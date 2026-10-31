@@ -1,0 +1,20 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Git hooks are shell scripts executed by sh on Linux/macOS. A CRLF shebang
+# fails there with "bad interpreter", which would silently disable the guard on
+# every machine except the one that installed it. Pin them to LF.
+.githooks/* text eol=lf
+.githooks/** text eol=lf
+
+# Workflow YAML is parsed by Actions runners; keep it byte-identical everywhere
+# so a local `act`/lint run matches CI.
+.github/workflows/* text eol=lf
+
+# Preserve the upstream Leaflet release bytes on every platform. The PNG files
+# in this directory remain binary and are intentionally not covered here.
+assets/vendor/leaflet/LICENSE -text
+assets/vendor/leaflet/README.md -text
+assets/vendor/leaflet/leaflet.css -text
+assets/vendor/leaflet/leaflet.js -text
+assets/vendor/leaflet/leaflet.js.map -text

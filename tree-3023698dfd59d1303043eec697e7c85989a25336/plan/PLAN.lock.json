@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "plan": "docs/plan/MASTER_PLAN.md",
+  "genesis_sha256": "ee27dbd42166352f4dcda832e611c9dc5c7fa4759f332a0d3a91319f18003ec6",
+<<<<<<< HEAD
+  "current_sha256": "c6799a475a42cf33b91d22269b901dddd9c466c37d39630f0bccb3fb31c0d6bd"
+=======
+  "current_sha256": "da9d4095c2deccfb9783ba9f82ea8f11d7cfa351b96597e9b8741681d956d9bc"
+>>>>>>> a6bfb8a1 (plan(A-002): the scoped exit composes with §3.2, and the showcase carve-out is recorded)
+}

@@ -1,0 +1,54 @@
+name: Prod smoke
+
+# Weekly live sweep of the deployed brand domain plus manual trigger.
+# Never blocks merges (runs on schedule, not on PRs); a red run means
+# production drifted from main — see docs/DEPLOY_RUNBOOK.md.
+
+on:
+  schedule:
+    - cron: "0 8 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    # Measured on 2026-09-18: ~16s. Bounded so a hung fetch cannot hold a
+    # runner for the 6-hour default; live-sanity's fetches are unbounded, so
+    # this cap is the only outer bound the job has.
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Staging-drift check (Pages vs main)
+        # Fails when the queued Pages deploy lags main — the signal that a
+        # staging smoke would silently verify a STALE build.
+        run: node scripts/check-staging-drift.mjs
+
+      - name: Live sanity sweep
+        run: node scripts/live-sanity.mjs
+
+  # Live NASA POWER data through both sizing modes AND the full tier pipeline.
+  # Deliberately scheduled rather than per-PR: it needs the network, so it can
+  # never be part of the offline deterministic PR suite. A red run here means
+  # the engine and the live API disagree — see docs/DEPLOY_RUNBOOK.md.
+  live-models:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Both sizing modes against live NASA data
+        run: npm run verify:live

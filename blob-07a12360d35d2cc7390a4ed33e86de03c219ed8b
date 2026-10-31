@@ -1,0 +1,749 @@
+// The adversarial pass over the delivery path, driven through the real page.
+//
+// WHAT THIS IS, and what it is not. The `resilience` facet was carried by a prose
+// line describing intent — retries, timeouts, fallbacks, a deadline — and not
+// one of those mechanisms had ever been made to fail on purpose. A guard that
+// reports resilience it has not exercised is a comment with an exit code, and
+// this repo has spent a whole cycle removing exactly those.
+//
+// So every claim below is made by BREAKING something and watching what the page
+// does. Nothing here is inferred from reading the source, and the one thing that
+// IS read from source — the inner/outer timeout arithmetic — is computed from the
+// constants the shipped modules export and is reported as a source-level
+// invariant rather than dressed up as an observation.
+//
+// THE FOUR FAILURE MODES, and why all four. A transport failure is not one thing
+// and a guard that only proves "the network broke" has proved the easiest case:
+//
+//   · FAILED      — the connection could not be made. A TypeError from fetch.
+//   · ABORTED     — the request was cancelled. Distinguishable from FAILED only
+//                   inside the page, and the product treats it differently.
+//   · REFUSED     — nothing listening. Same wire outcome as FAILED on most
+//                   stacks, so a guard that conflates them proves less than it
+//                   appears to.
+//   · SERVER 503  — a real HTTP response with a failure status. The response
+//                   EXISTS, which is the case a `res.ok` check exists for and
+//                   the one a network-error fixture never reaches.
+//   · MALFORMED   — HTTP 200 with a body that is not the expected shape. This is
+//                   the nastiest of the five and the most commonly untested: the
+//                   transport succeeded, so nothing in a network layer complains.
+//   · TIMEOUT     — the request hangs and the product's own abort fires. Forced
+//                   with the exact production timer, shortened in the browser
+//                   only, rather than by pointing the fixture at a dead port.
+//
+// All six must land on the SAME honest outcome, and that outcome is the claim:
+// the page still answers, says in words that it degraded, and never shows a
+// number it did not earn. A failure mode that produced a DIFFERENT answer per
+// mode would mean the classification is not really shared, which is precisely
+// what "classification covers transport failures end to end" has to mean.
+//
+// HOW THE FAILURES ARE INJECTED. CDP's Fetch domain, on the page session and on
+// every attached worker session, because the sizing worker is a separate target
+// and a NASA pull issued from inside it is invisible to a page-session-only
+// fixture. Nothing in the build is edited: the page under test is byte-for-byte
+// the staged artifact, and the only difference is that one request cannot
+// succeed.
+//
+// THE TIMER SHIM. The timeout mode shortens exactly one timer — the one armed
+// with the production constant `FETCH_TIMEOUT_MS` — by wrapping window.setTimeout
+// and matching on that exact value, counting its own rewrites so a test can
+// prove it shortened one timer and not all of them. This is the idiom
+// scripts/smoke/deadline.js already uses for the run deadline, for the same
+// reason: a 45-second wait is not a thing a gate can afford, and raising the
+// product's own timeout to suit a test would be testing a different product.
+import { RUN_TIMEOUT_MS } from "./actions.mjs";
+
+/** The result card text every flow in this repo uses to detect a finished run. */
+const CARD = "Total 20-year cost";
+
+/**
+ * The six transport failure modes, each with the Fetch-domain action that
+ * produces it and the class of failure it is meant to represent.
+ *
+ * `hold` is separate because it is the only mode that must NOT be completed: a
+ * held request is what lets the product's OWN abort timer fire, which is the
+ * only way to exercise the timeout classification rather than a fixture of it.
+ */
+export const TRANSPORT_FAILURES = [
+  {
+    id: "connection_failed",
+    label: "connection could not be made",
+    action: "fail",
+    reason: "Failed",
+  },
+  {
+    id: "request_aborted",
+    label: "request cancelled",
+    action: "fail",
+    reason: "Aborted",
+  },
+  {
+    id: "connection_refused",
+    label: "nothing listening",
+    action: "fail",
+    reason: "ConnectionRefused",
+  },
+  {
+    id: "server_503",
+    label: "a real 5xx response",
+    action: "fulfill",
+    status: 503,
+    body: "upstream unavailable",
+  },
+  {
+    id: "malformed_200",
+    label: "HTTP 200 with a body that is not the expected shape",
+    action: "fulfill",
+    status: 200,
+    body: "{ this is not the JSON anyone parses",
+    contentType: "application/json",
+  },
+  {
+    id: "hang_then_timeout",
+    label: "the request hangs and the product's own abort fires",
+    action: "hold",
+  },
+];
+
+const NASA = /power\.larc\.nasa\.gov/;
+
+/**
+ * Install a NASA interceptor on the page session and every worker session that
+ * attaches, and hand back the control surface.
+ *
+ * Returns `{ set, release, stats }`. `stats` is what makes the stage checkable:
+ * how many NASA requests were actually intercepted. A stage whose interceptor
+ * matched nothing has proved nothing about a transport failure — it proved the
+ * page works — and the gate is given that number so it can say so.
+ */
+export function installNasaInterceptor(ctx) {
+  const { send, ws } = ctx;
+  const sessions = new Set();
+  const stats = { intercepted: 0, matched: 0, mode: null, released: 0, held: 0 };
+  let enabled = false;
+
+  // Hold the requests we have deliberately paused, keyed by session+id, so the
+  // product's own abort is what ends them. Forgetting them would let a held
+  // request land after the stage finished and quietly invalidate the NEXT one.
+  const held = new Map();
+
+  const handlePaused = (sessionId, params) => {
+    if (!NASA.test(params?.request?.url || "")) {
+      send(
+        "Fetch.continueRequest",
+        { requestId: params.requestId },
+        sessionId,
+      ).catch(() => {});
+      return;
+    }
+    stats.matched += 1;
+    if (!stats.mode) return;
+    const m = stats.mode;
+    if (m.action === "fail") {
+      send(
+        "Fetch.failRequest",
+        { requestId: params.requestId, errorReason: m.reason },
+        sessionId,
+      ).catch(() => {});
+      stats.intercepted += 1;
+      return;
+    }
+    if (m.action === "fulfill") {
+      send(
+        "Fetch.fulfillRequest",
+        {
+          requestId: params.requestId,
+          responseCode: m.status,
+          responseHeaders: [
+            { name: "content-type", value: m.contentType || "text/plain" },
+          ],
+          body: Buffer.from(m.body || "", "utf8").toString("base64"),
+        },
+        sessionId,
+      ).catch(() => {});
+      stats.intercepted += 1;
+      return;
+    }
+    // hold: deliberately answer nothing, so the product's own abort timer is
+    // what resolves this request.
+    held.set(`${sessionId}:${params.requestId}`, true);
+    stats.held += 1;
+    stats.intercepted += 1;
+  };
+
+  const enableOn = (sessionId) =>
+    send(
+      "Fetch.enable",
+      { patterns: [{ urlPattern: "*", requestStage: "Request" }] },
+      sessionId,
+    ).catch(() => {});
+
+  const baseOnmessage = ws.onmessage;
+  ws.onmessage = (ev) => {
+    baseOnmessage(ev);
+    try {
+      const m = JSON.parse(ev.data);
+      if (m.method === "Target.attachedToTarget" && m.params?.sessionId) {
+        const sid = m.params.sessionId;
+        sessions.add(sid);
+        // A worker that attaches after interception is armed is still intercepted:
+        // otherwise the sizing worker quietly fetches real weather and the stage
+        // measures a page that was never actually offline.
+        if (enabled) enableOn(sid);
+      } else if (m.method === "Fetch.requestPaused" && m.params?.requestId) {
+        handlePaused(m.sessionId || null, m.params);
+      }
+    } catch {
+      /* not a frame we care about */
+    }
+  };
+
+  return {
+    async enable() {
+      await send("Target.setAutoAttach", {
+        autoAttach: true,
+        waitForDebuggerOnStart: false,
+        flatten: true,
+      }).catch(() => {});
+      await enableOn(null);
+      enabled = true;
+    },
+    /** Aim the interceptor at one failure mode. `null` lets everything through. */
+    async set(mode) {
+      stats.mode = mode;
+      if (mode) stats.intercepted = 0;
+    },
+    async release() {
+      // Release anything still held BEFORE disarming, so a held request cannot
+      // resolve into a later stage and read as that stage's weather.
+      for (const key of [...held.keys()]) {
+        const sid = key.slice(0, key.lastIndexOf(":"));
+        const requestId = key.slice(key.lastIndexOf(":") + 1);
+        await send("Fetch.continueRequest", { requestId }, sid).catch(() => {});
+        held.delete(key);
+        stats.released += 1;
+      }
+      stats.mode = null;
+      for (const sid of [null, ...sessions])
+        await send("Fetch.disable", {}, sid).catch(() => {});
+      ws.onmessage = baseOnmessage;
+    },
+    sessions: () => sessions.size,
+    stats: () => ({ ...stats, sessions: sessions.size }),
+  };
+}
+
+/**
+ * Shorten EXACTLY the production NASA fetch timeout, once, in the browser only.
+ *
+ * Matching on the production constant rather than on "any timer near 45s" is the
+ * whole point: a shim that shortened everything would make the stage pass for
+ * reasons that have nothing to do with the product's timeout. The rewrite count
+ * is exposed so the gate can assert it fired, and asserted to be small enough
+ * that it cannot have rewritten the page's other timers.
+ */
+function timeoutShimSource(fetchTimeoutMs, smokeMs) {
+  return `(() => {
+    const NATURAL = ${fetchTimeoutMs};
+    const SMOKE = ${smokeMs};
+    window.__naturalSetTimeout = window.setTimeout;
+    window.__naturalFetchTimeoutRewrites = 0;
+    window.setTimeout = function (callback, delay, ...args) {
+      if (delay === NATURAL) {
+        window.__naturalFetchTimeoutRewrites += 1;
+        return window.__naturalSetTimeout.call(this, callback, SMOKE, ...args);
+      }
+      return window.__naturalSetTimeout.call(this, callback, delay, ...args);
+    };
+    return true;
+  })()`;
+}
+
+function removeTimeoutShim() {
+  return `(() => {
+    if (window.__naturalSetTimeout) {
+      window.setTimeout = window.__naturalSetTimeout;
+      delete window.__naturalSetTimeout;
+      delete window.__naturalFetchTimeoutRewrites;
+    }
+    return true;
+  })()`;
+}
+
+/** Put the form in a known state and click Run, timed by the page's own clock. */
+function runSource({ timeoutMs }) {
+  return `(async () => {
+    const CARD = ${JSON.stringify(CARD)};
+    const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+    const cardUp = () => document.body.textContent.includes(CARD);
+    const out = {};
+
+    const set = (id, value) => {
+      const node = document.getElementById(id);
+      if (!node) return false;
+      node.value = value;
+      node.dispatchEvent(new Event("input", { bubbles: true }));
+      node.dispatchEvent(new Event("change", { bubbles: true }));
+      return true;
+    };
+    set("dailyKwhInput", "12");
+    const g = document.getElementById("systemGoal");
+    if (g) { g.value = "gridtie"; g.dispatchEvent(new Event("change", { bubbles: true })); }
+    const t = document.getElementById("customRateVal");
+    if (t && !(parseFloat(t.value) > 0)) {
+      t.value = "0.42";
+      t.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    await wait(150);
+
+    const region = document.getElementById("resultsRegion");
+    if (region) region.hidden = true;
+    const btn = document.getElementById("btnRunSizing");
+    if (!btn) { out.error = "no run button"; return out; }
+
+    const t0 = performance.now();
+    btn.click();
+    const end = Date.now() + ${timeoutMs};
+    let done = false;
+    while (Date.now() < end) {
+      if (cardUp()) { done = true; break; }
+      await wait(25);
+    }
+    out.ms = done ? Math.round(performance.now() - t0) : null;
+    out.card_rendered = done;
+    out.status = (document.getElementById("sizingStatus")?.textContent || "").trim().slice(0, 200);
+    out.button_disabled = btn.disabled === true;
+    out.results_hidden = region ? region.hidden === true : null;
+    // What the page SAID about the degradation, verbatim. A run that quietly used
+    // a different weather source without saying so would pass a card-rendered
+    // check and fail a human, and the human is who this product is for.
+    out.offline_label = /OFFLINE MODE|typical-year/i.test(document.body.textContent);
+    return out;
+  })()`;
+}
+
+/**
+ * Drive every transport failure mode through one cold sizing run each, and
+ * report what the page did about each.
+ *
+ * Each mode gets a fresh page load, because the weather caches are layered
+ * (memory, IndexedDB, Cache Storage, localStorage) and a mode measured against a
+ * cache the previous mode populated would be measuring the cache, not the
+ * failure. That is why this is six page loads and not one session with six
+ * toggles — the isolation is the measurement.
+ */
+export async function runTransportClassification(ctx, options = {}) {
+  const {
+    city = "Honolulu",
+    timeoutMs = RUN_TIMEOUT_MS,
+    fetchTimeoutMs,
+    smokeTimeoutMs = 400,
+    settleMs = 6000,
+    modes = TRANSPORT_FAILURES,
+    reload = true,
+  } = options;
+  const { send, evaluate, errors, poll } = ctx;
+
+  const net = installNasaInterceptor(ctx);
+  await net.enable();
+
+  const results = [];
+  for (const mode of modes) {
+    const errBefore = errors.length;
+    await send("Page.reload", { ignoreCache: false }).catch(() => {});
+    await new Promise((r) => setTimeout(r, settleMs));
+    await evaluate(
+      `(() => { const s = document.getElementById("citySearch");
+         if (s) { s.focus(); s.value = ${JSON.stringify(city)};
+           s.dispatchEvent(new InputEvent("input", { bubbles: true })); }
+         return true; })()`,
+    ).catch(() => {});
+    const suggested = await poll(
+      async () =>
+        (await evaluate(
+          `document.querySelectorAll('#citySuggestions [role="option"]').length`,
+        ).catch(() => 0)) > 0,
+      20000,
+      400,
+    );
+    if (!suggested) {
+      results.push({ id: mode.id, label: mode.label, ok: false, reason: "no city suggestion" });
+      continue;
+    }
+    await evaluate(
+      `document.querySelector('#citySuggestions [role="option"]').click()`,
+    ).catch(() => {});
+
+    const needsShim = mode.action === "hold";
+    if (needsShim && typeof fetchTimeoutMs === "number")
+      await evaluate(timeoutShimSource(fetchTimeoutMs, smokeTimeoutMs)).catch(() => {});
+    await net.set(mode);
+    const run = await evaluate(runSource({ timeoutMs }));
+    await net.release();
+    if (needsShim) await evaluate(removeTimeoutShim()).catch(() => {});
+
+    const stats = net.stats();
+    results.push({
+      id: mode.id,
+      label: mode.label,
+      ok: true,
+      // Without this the stage proves nothing: an interceptor that matched
+      // nothing exercised no failure at all.
+      intercepted: stats.intercepted,
+      held: stats.held,
+      rewrites: needsShim
+        ? (await evaluate("window.__naturalFetchTimeoutRewrites").catch(() => null))
+        : null,
+      card_rendered: run.card_rendered === true,
+      ms: run.ms,
+      status: run.status || "",
+      offline_label: run.offline_label === true,
+      button_disabled: run.button_disabled === true,
+      // A page that leaves the Run button disabled after a failure is a page that
+      // needs a reload, and a visitor who does not know that is stuck.
+      button_released: run.button_disabled === false,
+      page_errors: errors.slice(errBefore),
+      error: run.error || null,
+    });
+  }
+  await send("Fetch.disable").catch(() => {});
+  return { ok: true, modes: results };
+}
+
+/**
+ * A stuck run: the worker never replies, the page-side deadline fires, and an
+ * explicit retry recovers — with the worker and the run channel actually
+ * released, not merely the button re-enabled.
+ *
+ * The worker/channel release is the half that is easy to claim and hard to prove.
+ * A button that comes back is necessary and not sufficient: what matters is that
+ * the NEXT run is posted to a NEW worker and settles, because a page that
+ * re-enables the button while still holding the dead one recovers on screen and
+ * hangs again on the second failure. So the assertion is that the retry posts,
+ * completes, and is answered — and the post count is read from the same wrapper
+ * that swallowed the first message.
+ */
+export async function runStuckRunRecovery(ctx, options = {}) {
+  const { runDeadlineMs, smokeDeadlineMs = 400, timeoutMs = RUN_TIMEOUT_MS, settleMs = 6000 } =
+    options;
+  const { send, evaluate, errors, poll } = ctx;
+
+  await send("Page.reload", { ignoreCache: false }).catch(() => {});
+  await new Promise((r) => setTimeout(r, settleMs));
+
+  // Prime: the baseline run must settle BEFORE the silent-worker fixture is
+  // installed, so a stage that never worked cannot be mistaken for a stage that
+  // recovered.
+  const primed = await evaluate(runSource({ timeoutMs }));
+  if (!primed.card_rendered)
+    return { ok: false, reason: "the baseline run never rendered a card" };
+
+  const errBefore = errors.length;
+  // Swallow exactly ONE full-run message, so the worker goes silent for one run
+  // and every later run still has to travel. The postMessage wrapper STAYS
+  // installed for the whole stage so the retry's post is observable.
+  await evaluate(`(() => {
+    window.__holdRun = 1;
+    window.__runPosts = 0;
+    window.__heldRunPosts = 0;
+    window.__workerConstructions = 0;
+    const OriginalWorker = window.Worker;
+    window.Worker = function (...args) {
+      window.__workerConstructions += 1;
+      return new OriginalWorker(...args);
+    };
+    window.Worker.prototype = OriginalWorker.prototype;
+    const original = OriginalWorker.prototype.postMessage;
+    window.__originalPostMessage = original;
+    OriginalWorker.prototype.postMessage = function (m) {
+      if (m && m.type === "run") {
+        window.__runPosts += 1;
+        if (window.__holdRun === 1) {
+          window.__holdRun = 2;
+          window.__heldRunPosts += 1;
+          return;
+        }
+      }
+      return original.call(this, m);
+    };
+
+    // Shorten ONLY the timer armed with the production run deadline. Matching
+    // the exact constant is what keeps this from quietly shortening every other
+    // timer on the page, and the count is reported so a test can prove it.
+    window.__naturalSetTimeout = window.setTimeout;
+    window.__runDeadlineRewrites = 0;
+    window.setTimeout = function (callback, delay, ...args) {
+      if (delay === ${runDeadlineMs}) {
+        window.__runDeadlineRewrites += 1;
+        return window.__naturalSetTimeout.call(this, callback, ${smokeDeadlineMs}, ...args);
+      }
+      return window.__naturalSetTimeout.call(this, callback, delay, ...args);
+    };
+    return true;
+  })()`);
+
+  const stuck = await evaluate(runSource({ timeoutMs }));
+  const rewrites = await evaluate("window.__runDeadlineRewrites");
+
+  // The recovery, as a SEPARATE explicit click — which is the whole point. A page
+  // that recovers by itself has not recovered, it has only not failed yet; the
+  // visitor has to be able to try again.
+  await evaluate(`(() => { window.__holdRun = 0; return true; })()`);
+  const retry = await evaluate(runSource({ timeoutMs }));
+  const after = await evaluate(`(() => ({
+    runPosts: window.__runPosts,
+    heldRunPosts: window.__heldRunPosts,
+    workerConstructions: window.__workerConstructions,
+    buttonDisabled: document.getElementById("btnRunSizing")?.disabled ?? null,
+    status: (document.getElementById("sizingStatus")?.textContent || "").trim().slice(0, 200),
+    resultsHidden: document.getElementById("resultsRegion")?.hidden ?? null,
+  }))()`);
+
+  await evaluate(`(() => {
+    if (window.__naturalSetTimeout) {
+      window.setTimeout = window.__naturalSetTimeout;
+      delete window.__naturalSetTimeout;
+    }
+    if (window.__originalPostMessage) {
+      Worker.prototype.postMessage = window.__originalPostMessage;
+      delete window.__originalPostMessage;
+    }
+    delete window.__holdRun;
+    return true;
+  })()`).catch(() => {});
+
+  const timeoutError = /did not reply in time/i.test(stuck.status || "");
+  return {
+    ok: true,
+    // The fixture's own honesty: it must have swallowed exactly one message and
+    // shortened exactly the production timer. Both are reported, not assumed.
+    rewrites,
+    held_run_posts: after.heldRunPosts,
+    run_posts: after.runPosts,
+    worker_constructions: after.workerConstructions,
+    // What the visitor sees while stuck.
+    stuck_status: stuck.status || "",
+    stuck_error_is_actionable: timeoutError,
+    stuck_card_rendered: stuck.card_rendered === true,
+    stuck_button_disabled: stuck.button_disabled === true,
+    // The recovery.
+    retry_card_rendered: retry.card_rendered === true,
+    retry_ms: retry.ms,
+    retry_status: retry.status || "",
+    retry_status_cleared: !timeoutError,
+    retry_button_released: after.buttonDisabled === false,
+    retry_results_visible: after.resultsHidden === false,
+    // A retry that renders the card without a NEW worker would mean the dead one
+    // was never released and the second failure would hang identically.
+    fresh_worker_after_failure: after.workerConstructions >= 2,
+    page_errors: errors.slice(errBefore),
+  };
+}
+
+/**
+ * Stale inputs: a run started for one set of inputs must not be allowed to
+ * render as the answer for a DIFFERENT set the visitor has since typed.
+ *
+ * The worker cannot be preempted, so the design collapses a second request into
+ * a single trailing run and retires the superseded reply. That is only correct
+ * if the card the visitor ends up looking at belongs to the inputs currently on
+ * screen — so this drives the race and reads the NUMBER the page settled on,
+ * rather than asserting that a function called `staleRunAction` exists.
+ */
+export async function runStaleInputs(ctx, options = {}) {
+  const { timeoutMs = RUN_TIMEOUT_MS, settleMs = 6000, city = "Honolulu" } = options;
+  const { send, evaluate, errors } = ctx;
+
+  await send("Page.reload", { ignoreCache: false }).catch(() => {});
+  await new Promise((r) => setTimeout(r, settleMs));
+  await evaluate(
+    `(() => { const s = document.getElementById("citySearch");
+       if (s) { s.focus(); s.value = ${JSON.stringify(city)};
+         s.dispatchEvent(new InputEvent("input", { bubbles: true })); }
+       return true; })()`,
+  ).catch(() => {});
+  await evaluate(
+    `new Promise((res) => {
+      const t0 = Date.now();
+      const tick = () => {
+        const o = document.querySelector('#citySuggestions [role="option"]');
+        if (o || Date.now() - t0 > 20000) return res(true);
+        setTimeout(tick, 200);
+      };
+      tick();
+    })`,
+  ).catch(() => {});
+  await evaluate(
+    `document.querySelector('#citySuggestions [role="option"]')?.click() || true`,
+  ).catch(() => {});
+
+  const errBefore = errors.length;
+  // Start a run, and while it is in flight change the load the whole card is
+  // derived from. The weather and the engine are identical; only the consumer's
+  // number changes, so a card that renders the OLD number is unambiguous.
+  const race = await evaluate(`(async () => {
+    const CARD = ${JSON.stringify(CARD)};
+    const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+    const out = {};
+    const k = document.getElementById("dailyKwhInput");
+    k.value = "10";
+    k.dispatchEvent(new Event("input", { bubbles: true }));
+    k.dispatchEvent(new Event("change", { bubbles: true }));
+    await wait(150);
+
+    const region = document.getElementById("resultsRegion");
+    if (region) region.hidden = true;
+    document.getElementById("btnRunSizing").click();
+    // Let the first run get properly under way, THEN supersede it.
+    for (let i = 0; i < 40; i++) {
+      if (document.getElementById("btnRunSizing").disabled) break;
+      await wait(25);
+    }
+    out.second_run_started_while_first_in_flight =
+      document.getElementById("btnRunSizing").disabled === true;
+
+    const k2 = document.getElementById("dailyKwhInput");
+    k2.value = "27";
+    k2.dispatchEvent(new Event("input", { bubbles: true }));
+    k2.dispatchEvent(new Event("change", { bubbles: true }));
+    document.getElementById("btnRunSizing").click();
+
+    const end = Date.now() + ${timeoutMs};
+    while (Date.now() < end) {
+      if (document.body.textContent.includes(CARD) && !region?.hidden) break;
+      await wait(50);
+    }
+    // Let any superseded reply land after the visible one, which is the only
+    // order in which a stale render can actually do damage.
+    await wait(4000);
+    out.settled_input = document.getElementById("dailyKwhInput").value;
+    out.card_rendered = document.body.textContent.includes(CARD);
+    out.status = (document.getElementById("sizingStatus")?.textContent || "").trim().slice(0, 200);
+    out.button_released = document.getElementById("btnRunSizing").disabled === false;
+    // The card's own annual-consumption figure, which is a direct function of the
+    // input. 10 kWh/day and 27 kWh/day cannot both be on screen.
+    const text = document.body.textContent;
+    const hits = [];
+    for (const v of [10, 27]) if (new RegExp("\\\\b" + v + "\\\\b").test(text)) hits.push(v);
+    out.figures_present = hits;
+    return out;
+  })()`);
+
+  return {
+    ok: true,
+    second_run_started_while_first_in_flight:
+      race.second_run_started_while_first_in_flight === true,
+    settled_input: race.settled_input,
+    card_rendered: race.card_rendered === true,
+    status: race.status || "",
+    button_released: race.button_released === true,
+    figures_present: race.figures_present || [],
+    // The stale case, named rather than left to a reader to infer.
+    stale_figure_rendered: (race.figures_present || []).includes(10),
+    new_figure_rendered: (race.figures_present || []).includes(27),
+    page_errors: errors.slice(errBefore),
+  };
+}
+
+/**
+ * Share-restore, in the shape that actually broke in production: a run in flight
+ * when the page is restored from a share link.
+ *
+ * A share URL re-runs sizing on load, so restoring one while a run is in flight
+ * is the exact sequence that produced the reproduced freeze the run deadline now
+ * guards. The assertion is that the restored page answers at all — the inputs
+ * come back, the page says it loaded them, and an explicit click still works —
+ * and NOT that some particular timeout fired, because on a healthy network the
+ * deadline correctly never fires at all.
+ */
+export async function runShareRestore(ctx, options = {}) {
+  const { timeoutMs = RUN_TIMEOUT_MS, settleMs = 6000 } = options;
+  const { send, evaluate, errors } = ctx;
+
+  // Get a real share link from a real result: a hand-written hash would be a
+  // fixture, and the whole point is that this is the product's own link.
+  await send("Page.reload", { ignoreCache: false }).catch(() => {});
+  await new Promise((r) => setTimeout(r, settleMs));
+  const shareHash = await evaluate(
+    `(() => {
+      const out = runSourceReady();
+      return out;
+      function runSourceReady() {
+        const s = document.getElementById("citySearch");
+        if (s) { s.focus(); s.value = "Honolulu"; s.dispatchEvent(new InputEvent("input", { bubbles: true })); }
+        return null;
+      }
+    })()`,
+  );
+  void shareHash;
+  const suggestion = await evaluate(
+    `new Promise((res) => {
+      const t0 = Date.now();
+      const tick = () => {
+        const o = document.querySelector('#citySuggestions [role="option"]');
+        if (o || Date.now() - t0 > 20000) return res(!!o);
+        setTimeout(tick, 200);
+      };
+      tick();
+    })`,
+  ).catch(() => false);
+  if (!suggestion)
+    return { ok: false, reason: "no city suggestion, so no share link could be produced" };
+  await evaluate(
+    `document.querySelector('#citySuggestions [role="option"]').click() || true`,
+  );
+  const settled = await evaluate(
+    `(async () => {
+      const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+      const k = document.getElementById("dailyKwhInput");
+      k.value = "14"; k.dispatchEvent(new Event("input", { bubbles: true }));
+      k.dispatchEvent(new Event("change", { bubbles: true }));
+      const t = document.getElementById("customRateVal");
+      if (t && !(parseFloat(t.value) > 0)) { t.value = "0.42"; t.dispatchEvent(new Event("input", { bubbles: true })); }
+      await wait(150);
+      document.getElementById("btnRunSizing").click();
+      const end = Date.now() + ${timeoutMs};
+      while (Date.now() < end) {
+        if (document.body.textContent.includes(${JSON.stringify(CARD)})) return true;
+        await wait(50);
+      }
+      return false;
+    })()`,
+  );
+  if (!settled) return { ok: false, reason: "the priming run never produced a share link" };
+  const hash = await evaluate("String(location.hash || '')");
+  if (!hash)
+    return { ok: false, reason: "a completed run produced no share hash to restore" };
+
+  const errBefore = errors.length;
+  // Restore from that link — the product's own restore path, not a hand-set one.
+  await send("Page.navigate", { url: `${ctx.base}${hash}` }).catch(() => {});
+  await new Promise((r) => setTimeout(r, settleMs + 2000));
+
+  const restored = await evaluate(`(() => ({
+    dailyKwh: document.getElementById("dailyKwhInput")?.value ?? null,
+    status: (document.getElementById("sizingStatus")?.textContent || "").trim().slice(0, 200),
+    buttonDisabled: document.getElementById("btnRunSizing")?.disabled ?? null,
+    hashPresent: String(location.hash || "") === ${JSON.stringify(hash)},
+    cardRendered: document.body.textContent.includes(${JSON.stringify(CARD)}),
+  }))()`);
+
+  // And the restored page must still be USABLE: an explicit click has to answer.
+  const afterRestore = await evaluate(runSource({ timeoutMs }));
+
+  return {
+    ok: true,
+    share_hash: String(hash).slice(0, 120),
+    restored_daily_kwh: restored.dailyKwh,
+    // Restored inputs are the claim: a share link that renders a card for
+    // defaults instead of the visitor's own numbers has restored nothing.
+    inputs_restored: restored.dailyKwh === "14",
+    hash_preserved: restored.hashPresent === true,
+    status: restored.status || "",
+    card_rendered_after_restore: restored.cardRendered === true,
+    button_released: restored.buttonDisabled === false,
+    explicit_run_after_restore: afterRestore.card_rendered === true,
+    explicit_run_ms: afterRestore.ms,
+    page_errors: errors.slice(errBefore),
+  };
+}

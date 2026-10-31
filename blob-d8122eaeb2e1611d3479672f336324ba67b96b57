@@ -1,0 +1,150 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { test } from "node:test";
+
+const articlePath =
+  "blog/hawaii-2026-hurricane-season-backup-power/index.html";
+const html = readFileSync(articlePath, "utf8");
+const listing = readFileSync("blog/index.html", "utf8");
+const flatHtml = html.replace(/\s+/g, " ");
+
+const jsonLd = (source) => {
+  const script = source.match(
+    /<script type="application\/ld\+json">([\s\S]*?)<\/script>/,
+  );
+  assert.ok(script, "JSON-LD script exists");
+  return JSON.parse(script[1]);
+};
+
+const collectTextNodes = (value) => {
+  const nodes = [];
+  let inTag = false;
+  let textStart = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    if (!inTag && value[index] === "<") {
+      nodes.push(value.slice(textStart, index));
+      inTag = true;
+    } else if (inTag && value[index] === ">") {
+      inTag = false;
+      textStart = index + 1;
+    }
+  }
+  if (!inTag) nodes.push(value.slice(textStart));
+  return nodes.join("");
+};
+
+const normalizeText = (value) =>
+  collectTextNodes(value)
+    .replace(/&amp;/g, "&")
+    .replace(/\s+/g, " ")
+    .trim();
+
+test("storm facts match the cited official reports", () => {
+  assert.ok(
+    /Category 1 hurricane over the Big Island.{0,350}51 mph sustained wind.{0,120}71 mph gust/i.test(
+      flatHtml,
+    ),
+    "Lala wind observations are stated precisely",
+  );
+  assert.ok(/federal emergency declaration/i.test(flatHtml));
+  assert.ok(
+    /90% of more than 36,000 Kauai Island Utility Cooperative customers/i.test(
+      flatHtml,
+    ),
+  );
+  assert.ok(
+    /late September.{0,250}flooding and road closures/i.test(flatHtml),
+  );
+  assert.ok(
+    !/first hurricane-force gusts in 155 years|federal disaster declaration|92% of Kaua'i lost power|early October, no land impacts|battery wins on every axis|batteries win on everything/i.test(
+      flatHtml,
+    ),
+    "removed claims are not present in the article or metadata",
+  );
+});
+
+test("backup guidance avoids universal battery sizing and grid guarantees", () => {
+  assert.ok(/List each critical device/i.test(html));
+  assert.ok(/does not guarantee outage runtime/i.test(html));
+  assert.ok(/configured to operate in island mode/i.test(html));
+  assert.ok(/at least 20 feet from buildings/i.test(html));
+  assert.ok(/life-support equipment/i.test(html));
+});
+
+test("BYOD Plus terms describe committed capacity and participation limits", () => {
+  assert.ok(/\$400 per committed kW/i.test(html));
+  assert.ok(/additional \$400 per committed kW/i.test(html));
+  assert.ok(
+    /15-kWh battery[\s\S]{0,120}5 kW for two hours[\s\S]{0,120}\$2,000/i.test(
+      html,
+    ),
+  );
+  assert.ok(/Participation requires a five-year agreement/i.test(html));
+  assert.ok(/household is served first/i.test(html));
+  assert.ok(/leasing company is the system owner/i.test(html));
+});
+
+test("official sources are linked from the article", () => {
+  for (const source of [
+    "https://www.weather.gov/hfo/Lala2026",
+    "https://governor.hawaii.gov/newsroom/office-of-the-governor-news-release-potus-approves-gov-greens-request-for-federal-emergency-declaration-following-tropical-cyclone-lala/",
+    "https://dod.hawaii.gov/hiema/news-release-state-of-hawai%CA%BBi-on-hurricane-lowell-state-departments-continue-to-support-residents/",
+    "https://www.weather.gov/index.php/hfo/September2026monthlysummary",
+    "https://www.hawaiianelectric.com/products-and-services/customer-incentive-programs/bring-your-own-device-plus",
+    "https://www.energy.gov/cmei/systems/solar-and-resilience-basics",
+    "https://www.cpsc.gov/Newsroom/News-Releases/2026/CPSC-Warns-of-Generator-Carbon-Monoxide-and-Fire-Hazards-Ahead-of-Hurricane-Season",
+    "https://www.fda.gov/medical-devices/emergency-situations-medical-devices/fda-offers-tips-about-medical-devices-and-natural-disasters",
+  ]) {
+    assert.ok(html.includes(source), `missing source: ${source}`);
+  }
+});
+
+test("visible storm FAQs match FAQPage metadata", () => {
+  const graph = jsonLd(html)["@graph"];
+  const faq = graph.find((item) => item["@type"] === "FAQPage");
+  const visible = [
+    ...html.matchAll(
+      /<details>\s*<summary>([\s\S]*?)<\/summary>\s*<p>([\s\S]*?)<\/p>\s*<\/details>/g,
+    ),
+  ].map(([, question, answer]) => ({
+    name: normalizeText(question),
+    text: normalizeText(answer),
+  }));
+  const structured = faq.mainEntity.map((entry) => ({
+    name: normalizeText(entry.name),
+    text: normalizeText(entry.acceptedAnswer.text),
+  }));
+  assert.equal(visible.length, 4);
+  assert.deepEqual(structured, visible);
+});
+
+test("review date and blog card match Article and BlogPosting metadata", () => {
+  const article = jsonLd(html)["@graph"].find(
+    (item) => item["@type"] === "Article",
+  );
+  assert.equal(article.dateModified, "2026-10-22T00:00:00Z");
+  assert.ok(
+    /<time datetime="2026-10-22">Last reviewed: October 22, 2026<\/time>/.test(
+      html,
+    ),
+  );
+
+  const post = jsonLd(listing).blogPost.find(
+    (item) =>
+      item["@type"] === "BlogPosting" &&
+      item.url ===
+        "https://freeoffgridcalculator.com/blog/hawaii-2026-hurricane-season-backup-power/",
+  );
+  assert.ok(post);
+  assert.equal(post.dateModified, article.dateModified);
+  const link = listing.indexOf(
+    'href="./hawaii-2026-hurricane-season-backup-power/"',
+  );
+  const cardStart = listing.lastIndexOf('<article class="article-card">', link);
+  const cardEnd = listing.indexOf("</article>", link);
+  const card = listing.slice(cardStart, cardEnd);
+  assert.ok(cardStart >= 0 && cardEnd > cardStart);
+  assert.match(card, /Oct 22, 2026/);
+  assert.ok(/Verified reports on Hurricanes Lala, Lowell, and Nolo/.test(card));
+  assert.doesNotMatch(card, /pays you to need the grid less|📅/);
+});

@@ -1,0 +1,63 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { infeasibleReason } from "../assets/js/sizing/engine.js";
+import {
+  assertModeMatchesUseCase,
+  assertUseCase,
+  sizeUseCase,
+} from "./usecase-fixture.mjs";
+
+for (const [hardwareConfig, expected] of [
+  ["solar", "needs-battery"],
+  ["battery", null],
+  ["both", null],
+]) {
+  test(`tou feasibility: ${hardwareConfig}`, () => {
+    assert.equal(infeasibleReason({ mode: "tou", hardwareConfig }), expected);
+  });
+}
+
+test("tou mode reaches battery-only peak-offset measurement, not an offgrid result", async () => {
+  const p = await assertModeMatchesUseCase("tou");
+  const m = assertUseCase(p, "tou");
+  assert.equal(p.mode, "gridtie");
+  assert.equal(p.hardwareConfig, "battery");
+  assert.equal(p.focus.pvKw, 0);
+  assert.ok(m.battKwh > 0);
+  assert.ok(m.touPeakOffsetPct > 0 && m.touPeakOffsetPct <= 100);
+  assert.equal(p.useCaseOutcome.value, m.touPeakOffsetPct);
+  assert.equal(m.touSpreadPerKwh, 0.5);
+  assert.ok(m.touSavingUsd20y > 0);
+});
+
+test("flat rates are declined by the shipped TOU outcome", async () => {
+  const p = await sizeUseCase({
+    mode: "tou",
+    touPeakRate: 0.2,
+    touOffPeakRate: 0.2,
+  });
+  const m = assertUseCase(p, "tou");
+  assert.equal(m.touSavingUsd20y, 0);
+  assert.equal(p.useCaseOutcome.status, "not-here");
+});
+
+test("reversed or non-finite TOU rates never invent savings", async () => {
+  for (const [touPeakRate, touOffPeakRate] of [
+    [0.1, 0.15],
+    [Infinity, 0.1],
+    [0.6, NaN],
+  ]) {
+    const p = await sizeUseCase({ mode: "tou", touPeakRate, touOffPeakRate });
+    const m = assertUseCase(p, "tou");
+    assert.equal(m.touSpreadPerKwh, 0);
+    assert.equal(m.touSavingUsd20y, 0);
+    assert.equal(p.useCaseOutcome.status, "not-here");
+  }
+});
+
+test("legacy gridtie battery-only requests retain the canonical TOU outcome", async () => {
+  const p = await sizeUseCase({ mode: "gridtie", hardwareConfig: "battery" });
+  assertUseCase(p, "tou");
+  assert.equal(p.mode, "gridtie");
+  assert.equal(p.hardwareConfig, "battery");
+});

@@ -1,0 +1,278 @@
+// The `performance` axis's speed clause, and why it exists as a second half.
+//
+// WHY THIS TEST EXISTS: at P0.4 the gate measured CLS fall from 0.114 to 0.000
+// and FCP and LCP roughly halve, on the same runner, with the same gate, and
+// the `performance` ordinal did not move by a single point. The cause was not
+// that the measurement was weak. It was that the composed facet line carried
+// none of it — `composeFacetLine` spends all 280 characters on the warm
+// reading, the target count, the three deterministic categories and the
+// variance envelope, and has never put FCP, LCP or CLS in front of the judge
+// even though the gate measures all three on every run. A measurement nobody
+// reads cannot move anything.
+//
+// So the axis became TWO clauses, joined under the per-axis clip the same way
+// `quality` and `accessibility` already are. These tests pin the discipline
+// that makes the split honest rather than convenient:
+//
+//   · the numbers are DERIVED from `report.measured`, never typed;
+//   · they are the WORST across every measured target, and the clause says so,
+//     because a bare "FCP 2.1s" reads as a page's first paint or a median when
+//     it is the slowest template in the run;
+//   · FCP/LCP are stored in SECONDS and must not go through the millisecond
+//     formatter the warm clause uses (that mistake renders 2.08s as "2ms");
+//   · each half is bounded by its OWN declared maximum, so an over-budget half
+//     is NAMED rather than trimmed, and the joint total is checked too;
+//   · and the bound arithmetic is recorded, including the fact that the real
+//     14-target line currently exceeds the transport clip. That is a decision
+//     for the owner, not something to quietly trim a word away to make green.
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+
+import {
+  PERF_RATCHET_CLAUSE_MAX,
+  PERF_SPEED_CLAUSE_MAX,
+  composeFacetLine,
+  composePerfClauses,
+  composeSpeedClause,
+  LIGHTHOUSE_FACET_AXES,
+} from "../scripts/lib/lighthouse-budgets.mjs";
+import { COMPLETE_FACET_CLIP } from "../scripts/lib/jev-complete.mjs";
+
+/** A report shaped like the gate's, with the speed readings the gate records. */
+const reportWith = (measured) => ({
+  measured,
+  warm_interaction: {
+    ok: true,
+    cold_run: { ms: 5400 },
+    warm_rerun: { ms: 51 },
+    warm_adjustments: { preview_median_ms: 11, confirm_median_ms: 0 },
+    warm_network_requests: 0,
+  },
+});
+
+const target = (id, speed, perf = 90) => ({
+  id,
+  scores: { performance: perf, accessibility: 100, "best-practices": 100, seo: 100 },
+  speed,
+});
+
+test("the speed clause reports the WORST target, and says so on the line", () => {
+  const clause = composeSpeedClause(
+    reportWith([
+      target("home/mobile", { fcp_s: 1.99, lcp_s: 2.37, cls: 0.0 }),
+      target("home/desktop", { fcp_s: 2.08, lcp_s: 2.7, cls: 0.005 }),
+      target("city/mobile", { fcp_s: 0.64, lcp_s: 0.9, cls: 0.0 }),
+    ]),
+  );
+  assert.equal(clause, "worst FCP 2.1s, LCP 2.7s, CLS 0.005");
+  // The word is load-bearing, not decoration. The ratchet half says "median of
+  // 3" about RUNS; without "worst" here the two halves would be describing
+  // different statistics in the same words and neither would say which.
+  assert.match(
+    clause,
+    /^worst /,
+    "the clause must name that these are the worst measured, not a median or a " +
+      "single page's reading",
+  );
+  // And it must be the max, not the first, the min, or an average.
+  assert.ok(clause.includes("2.1s"), "FCP must be home/desktop's 2.08s, not the min");
+  assert.ok(clause.includes("2.7s"), "LCP must be home/desktop's 2.7s");
+  assert.ok(clause.includes("0.005"), "CLS must be the worst 0.005, not 0");
+});
+
+test("FCP and LCP are seconds and must not read as milliseconds", () => {
+  // The unit bug this pins: the warm clause's formatter takes MILLISECONDS, and
+  // routing `fcp_s` through it renders 2.08 seconds as "2ms" — wrong by three
+  // orders of magnitude and reading as an instant first paint.
+  const clause = composeSpeedClause(
+    reportWith([target("home/desktop", { fcp_s: 2.08, lcp_s: 2.7, cls: 0.0 })]),
+  );
+  assert.ok(!/\b2ms\b/.test(clause), `2.08s must not render as 2ms: ${clause}`);
+  assert.match(clause, /FCP 2\.1s/);
+  // Sub-second readings are the same trap from the other side: 0.9s is 900ms.
+  const sub = composeSpeedClause(
+    reportWith([target("city/mobile", { fcp_s: 0.64, lcp_s: 0.9, cls: 0 })]),
+  );
+  assert.match(sub, /FCP 0\.6s|FCP 640ms/);
+  assert.ok(!/FCP 0\.6ms/.test(sub), `0.64s must not render as 0.6ms: ${sub}`);
+});
+
+test("a missing metric yields no clause at all, not a partial one", () => {
+  // Three metrics and two is a claim about a different measurement.
+  assert.equal(
+    composeSpeedClause(
+      reportWith([target("home/mobile", { fcp_s: 1.99, lcp_s: 2.37 })]),
+    ),
+    null,
+    "a missing cls must suppress the whole clause, not emit FCP and LCP alone",
+  );
+  assert.equal(composeSpeedClause(reportWith([])), null);
+  assert.equal(composeSpeedClause({}), null);
+  assert.equal(composeSpeedClause(null), null);
+  // A non-finite reading is a HOLE in that target, not a zero and not a
+  // reason to suppress the clause: the worst of the targets that DID measure is
+  // still the worst measured. What must never happen is a hole reading as 0,
+  // which would report an instant first paint.
+  assert.equal(
+    composeSpeedClause(
+      reportWith([
+        target("holed", { fcp_s: Number.NaN, lcp_s: 2, cls: 0 }),
+        target("ok", { fcp_s: 1, lcp_s: 2, cls: 0 }),
+      ]),
+    ),
+    "worst FCP 1.0s, LCP 2.0s, CLS 0.000",
+  );
+  // But when NOTHING measured, that is a hole, not a zero.
+  assert.equal(
+    composeSpeedClause(
+      reportWith([target("holed", { fcp_s: Number.NaN, lcp_s: 2, cls: 0 })]),
+    ),
+    null,
+  );
+});
+
+test("both halves are declared, ordered, and each carries its own bound", () => {
+  const report = reportWith([
+    target("home/mobile", { fcp_s: 1.99, lcp_s: 2.37, cls: 0.0 }),
+    target("home/desktop", { fcp_s: 2.08, lcp_s: 2.7, cls: 0.005 }),
+  ]);
+  const clauses = composePerfClauses(report);
+  assert.equal(clauses.length, 2);
+  assert.deepEqual(
+    clauses.map((c) => c.half),
+    ["ratchet", "speed"],
+    "the ratchet half is first: it is the sentence that says how to read the run",
+  );
+  assert.deepEqual(
+    clauses.map((c) => c.metric),
+    ["perf_ratchet", "perf_speed"],
+    "the join matches on metric, so both must be distinct and stable",
+  );
+  for (const c of clauses)
+    assert.equal(
+      c.max,
+      c.half === "speed" ? PERF_SPEED_CLAUSE_MAX : PERF_RATCHET_CLAUSE_MAX,
+      `${c.half} must be checked against its OWN bound: a half that outgrows ` +
+        "its budget pushes the other half out of room",
+    );
+  // The ratchet half must be exactly what the gate has always published, or
+  // this change is not additive.
+  assert.equal(clauses[0].text, composeFacetLine(report));
+});
+
+test("the two declared bounds and the transport clip are accounted for", () => {
+  // The arithmetic, stated so a change to any of the three numbers has to be a
+  // deliberate edit here rather than an accident. The pair's worst case must
+  // fit the transport clip, or the axis is a guaranteed build failure.
+  assert.ok(
+    PERF_RATCHET_CLAUSE_MAX + 1 + PERF_SPEED_CLAUSE_MAX <= COMPLETE_FACET_CLIP,
+    `the two declared worst cases join to ` +
+      `${PERF_RATCHET_CLAUSE_MAX + 1 + PERF_SPEED_CLAUSE_MAX}, over the ` +
+      `${COMPLETE_FACET_CLIP}-char clip; the axis could not survive a run whose ` +
+      "readings are wide enough to hit both declared maxima",
+  );
+  assert.ok(
+    PERF_RATCHET_CLAUSE_MAX < COMPLETE_FACET_CLIP,
+    "the ratchet half alone must fit the clip, or the axis is already broken",
+  );
+  assert.ok(
+    PERF_SPEED_CLAUSE_MAX < COMPLETE_FACET_CLIP,
+    "the speed half alone must fit the clip",
+  );
+});
+
+test("MEASURED: the real 14-target line reaches the judge whole", () => {
+  // These are the numbers run 36892624209 actually produced, verbatim: the
+  // 14-target ratchet clause and the speed clause derived from the same
+  // report's speed readings. The join is 286 characters, which is 6 over the
+  // 280 clip this axis shipped with and 14 under the 300 clip the owner raised
+  // it to. Pinned here as a measurement rather than a comment, because the
+  // number that decides whether the speed half reaches the judge is the number
+  // most likely to drift: the ratchet half's length moves with the data (target
+  // count, the ratcheted categories' spread, the perf range), and a line that
+  // quietly outgrows the clip is cut SILENTLY in transit.
+  const ratchet =
+    "WARM, 1 unthrottled Chrome: cold 5.4s, repeat 51ms, drag 11ms, confirm 0ms, 0 warm requests. Lighthouse, 14 targets, median of 3. ratcheted accessibility 100, best-practices 96-100, seo 63-100. perf NOT ratcheted, 68-100 this run, 40-76 over 21 runs.";
+  const speed = "worst FCP 2.1s, LCP 2.7s, CLS 0.005";
+  const joined = `${ratchet} ${speed}`;
+
+  // Each half is inside its own bound — the split itself is sound.
+  assert.ok(
+    ratchet.length <= PERF_RATCHET_CLAUSE_MAX,
+    `ratchet half is ${ratchet.length}, over its ${PERF_RATCHET_CLAUSE_MAX}`,
+  );
+  assert.ok(
+    speed.length <= PERF_SPEED_CLAUSE_MAX,
+    `speed half is ${speed.length}, over its ${PERF_SPEED_CLAUSE_MAX}`,
+  );
+  // And the join now fits, whole, with the qualifier intact.
+  assert.equal(joined.length, 286);
+  assert.ok(
+    joined.length <= COMPLETE_FACET_CLIP,
+    `the joined 14-target line is ${joined.length} chars against the ` +
+      `${COMPLETE_FACET_CLIP}-char clip; it would be cut in transit and the ` +
+      "speed half is exactly what a cut drops",
+  );
+  assert.ok(
+    joined.length < COMPLETE_FACET_CLIP,
+    "the line should fit with headroom, not exactly at the boundary — the " +
+      "ratchet half's length moves with the run's own data",
+  );
+  // The word that made this cost 6 characters, asserted so a future edit
+  // cannot drop it silently and leave a number that reads like a median.
+  assert.ok(speed.startsWith("worst "), "the 'worst' qualifier is not optional");
+});
+
+test("the gate emits both clauses and never lets a half be trimmed", () => {
+  const gate = readFileSync("scripts/check-lighthouse.mjs", "utf8");
+  // Both halves travel, each with its metric, so the builder can join them.
+  assert.match(gate, /facet_clauses/, "the report must carry facet_clauses");
+  // The single-clause form is kept for the case where the speed half cannot be
+  // derived, so a partial measurement still reaches the judge.
+  // Whitespace-tolerant: the formatter reflows ternaries, and a source
+  // assertion that breaks when Prettier reformats a line is testing the
+  // formatter, not the contract.
+  assert.match(
+    gate,
+    /facet_line\s*=\s*perfClauses\s*\?\s*perfClauses\[0\]\.text\s*:\s*composeFacetLine/s,
+    "facet_line must remain the ratchet half so a report with no speed " +
+      "readings still carries the axis",
+  );
+  // Over-budget is a named failure with a non-zero exit, per half AND for the
+  // join — never a slice.
+  assert.ok(
+    !/\.slice\(0,\s*COMPLETE_FACET_CLIP/.test(gate),
+    "the gate must never trim its own line; an over-long line is a named failure",
+  );
+  assert.match(gate, /process\.exitCode = 1/);
+});
+
+test("the builder joins the two halves on metric, like the other two axes", () => {
+  const builder = readFileSync("scripts/build-jev-evidence.mjs", "utf8");
+  assert.match(
+    builder,
+    /d\.metric === "perf_ratchet"/,
+    "the join must match on metric, the same way the a11y halves do",
+  );
+  assert.match(builder, /d\.metric === "perf_speed"/);
+  // It reuses the one code path that already bounds a joined axis, rather than
+  // growing a second join with its own idea of the rules.
+  assert.match(builder, /joinAxisClauses\(evidence, problems, perfAxis/);
+  // The plural clause form is additive: the single-clause path still works for
+  // every other gate.
+  assert.match(builder, /Array\.isArray\(parsed\.facet_clauses\)/);
+  assert.match(
+    builder,
+    /if \(parsed\.facet_line\.length > COMPLETE_FACET_CLIP\)/,
+    "the single-clause clip check must survive for the other gates",
+  );
+});
+
+test("performance is declared as exactly one axis, as before", () => {
+  assert.deepEqual(
+    LIGHTHOUSE_FACET_AXES,
+    ["performance"],
+    "the split adds a second CLAUSE to the performance axis, never a second axis",
+  );
+});

@@ -1,0 +1,160 @@
+// Drawing 39,707 dots on a Leaflet canvas, as pure math.
+//
+// WHY THE MARKERS ARE NOT Leaflet LAYERS ANY MORE. The page built one
+// `L.circleMarker` per grid point and handed them all to an `L.canvas()`
+// renderer, which did fix the accessibility defect that test names: with the
+// canvas renderer the page holds 237 DOM nodes instead of 39,946. But a Leaflet
+// layer is a JavaScript object with its own projection, options, event registry
+// and redraw bookkeeping, and 39,707 of them cost more than the pixels they
+// draw — measured on the staged build, `L.layerGroup(markers).addTo(map)` took
+// 140ms (mobile) and 143ms (desktop) on its own, the construction loop 46/42ms,
+// and attaching 39,707 individual click handlers another 26/29ms. A CPU profile
+// put only 20ms of actual fill work in `_fillStroke`: the pixels were never the
+// cost, the object graph was.
+//
+// So the dots are drawn straight onto one canvas in seven passes — one path per
+// color bucket, built with a single `arc()` per point and one `fill()` per
+// bucket — and the page keeps exactly one click handler. What that preserves is
+// the property the earlier fix was protecting, and strengthens it: still zero
+// DOM nodes per data point, and the numbers still readable as text in
+// #best-list / #worst-list.
+//
+// WHY THE PROJECTION IS HERE AND NOT IN THE PAGE. Aligning a dot with the
+// basemap means reproducing Leaflet's exact EPSG:3857 transform, and "close
+// enough" is a bug you can only see by eye. Keeping the transform here makes it
+// testable: tests/heatmap-dots.test.mjs asserts these functions agree with
+// Leaflet's own `latLngToContainerPoint` to the pixel on reference points
+// captured from a real browser, so a change to either side is caught by a test
+// instead of by a reader noticing the dots had drifted.
+
+// Leaflet's EPSG:3857 projection radius, and its scale for a zoom level.
+export const EARTH_RADIUS = 6378137;
+const MAX_LAT = 85.0511287798; // Leaflet clamps here, not at 90
+
+/**
+ * Leaflet's `Crs.scale(zoom)`: the pixel size of one projected unit at `zoom`.
+ * Leaflet's EPSG3857 does `256 * 2^zoom`, which is what the basemap tiles are
+ * sized against.
+ */
+export const mercatorScale = (zoom) => 256 * Math.pow(2, zoom);
+
+/** Raw EPSG:3857 projection, then scaled. This is Leaflet's `L.CRS.EPSG3857`. */
+export function projectPoint(lat, lon, scale) {
+  const clamped = Math.max(
+    -MAX_LAT,
+    Math.min(MAX_LAT, lat),
+  );
+  return {
+    x: (lon * Math.PI * EARTH_RADIUS * scale) / 180,
+    y:
+      (Math.log(Math.tan(Math.PI / 4 + (clamped * Math.PI) / 360)) *
+        EARTH_RADIUS *
+        scale),
+  };
+}
+
+/**
+ * The transform from container pixels to projected coordinates, for one view.
+ *
+ * Leaflet composes three steps — project, scale, then subtract the pixel origin
+ * (the map centre, moved to the top-left of the viewport). Deriving the origin
+ * here means the page adds `origin` to a projected point and gets the same
+ * pixel Leaflet would have returned for `latLngToContainerPoint`.
+ */
+export function dotTransform({ centerLat, centerLng, zoom, width, height }) {
+  const scale = mercatorScale(zoom);
+  const center = projectPoint(centerLat, centerLng, scale);
+  return {
+    scale,
+    originX: center.x - width / 2,
+    originY: center.y - height / 2,
+  };
+}
+
+/**
+ * Project every dot into container pixels, in one pass and without allocating
+ * a point per call — 39,707 of those allocations was part of what this module
+ * replaces.
+ *
+ * Fills `xs`/`ys` and returns them. `latQ`/`lonQ` are the grid's hundredths, so
+ * they are divided here rather than at load time: dividing 39,707 numbers once
+ * per redraw is cheaper than keeping a second copy in memory for the life of
+ * the page.
+ */
+export function projectDots(latQ, lonQ, count, t, xs, ys) {
+  const { scale, originX, originY } = t;
+  const k = (Math.PI * EARTH_RADIUS * scale) / 180;
+  for (let i = 0; i < count; i++) {
+    const lat = latQ[i] / 100;
+    const clamped = lat < -MAX_LAT ? -MAX_LAT : lat > MAX_LAT ? MAX_LAT : lat;
+    xs[i] = (lonQ[i] * k) - originX;
+    ys[i] =
+      Math.log(Math.tan(Math.PI / 4 + (clamped * Math.PI) / 360)) *
+        EARTH_RADIUS *
+        scale -
+      originY;
+  }
+  return { xs, ys };
+}
+
+/**
+ * A uniform index over the projected points, for hit-testing a click.
+ *
+ * The page no longer registers 39,707 handlers, so a click has to be resolved
+ * to a point. Doing that by scanning all 39,707 on every click is fine for one
+ * click and terrible for a drag, and the map's own click handler fires often
+ * enough that the scan would show up as its own long task. Bucketing into a
+ * coarse grid makes it a handful of candidates.
+ *
+ * Cells are in pixels, sized so a bucket holds a few dozen points at world zoom
+ * without being so small that the index costs more memory than the scan.
+ */
+export const HIT_CELL_PX = 64;
+
+/** Build the pixel-space bucket index. Pure; returns a plain object. */
+export function buildHitIndex(xs, ys, count, cellPx = HIT_CELL_PX) {
+  const cells = new Map();
+  for (let i = 0; i < count; i++) {
+    const key = `${Math.floor(xs[i] / cellPx)},${Math.floor(ys[i] / cellPx)}`;
+    let bucket = cells.get(key);
+    if (bucket === undefined) {
+      bucket = [];
+      cells.set(key, bucket);
+    }
+    bucket.push(i);
+  }
+  return { cells, cellPx };
+}
+
+/**
+ * The dot nearest `(x, y)` within `radiusPx`, or -1.
+ *
+ * Searches the 3x3 cell neighbourhood, so it only ever looks at points that
+ * could plausibly be within the radius, and returns the closest of them rather
+ * than the first hit — otherwise a click near a cell edge would resolve to a
+ * neighbouring point.
+ */
+export function hitTest(index, xs, ys, x, y, radiusPx) {
+  const c = index.cellPx;
+  const cx = Math.floor(x / c);
+  const cy = Math.floor(y / c);
+  const maxSq = radiusPx * radiusPx;
+  let best = -1;
+  let bestSq = Infinity;
+  for (let gy = cy - 1; gy <= cy + 1; gy++) {
+    for (let gx = cx - 1; gx <= cx + 1; gx++) {
+      const bucket = index.cells.get(`${gx},${gy}`);
+      if (bucket === undefined) continue;
+      for (const i of bucket) {
+        const dx = xs[i] - x;
+        const dy = ys[i] - y;
+        const sq = dx * dx + dy * dy;
+        if (sq <= maxSq && sq < bestSq) {
+          bestSq = sq;
+          best = i;
+        }
+      }
+    }
+  }
+  return best;
+}

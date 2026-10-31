@@ -1,0 +1,139 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { test } from "node:test";
+
+const article = readFileSync("blog/escape-load-shedding/index.html", "utf8");
+const listing = readFileSync("blog/index.html", "utf8");
+const canonical = readFileSync(
+  "blog/is-a-home-battery-worth-it/index.html",
+  "utf8",
+);
+const readSchema = (html) =>
+  JSON.parse(
+    html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)[1],
+  );
+const walk = function* (value) {
+  if (Array.isArray(value)) {
+    for (const item of value) yield* walk(item);
+  } else if (value && typeof value === "object") {
+    yield value;
+    for (const child of Object.values(value)) yield* walk(child);
+  }
+};
+const TEXT_ENTITIES = {
+  "&amp;": "&",
+  "&quot;": '"',
+  "&#39;": "'",
+  "&apos;": "'",
+};
+const collectTextNodes = (value) => {
+  const nodes = [];
+  let inTag = false;
+  let textStart = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    if (!inTag && value[index] === "<") {
+      nodes.push(value.slice(textStart, index));
+      inTag = true;
+    } else if (inTag && value[index] === ">") {
+      inTag = false;
+      textStart = index + 1;
+    }
+  }
+  if (!inTag) nodes.push(value.slice(textStart));
+  return nodes.join("");
+};
+const normalize = (value) =>
+  collectTextNodes(value)
+    .replace(
+      /&(amp|quot|#39|apos);/g,
+      (entity) => TEXT_ENTITIES[entity] ?? entity,
+    )
+    .replace(/\s+/g, " ")
+    .trim();
+const articleSchema = readSchema(article);
+const listingSchema = readSchema(listing);
+const articleData = [...walk(articleSchema)].find(
+  (node) =>
+    node["@type"] === "Article" &&
+    node["@id"] ===
+      "https://freeoffgridcalculator.com/blog/escape-load-shedding/#article",
+);
+const listingData = [...walk(listingSchema)].find(
+  (node) =>
+    node["@type"] === "BlogPosting" &&
+    node.url === "https://freeoffgridcalculator.com/blog/escape-load-shedding/",
+);
+const card = [
+  ...listing.matchAll(/<article class="article-card">[\s\S]*?<\/article>/g),
+]
+  .map((match) => match[0])
+  .find((html) => html.includes("./escape-load-shedding/"));
+
+test("the load-shedding guide uses measured, site-specific sizing inputs", () => {
+  assert.ok(articleData, "article JSON-LD is present");
+  assert.ok(listingData, "matching BlogPosting JSON-LD is present");
+  for (const source of [
+    "https://www.energy.gov/indianenergy/articles/valuing-resilience-provided-solar-and-battery-energy-storage-systems",
+    "https://loadshedding.eskom.co.za/loadshedding/ScheduleInterpretation",
+    "https://power.larc.nasa.gov/docs/services/api/temporal/hourly/",
+    "https://www.energy.gov/cmei/systems/solar-and-resilience-basics",
+  ]) {
+    assert.ok(
+      article.includes(`href="${source}"`),
+      `missing source: ${source}`,
+    );
+  }
+  assert.match(article, /100 × 5 ÷ 1,000\s*=\s*0\.5 kWh/);
+  assert.ok(article.includes("last five complete years"));
+  assert.ok(article.includes("nearest-city typical-year profile"));
+  assert.doesNotMatch(
+    article,
+    /Nigeria:|Lebanon:|\$250|\$6,500|2–3 kWh\/day|6,000 cycles|10–20 ms|60–80% cut/i,
+  );
+  assert.doesNotMatch(article, /\p{Extended_Pictographic}/u);
+});
+
+test("visible FAQs match the FAQPage structured data", () => {
+  const faq = [...walk(articleSchema)].find(
+    (node) => node["@type"] === "FAQPage",
+  );
+  const visible = [
+    ...article.matchAll(
+      /<details>\s*<summary>([\s\S]*?)<\/summary>\s*<p>([\s\S]*?)<\/p>\s*<\/details>/g,
+    ),
+  ].map(([, question, answer]) => [normalize(question), normalize(answer)]);
+  const structured = faq.mainEntity.map((entry) => [
+    normalize(entry.name),
+    normalize(entry.acceptedAnswer.text),
+  ]);
+  assert.equal(visible.length, 4);
+  assert.deepEqual(structured, visible);
+});
+
+test("review date, metadata, BlogPosting, card, and style stay synchronized", () => {
+  assert.ok(card, "article card links to the audited article");
+  const cardExcerpt = card.match(
+    /<p class="card-excerpt">([\s\S]*?)<\/p>/,
+  )?.[1];
+  const description = article.match(
+    /<meta\s+name="description"\s+content="([^"]+)"/s,
+  )?.[1];
+  const title = article.match(/<title>(.*?)<\/title>/)?.[1];
+  assert.equal(articleData.headline, title);
+  assert.equal(listingData.headline, title);
+  assert.equal(articleData.description, description);
+  assert.equal(listingData.description, normalize(cardExcerpt));
+  assert.equal(articleData.datePublished, "2026-09-07T00:00:00Z");
+  assert.equal(articleData.dateModified, "2026-10-22T00:00:00Z");
+  assert.equal(listingData.dateModified, articleData.dateModified);
+  assert.ok(
+    article.includes('property="article:modified_time" content="2026-10-22"'),
+  );
+  assert.ok(
+    article.includes('<time datetime="2026-10-22">October 22, 2026</time>'),
+  );
+  assert.ok(card.includes("Reviewed October 22, 2026"));
+  const styleBlock = (html) => html.match(/<style>[\s\S]*?<\/style>/)?.[0];
+  assert.equal(styleBlock(article), styleBlock(canonical));
+  assert.doesNotMatch(card, /\p{Extended_Pictographic}/u);
+});

@@ -1,0 +1,943 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta name="color-scheme" content="dark" />
+    <title>Battery cycle life and depth of discharge: a practical guide</title>
+    <meta
+      name="description"
+      content="How to read battery cycle-life ratings, compare test conditions, and plan usable capacity without assuming a guaranteed service life."
+    />
+    <meta
+      name="keywords"
+      content="battery cycle life, depth of discharge, battery sizing, energy storage ratings"
+    />
+    <link
+      rel="canonical"
+      href="https://freeoffgridcalculator.com/blog/battery-longevity-and-dod-reference/"
+    />
+    <link rel="icon" type="image/svg+xml" href="../../assets/icon.svg" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="48x48"
+      href="../../assets/favicon-48.png"
+    />
+    <link rel="apple-touch-icon" href="../../assets/apple-touch-icon.png" />
+    <link rel="manifest" href="../../manifest.webmanifest" />
+    <meta name="theme-color" content="#090d16" />
+
+    <link
+      rel="alternate"
+      hreflang="en"
+      href="https://freeoffgridcalculator.com/blog/battery-longevity-and-dod-reference/"
+    />
+    <link
+      rel="alternate"
+      hreflang="x-default"
+      href="https://freeoffgridcalculator.com/blog/battery-longevity-and-dod-reference/"
+    />
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title="BigEnergyCo Blog"
+      href="https://freeoffgridcalculator.com/rss.xml"
+    />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="BigEnergyCo" />
+    <meta
+      property="og:title"
+      content="Battery cycle life and depth of discharge: a practical guide"
+    />
+    <meta
+      property="og:description"
+      content="How to read battery cycle-life ratings, compare test conditions, and plan usable capacity without assuming a guaranteed service life."
+    />
+    <meta
+      property="og:url"
+      content="https://freeoffgridcalculator.com/blog/battery-longevity-and-dod-reference/"
+    />
+    <meta property="article:published_time" content="2026-09-11" />
+    <meta property="article:modified_time" content="2026-09-11" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="Battery cycle life and depth of discharge: a practical guide"
+    />
+    <meta
+      name="twitter:description"
+      content="How to read battery cycle-life ratings, compare test conditions, and plan usable capacity without assuming a guaranteed service life."
+    />
+    <meta
+      property="og:image"
+      content="https://freeoffgridcalculator.com/assets/og-card.jpg"
+    />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      name="twitter:image"
+      content="https://freeoffgridcalculator.com/assets/og-card.jpg"
+    />
+
+    <!-- Structured Data JSON-LD (Article + BreadcrumbList + FAQPage) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Article",
+            "@id": "https://freeoffgridcalculator.com/blog/battery-longevity-and-dod-reference/#article",
+            "isPartOf": {
+              "@type": "WebPage",
+              "@id": "https://freeoffgridcalculator.com/blog/battery-longevity-and-dod-reference/"
+            },
+            "headline": "Battery cycle life and depth of discharge: a practical guide",
+            "name": "Battery cycle life and depth of discharge: a practical guide",
+            "description": "How to read battery cycle-life ratings, compare test conditions, and plan usable capacity without assuming a guaranteed service life.",
+            "datePublished": "2026-09-11T00:00:00Z",
+            "dateModified": "2026-09-11T00:00:00Z",
+            "mainEntityOfPage": "https://freeoffgridcalculator.com/blog/battery-longevity-and-dod-reference/",
+            "image": ["https://freeoffgridcalculator.com/assets/og-card.jpg"],
+            "author": {
+              "@type": "Person",
+              "name": "Lucas Ballek",
+              "url": "https://freeoffgridcalculator.com"
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": "BigEnergyCo",
+              "url": "https://freeoffgridcalculator.com"
+            },
+            "keywords": [
+              "battery longevity",
+              "depth of discharge",
+              "DoD cycle life",
+              "LiFePO4 lifespan",
+              "sodium-ion battery",
+              "battery oversizing zero swap",
+              "off-grid battery degradation"
+            ]
+          },
+          {
+            "@type": "BreadcrumbList",
+            "@id": "https://freeoffgridcalculator.com/blog/battery-longevity-and-dod-reference/#breadcrumb",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://freeoffgridcalculator.com/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Blog",
+                "item": "https://freeoffgridcalculator.com/blog/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "Battery Longevity & DoD Reference Guide",
+                "item": "https://freeoffgridcalculator.com/blog/battery-longevity-and-dod-reference/"
+              }
+            ]
+          },
+          {
+            "@type": "FAQPage",
+            "@id": "https://freeoffgridcalculator.com/blog/battery-longevity-and-dod-reference/#faq",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "How should I compare cycle-life ratings at different DoD values?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Compare ratings only when their test conditions and end-of-life criteria are stated. Depth of discharge is one variable; cell design, temperature, charge and discharge rate, and voltage limits also matter. Research on commercial cells reports variation across cycling conditions, so a generic cycle count is not a life guarantee."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Can a sodium-ion battery be discharged to 0 V?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "There is no chemistry-wide cell-voltage cutoff that can be treated as a normal discharge target. The permitted lower voltage and instructions after over-discharge depend on the exact cell or pack. Follow that product’s data sheet and battery-management-system limits; do not infer a safe endpoint from the chemistry name."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How much of a sodium-ion battery can a standard inverter use?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "There is no chemistry-wide usable percentage. Usable energy depends on the exact cell or pack voltage range, inverter low-voltage settings, and battery-management system. CATL describes dedicated voltage regulation and a sodium-specific battery-management system for its TENER Sodium system; that product-specific design does not establish a cutoff or usable fraction for other packs. Check the manuals and compatibility information for the exact battery and inverter before pairing them."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Can an oversized AGM battery bank be expected to last 20 years?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Do not infer a 20-year service life or fixed replacement count from bank size alone. Service depends on the exact model and duty cycle. Discover’s AGM Battery Performance data sheet says stand-by life depends on frequency and depth of discharge, charge voltage, and ambient temperature; cyclic life also depends on capacity taken, discharge rate, operating temperature, and charging method. Use the exact product data sheet and label any projection as an estimate."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Does oversizing a battery bank always save money?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "No. A larger bank may change operating depth of discharge for a given load, but that alone does not establish cycle life, service life, or lifetime cost. Compare the exact battery model, usable capacity, installed price, warranty, operating conditions, replacement assumptions, and analysis period using the inputs listed above. Do not claim a saving or replacement schedule without sourced assumptions."
+                }
+              }
+            ]
+          }
+        ]
+      }
+    </script>
+
+    <style>
+      :root {
+        color-scheme: dark;
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 255, 255, 0.28) rgba(11, 15, 23, 0.85);
+        --accent: #00e699;
+        --text: #e5e7eb;
+        --muted: #9ca3af;
+        --bg: #0b0f17;
+        --card: rgba(255, 255, 255, 0.04);
+        --border: rgba(255, 255, 255, 0.12);
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: rgba(11, 15, 23, 0.85);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.22);
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.38);
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          Roboto,
+          sans-serif;
+        line-height: 1.7;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      .container {
+        max-width: 820px;
+        margin: 0 auto;
+        padding: 0 1.25rem;
+      }
+      header {
+        border-bottom: 1px solid var(--border);
+        padding: max(1rem, env(safe-area-inset-top)) 0 1rem;
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+        background: rgba(11, 15, 23, 0.92);
+        position: sticky;
+        top: 0;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        z-index: 5;
+      }
+      header .container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+      }
+      .logo {
+        font-weight: 800;
+        font-size: 1.25rem;
+        letter-spacing: -0.5px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        color: #fff;
+      }
+      .logo .highlight {
+        color: var(--accent);
+      }
+      nav {
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        flex-wrap: wrap;
+      }
+      nav a {
+        color: var(--muted);
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: color 0.2s;
+      }
+      nav a:hover,
+      nav a.active {
+        color: #fff;
+      }
+      .header-cta {
+        display: flex;
+        align-items: center;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 0.88rem;
+        cursor: pointer;
+        text-decoration: none !important;
+        transition: all 0.2s ease;
+        border: none;
+      }
+      .btn-primary {
+        background: linear-gradient(135deg, #00e699 0%, #00b377 100%);
+        color: #04120c;
+        box-shadow: 0 0 12px rgba(0, 230, 153, 0.25);
+      }
+      .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 0 18px rgba(0, 230, 153, 0.4);
+        color: #04120c;
+      }
+      article {
+        padding: 2.5rem 0 1rem;
+      }
+      h1 {
+        color: #fff;
+        font-size: 2.1rem;
+        line-height: 1.25;
+        letter-spacing: -0.5px;
+        margin-bottom: 0.75rem;
+      }
+      .meta {
+        color: var(--muted);
+        font-size: 0.85rem;
+        margin-bottom: 2rem;
+      }
+      h2 {
+        color: #fff;
+        font-size: 1.35rem;
+        margin: 2.2rem 0 0.8rem;
+      }
+      h3 {
+        color: #fff;
+        font-size: 1.05rem;
+        margin: 1.4rem 0 0.5rem;
+      }
+      p {
+        margin-bottom: 1rem;
+      }
+      ul {
+        margin: 0 0 1rem 1.25rem;
+      }
+      li {
+        margin-bottom: 0.45rem;
+      }
+      .table-container {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin: 1.2rem 0;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.93rem;
+      }
+      th,
+      td {
+        border: 1px solid var(--border);
+        padding: 0.55rem 0.7rem;
+        text-align: left;
+      }
+      th {
+        background: rgba(0, 230, 153, 0.08);
+        color: #fff;
+      }
+      td.num,
+      th.num {
+        text-align: right;
+        font-family: ui-monospace, Menlo, monospace;
+      }
+      strong {
+        color: #fff;
+      }
+      em.kicker {
+        color: var(--accent);
+        font-style: normal;
+        font-weight: 700;
+      }
+      .cta-box {
+        border: 1px solid rgba(0, 230, 153, 0.4);
+        background: rgba(0, 230, 153, 0.06);
+        border-radius: 12px;
+        padding: 1.2rem 1.4rem;
+        margin: 2rem 0;
+      }
+      .cta-box p:last-child {
+        margin: 0;
+      }
+      .btn {
+        display: inline-block;
+        background: linear-gradient(135deg, #00e699, #00b377);
+        color: #04120c;
+        font-weight: 700;
+        text-decoration: none;
+        padding: 0.65rem 1.3rem;
+        border-radius: 8px;
+        margin-top: 0.6rem;
+      }
+      details {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 0.9rem 1.1rem;
+        margin-bottom: 0.8rem;
+        background: var(--card);
+      }
+      summary {
+        cursor: pointer;
+        color: var(--accent);
+        font-weight: 600;
+      }
+      details p {
+        margin: 0.6rem 0 0;
+      }
+      footer {
+        border-top: 1px solid var(--border);
+        padding: 2.5rem 0 max(3rem, env(safe-area-inset-bottom));
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+        margin-top: 3rem;
+        color: var(--muted);
+        font-size: 0.85rem;
+        text-align: center;
+      }
+      footer a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      @media (max-width: 480px) {
+        h1 {
+          font-size: 1.65rem;
+        }
+        .container {
+          padding: 0 1rem;
+        }
+        nav a {
+          margin-left: 0.65rem;
+          font-size: 0.85rem;
+        }
+      }
+      .skip-link {
+        position: absolute;
+        left: -9999px;
+        top: 0.5rem;
+        z-index: 20;
+        padding: 0.7rem 1rem;
+        background: #00e699;
+        color: #04120c;
+        font-weight: 800;
+        border-radius: 8px;
+      }
+      .skip-link:focus {
+        left: 0.75rem;
+      }
+      a:focus-visible,
+      button:focus-visible,
+      summary:focus-visible {
+        outline: 2px solid #00e699;
+        outline-offset: 2px;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation: none !important;
+          transition: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <!-- Header -->
+    <header>
+      <div class="container nav-flex">
+        <a href="../../" class="logo" aria-label="BigEnergyCo Home">
+          <span aria-hidden="true">&#9889;</span>
+
+          <span>BigEnergy<span class="highlight">Co</span></span>
+        </a>
+
+        <nav class="nav-links">
+          <a href="../../solar-heatmap/">Heatmap</a>
+
+          <a href="../../#bom" data-i18n="navBom">Hardware Reference</a>
+
+          <a href="../" class="active" data-i18n="navBlog">Guides &amp; Blog</a>
+
+          <a href="../../about/">About</a>
+
+          <a href="../../#legal" data-i18n="navLegal">Terms &amp; Disclaimer</a>
+        </nav>
+
+        <div class="header-cta">
+          <span
+            id="offlineBadge"
+            class="offline-badge"
+            style="display: none"
+            title="Working offline using cached app data &amp; local weather simulation"
+            aria-label="Offline status"
+          >
+            <span class="offline-dot"></span> Offline
+          </span>
+
+          <button
+            id="btnInstallApp"
+            class="btn btn-outline btn-xs"
+            type="button"
+            aria-label="Install BigEnergyCo Web App"
+            style="display: none"
+          >
+            &#128242; Install App
+          </button>
+
+          <a
+            href="../../#support"
+            class="btn btn-secondary"
+            data-i18n="navSupport"
+            >Support</a
+          >
+
+          <a href="../../#sizing" class="btn btn-primary" data-i18n="navSizing"
+            >Size Your System</a
+          >
+        </div>
+      </div>
+    </header>
+
+    <main id="main" class="container">
+      <!-- Breadcrumbs -->
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="../../">Home</a>
+        <span>&rsaquo;</span>
+        <a href="../">Blog</a>
+        <span>&rsaquo;</span>
+        <span style="color: var(--text-main)">Battery Cycle-Life Guide</span>
+      </nav>
+
+      <!-- Article Header -->
+      <article class="article-content">
+        <header class="article-header">
+          <div class="article-tag">Battery cycle-life guide</div>
+          <h1>Battery cycle life and depth of discharge: a practical guide</h1>
+          <div class="article-meta">
+            <span
+              >By <strong>Lucas Ballek</strong> &middot; BigEnergyCo
+              Engineering</span
+            >
+            <span>Published: Sep 11, 2026</span>
+            <span>Reading Time: 14 min</span>
+          </div>
+        </header>
+
+        <!-- Executive Summary Callout -->
+        <div class="callout callout-info">
+          <div class="callout-title">What the evidence supports</div>
+          <p style="margin-bottom: 0">
+            No single cycle count or service life applies to every battery sold
+            under the same chemistry label. Cell design and test conditions
+            matter. Use the product data sheet and the limits stated by the
+            battery maker and battery-management system when planning a bank.
+          </p>
+        </div>
+
+        <h2>1. Cycle-life ratings belong to a test protocol</h2>
+        <p>
+          Depth of discharge (DoD) describes how much of a battery's rated
+          capacity is removed during a discharge. It is one input to aging, not
+          a stand-alone lifetime predictor. A Sandia study tested commercial
+          LFP, NCA, and NMC cells at different discharge rates, depths of
+          discharge, and temperatures. It found substantial variation in time
+          and cycle counts to 80% capacity, including variation among cells of
+          the same chemistry. The result describes those cells and protocols; it
+          does not establish a universal cycle-life curve for every product. See
+          <a href="https://www.osti.gov/biblio/1650174">Preger et al. (2020)</a
+          >.
+        </p>
+        <p>
+          A cycle-life number is useful only alongside the conditions under
+          which it was measured. When comparing products, record the DoD or
+          state-of-charge window, temperature, charge and discharge rate,
+          voltage limits, cycle profile, and the maker's end-of-life criterion.
+          NREL's
+          <a href="https://docs.nrel.gov/docs/fy19osti/73822.pdf"
+            >operation and maintenance guide</a
+          >
+          emphasizes documenting operating conditions when evaluating
+          energy-storage systems.
+        </p>
+
+        <h2>2. What a larger battery can and cannot tell you</h2>
+        <p>
+          If the energy taken from a bank stays the same, increasing its usable
+          capacity reduces the share used on a typical day. That is capacity
+          arithmetic, not a promise of a particular cycle count, calendar life,
+          or replacement date. Temperature, charge settings, system controls,
+          and time in service still matter.
+        </p>
+        <p>
+          For an initial sizing estimate, divide the energy that must come from
+          the battery by the usable fraction selected for the scenario. Then
+          account for conversion losses, reserve, and the limits in the battery
+          and inverter documentation. Treat the result as a planning input; it
+          is not a warranty or a battery-life prediction.
+        </p>
+        <h2>3. Chemistry does not guarantee a service life</h2>
+        <p>
+          Cycle-life figures describe a particular cell or pack under a stated
+          test. Chemistry alone does not establish usable capacity, cycle life,
+          calendar life, cold-weather performance, or replacement timing. Read
+          the exact product documentation and compare the conditions behind each
+          rating.
+        </p>
+
+        <h3>Lithium iron phosphate (LFP)</h3>
+        <p>
+          A cycle count is meaningful only with its test conditions and
+          end-of-life definition. Preger et al. tested commercial lithium-ion
+          cells under different cycling conditions and found substantial
+          variation in the time and cycle count to 80% capacity. That study
+          describes its tested cells; it is not a universal curve for every LFP
+          product. See
+          <a href="https://www.osti.gov/biblio/1650174">the study record</a>.
+        </p>
+        <p>
+          For a product comparison, check the maker's stated charge and
+          discharge limits, temperature, rate, depth of discharge, and capacity
+          threshold. Do not convert a lab cycle count directly into a calendar
+          service-life promise.
+        </p>
+
+        <h3>Sodium-ion</h3>
+        <p>
+          Do not infer a pack's usable range, voltage limits, storage behavior,
+          cold-weather limits, or inverter compatibility from the chemistry
+          name. Follow the exact battery manufacturer's operating limits,
+          battery-management-system cutoffs, and the inverter maker's
+          compatibility guidance. Treat any cycle-life figure as specific to the
+          product and test conditions that produced it.
+        </p>
+
+        <h3>Lead-acid and AGM</h3>
+        <p>
+          Cycle life also depends on the particular model and its use. For
+          example, Discover's AGM performance sheet says cyclic life depends on
+          capacity taken, discharge rate, temperature, and charging method. Its
+          cycle-life chart gives the test current, final voltage, charge
+          current, and temperature. Those results describe the listed test, not
+          every AGM battery. See the
+          <a
+            href="https://assets.discoverbattery.com/documents/07_sla/885_product_literature/standard-agm-battery-performance.pdf"
+            >manufacturer's performance sheet</a
+          >.
+        </p>
+        <p>
+          Across chemistries, use the exact model's warranty and maintenance
+          instructions, and plan around the loads, environment, and service
+          conditions you expect. A cycle count alone cannot establish how many
+          years a home battery will last.
+        </p>
+        <h2>6. Build a cost comparison from stated inputs</h2>
+        <p>
+          Lifetime-cost comparisons depend on the exact products, their usable
+          energy, installed price, warranty, operating conditions, and
+          replacement assumptions. A cycle count alone does not establish a
+          replacement date or total cost.
+        </p>
+        <div
+          class="table-wrapper"
+          tabindex="0"
+          role="region"
+          aria-label="Inputs to disclose in a battery cost comparison, scrollable table"
+        >
+          <table>
+            <caption>
+              Inputs to disclose in a battery cost comparison
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Input</th>
+                <th scope="col">What to state</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">Battery product</th>
+                <td>
+                  Exact cell or pack model, nameplate capacity, and usable
+                  capacity.
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">Price</th>
+                <td>
+                  Source and date, currency, tax, shipping, and installation.
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">Test and service conditions</th>
+                <td>
+                  Temperature, discharge rate, depth of discharge, and
+                  end-of-life capacity.
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">Replacement estimate</th>
+                <td>
+                  Source for cycle-life or calendar-life assumptions, plus
+                  labor, freight, and recycling.
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">Comparison method</th>
+                <td>
+                  Shared analysis period and any efficiency or discount
+                  assumptions.
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">Uncertain values</th>
+                <td>
+                  Label estimates and unknowns instead of presenting them as
+                  product facts.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          Mark unavailable prices or service-life inputs as assumptions. Do not
+          present a scenario as a guaranteed saving or a universal battery
+          replacement schedule.
+        </p>
+        <h2>7. Use product-specific setup information</h2>
+        <p>
+          Before choosing or configuring a battery, gather the load, battery,
+          inverter, and installation information for the exact system:
+        </p>
+        <ol>
+          <li>
+            <strong>Characterize the load:</strong> Estimate the energy and peak
+            power the battery must supply over the intended backup period. Use
+            measured or documented loads and include inverter standby and
+            conversion losses only when supported by the equipment information.
+          </li>
+          <li>
+            <strong>Size from usable capacity:</strong> Account for the
+            battery&rsquo;s stated usable energy, discharge limits, temperature
+            range, power rating, and any reserve you need. Do not use a fixed
+            depth-of-discharge multiplier as a universal sizing rule.
+          </li>
+          <li>
+            <strong>Check battery and inverter compatibility:</strong> Confirm
+            that the exact products support each other. Configure charging,
+            voltage cutoffs, current limits, battery-management-system
+            communications, and firmware only as their manufacturers specify. Do
+            not copy setpoints from another model or chemistry.
+          </li>
+          <li>
+            <strong>Plan protection and installation:</strong> Follow the
+            product instructions for overcurrent protection, disconnects,
+            conductor sizing, location, clearances, and temperature limits.
+            Check applicable local electrical requirements and use a qualified
+            installer when required.
+          </li>
+        </ol>
+
+        <div class="cta-card">
+          <h3>Explore an estimated battery size</h3>
+          <p>
+            Use the solar and battery estimator to explore a result for your
+            location and selected assumptions. Treat it as an estimate and
+            confirm equipment settings against the exact product documentation.
+          </p>
+          <a
+            href="../../#sizing"
+            class="btn btn-primary"
+            style="font-size: 1.05rem; padding: 0.85rem 2rem"
+          >
+            Launch the off-grid sizing calculator
+          </a>
+        </div>
+
+        <h2>8. Frequently Asked Questions</h2>
+        <div class="faq-item">
+          <div class="faq-question">
+            How should I compare cycle-life ratings at different DoD values?
+          </div>
+          <div class="faq-answer">
+            Compare ratings only when their test conditions and end-of-life
+            criteria are stated. Depth of discharge is one variable; cell
+            design, temperature, charge and discharge rate, and voltage limits
+            also matter. Research on commercial cells reports variation across
+            cycling conditions, so a generic cycle count is not a life
+            guarantee.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question">
+            Can a sodium-ion battery be discharged to 0 V?
+          </div>
+          <div class="faq-answer">
+            There is no chemistry-wide cell-voltage cutoff that can be treated
+            as a normal discharge target. The permitted lower voltage and
+            instructions after over-discharge depend on the exact cell or pack.
+            Follow that product’s data sheet and battery-management-system
+            limits; do not infer a safe endpoint from the chemistry name.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question">
+            How much of a sodium-ion battery can a standard inverter use?
+          </div>
+          <div class="faq-answer">
+            There is no chemistry-wide usable percentage. Usable energy depends
+            on the exact cell or pack voltage range, inverter low-voltage
+            settings, and battery-management system.
+            <a
+              href="https://www.catl.com/en/news/6861.html"
+              target="_blank"
+              rel="noopener"
+              >CATL describes dedicated voltage regulation and a sodium-specific
+              battery-management system for its TENER Sodium system</a
+            >; that product-specific design does not establish a cutoff or
+            usable fraction for other packs. Check the manuals and compatibility
+            information for the exact battery and inverter before pairing them.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question">
+            Can an oversized AGM battery bank be expected to last 20 years?
+          </div>
+          <div class="faq-answer">
+            Do not infer a 20-year service life or fixed replacement count from
+            bank size alone. Service depends on the exact model and duty cycle.
+            <a
+              href="https://assets.discoverbattery.com/documents/07_sla/885_product_literature/standard-agm-battery-performance.pdf"
+              target="_blank"
+              rel="noopener"
+              >Discover’s AGM Battery Performance data sheet</a
+            >
+            says stand-by life depends on frequency and depth of discharge,
+            charge voltage, and ambient temperature; cyclic life also depends on
+            capacity taken, discharge rate, operating temperature, and charging
+            method. Use the exact product data sheet and label any projection as
+            an estimate.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question">
+            Does oversizing a battery bank always save money?
+          </div>
+          <div class="faq-answer">
+            No. A larger bank may change operating depth of discharge for a
+            given load, but that alone does not establish cycle life, service
+            life, or lifetime cost. Compare the exact battery model, usable
+            capacity, installed price, warranty, operating conditions,
+            replacement assumptions, and analysis period using the inputs listed
+            above. Do not claim a saving or replacement schedule without sourced
+            assumptions.
+          </div>
+        </div>
+
+        <h2>9. References</h2>
+        <ul class="citation-list">
+          <li>
+            <a href="https://www.osti.gov/biblio/1650174"
+              >Preger, Y., et al. (2020). “Degradation of Commercial Lithium-Ion
+              Cells as a Function of Chemistry and Cycling Conditions.”</a
+            >
+            <em>Journal of The Electrochemical Society</em>, 167(12), 120532.
+            DOI: 10.1149/1945-7111/abae37.
+          </li>
+          <li>
+            <a href="https://docs.nrel.gov/docs/fy19osti/73822.pdf"
+              >PV O&amp;M Best Practices Working Group. (2018).
+              <em
+                >Best Practices for Operation and Maintenance of Photovoltaic
+                and Energy Storage Systems</em
+              >
+              (3rd ed., NREL/TP-7A40-73822).</a
+            >
+            National Renewable Energy Laboratory.
+          </li>
+          <li>
+            <a
+              href="https://assets.discoverbattery.com/documents/07_sla/885_product_literature/standard-agm-battery-performance.pdf"
+              >Discover Battery. (n.d.). <em>AGM Battery Performance</em> data
+              sheet.</a
+            >
+          </li>
+          <li>
+            <a href="https://www.catl.com/en/news/6861.html"
+              >CATL. (2026, June 22). “CATL Debuts World's First Field-Validated
+              Sodium-Ion BESS, Bringing Sodium Storage to Commercial
+              Reality.”</a
+            >
+          </li>
+        </ul>
+      </article>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+      <div class="container">
+        <p>
+          Provided free, as-is, with no warranty. Educational estimates only —
+          verify everything with a licensed professional before building.
+          Working with batteries and mains wiring can cause fire, injury, and
+          death.
+        </p>
+        <p style="margin-top: 0.75rem">
+          <a href="../../">Size Your System</a> · <a href="../">All Guides</a> ·
+          <a href="mailto:lucasballek@gmail.com">Contact</a>
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

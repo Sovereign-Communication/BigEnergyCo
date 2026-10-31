@@ -1,0 +1,318 @@
+{
+  "gate": "jev-complete",
+  "pack_id": "bigenergyco-complete-gate-v2",
+  "min_score": 99,
+  "score": 96.44,
+  "pass": false,
+  "hard_gates_passed": true,
+  "facets_not_proven": [
+    "accessibility",
+    "advisor",
+    "correctness",
+    "design",
+    "experience",
+    "i18n",
+    "performance",
+    "physics",
+    "resilience",
+    "security",
+    "spec"
+  ],
+  "hard_gates": {
+    "tests_green": true,
+    "smoke_green": true,
+    "ci_green": true,
+    "prettier_clean": true,
+    "seo_green": true,
+    "secrets_clean": true,
+    "tree_clean": true
+  },
+  "mechanical_score": 100,
+  "semantic_score": 88.13,
+  "facets": {
+    "spec": {
+      "bucket": "spec_gap",
+      "authority": "jev",
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
+      "source": "live",
+      "confidence": 0.57
+    },
+    "design": {
+      "bucket": "design_gap",
+      "authority": "jev",
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
+      "source": "live",
+      "confidence": 0.78
+    },
+    "correctness": {
+      "bucket": "correctness_gap",
+      "authority": "jev",
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
+      "source": "live",
+      "confidence": 0.55
+    },
+    "quality": {
+      "bucket": "quality_gap",
+      "authority": "jev",
+      "level": "proven — google-quality, evidenced end to end",
+      "index": 4,
+      "ordinal": 100,
+      "source": "live",
+      "confidence": 0.59
+    },
+    "security": {
+      "bucket": "security_gap",
+      "authority": "jev",
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
+      "source": "live",
+      "confidence": 0.75
+    },
+    "performance": {
+      "bucket": "perf_gap",
+      "authority": "jev",
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
+      "source": "live",
+      "confidence": 0.75
+    },
+    "accessibility": {
+      "bucket": "a11y_gap",
+      "authority": "jev",
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
+      "source": "live",
+      "confidence": 0.59
+    },
+    "i18n": {
+      "bucket": "i18n_gap",
+      "authority": "jev",
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
+      "source": "live",
+      "confidence": 0.32
+    },
+    "seo": {
+      "bucket": "seo_gap",
+      "authority": "code",
+      "level": "proven — google-quality, evidenced end to end",
+      "index": 4,
+      "ordinal": 100,
+      "source": "code",
+      "confidence": 0.84
+    },
+    "resilience": {
+      "bucket": "resilience_gap",
+      "authority": "jev",
+      "level": "mixed — partial or unverified evidence",
+      "index": 2,
+      "ordinal": 60,
+      "source": "live",
+      "confidence": 0.66
+    },
+    "experience": {
+      "bucket": "experience_gap",
+      "authority": "jev",
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
+      "source": "live",
+      "confidence": 0.56
+    },
+    "docs": {
+      "bucket": "docs_gap",
+      "authority": "jev",
+      "level": "proven — google-quality, evidenced end to end",
+      "index": 4,
+      "ordinal": 100,
+      "source": "live",
+      "confidence": 0.63
+    },
+    "testing": {
+      "bucket": "tests_gap",
+      "authority": "code",
+      "level": "proven — google-quality, evidenced end to end",
+      "index": 4,
+      "ordinal": 100,
+      "source": "code",
+      "confidence": 0.79
+    },
+    "release": {
+      "bucket": "release_gap",
+      "authority": "code",
+      "level": "proven — google-quality, evidenced end to end",
+      "index": 4,
+      "ordinal": 100,
+      "source": "code",
+      "confidence": 0.85
+    },
+    "advisor": {
+      "bucket": "advisor_gap",
+      "authority": "jev",
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
+      "source": "live",
+      "confidence": 0.61
+    },
+    "physics": {
+      "bucket": "physics_gap",
+      "authority": "jev",
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
+      "source": "live",
+      "confidence": 0.73
+    }
+  },
+  "blocking_facets": [],
+  "required_work": [
+    {
+      "bucket": "i18n_gap",
+      "label": "Localization gap",
+      "path_id": "complete/i18n",
+      "work_type": "contract-tests",
+      "suggested_next_action": "Pin locale parity as a behavioral test (every locale carries every user-visible key), fix the drifting strings it exposes, and keep the parity check green.",
+      "axis": null,
+      "level": null,
+      "ordinal": null,
+      "source": "live",
+      "confidence": null,
+      "primary": true
+    },
+    {
+      "bucket": "resilience_gap",
+      "label": "Delivery resilience gap",
+      "path_id": "complete/resilience",
+      "work_type": "adversarial-fix",
+      "suggested_next_action": "Run the adversarial pass over the delivery path: prove inner retry/timeout budgets fit every outer cap, classification covers transport failures end to end, and stuck runs recover. Exercise the page-side deadline with a silent worker, including share-restore, stale inputs, and an explicit retry; keep the error actionable and the worker/channel cleanup tested.",
+      "axis": "resilience",
+      "level": "mixed — partial or unverified evidence",
+      "ordinal": 60,
+      "source": "live",
+      "confidence": 0.66,
+      "primary": false
+    }
+  ],
+  "recommended_actions": {
+    "contract-tests": [
+      {
+        "bucket": "i18n_gap",
+        "label": "Localization gap",
+        "path_id": "complete/i18n",
+        "suggested_next_action": "Pin locale parity as a behavioral test (every locale carries every user-visible key), fix the drifting strings it exposes, and keep the parity check green.",
+        "axis": null,
+        "level": null,
+        "ordinal": null,
+        "primary": true
+      }
+    ],
+    "adversarial-fix": [
+      {
+        "bucket": "resilience_gap",
+        "label": "Delivery resilience gap",
+        "path_id": "complete/resilience",
+        "suggested_next_action": "Run the adversarial pass over the delivery path: prove inner retry/timeout budgets fit every outer cap, classification covers transport failures end to end, and stuck runs recover. Exercise the page-side deadline with a silent worker, including share-restore, stale inputs, and an explicit retry; keep the error actionable and the worker/channel cleanup tested.",
+        "axis": "resilience",
+        "level": "mixed — partial or unverified evidence",
+        "ordinal": 60,
+        "primary": false
+      }
+    ]
+  },
+  "blockers": [
+    "score 96.44 below target 99.00"
+  ],
+  "live": {
+    "is_fallback": false,
+    "primary_gap": "i18n_gap",
+    "primary_gap_source": "live",
+    "notes": [
+      "spec:confident — solid with minor gaps",
+      "design:confident — solid with minor gaps",
+      "correctness:confident — solid with minor gaps",
+      "quality:proven — google-quality, evidenced end to end",
+      "security:confident — solid with minor gaps",
+      "performance:confident — solid with minor gaps",
+      "accessibility:confident — solid with minor gaps",
+      "i18n:confident — solid with minor gaps",
+      "seo:proven — google-quality, evidenced end to end",
+      "resilience:mixed — partial or unverified evidence",
+      "experience:confident — solid with minor gaps",
+      "docs:proven — google-quality, evidenced end to end",
+      "testing:proven — google-quality, evidenced end to end",
+      "release:proven — google-quality, evidenced end to end",
+      "advisor:confident — solid with minor gaps",
+      "physics:confident — solid with minor gaps",
+      "primary_gap:i18n_gap"
+    ]
+  },
+  "evidence": {
+    "tests_summary": "794/794 npm test green (794 tests, 794 pass, 0 fail), measured on this tree. The 749 previously claimed here is stale: P0.1-P0.3b added 45 gates. deploy:check stages the build clean; the promote verifier counts 358 published files.",
+    "seo_summary": "npm run seo and node scripts/check-chars.mjs exit 0: JSON-LD, sitemap, metadata, characters, i18n, CSP/headers, country files, asset token 20260925c, SW cache beco-v88. Unchanged by P0.1-P0.3c, which touch no allowlisted file.",
+    "smoke_note": "the browser smoke runs 153 gates. Measured this session: 153 pass, 0 fail locally. Production re-verified today: 358/358 files byte-identical at servedStamp 20260925c, browser smoke passing. The 20260925b previously carried here was wrong.",
+    "ci_summary": "PRs #144-#148 merged 5/5 green (analyze, coverage, test, web-smoke, CodeQL). This head: 798 tests, 153 smoke gates, prettier, seo, plan:check and deploy:check green, Jev report attached",
+    "advisor_audit": "measured against the live chat and worker paths: 3 Jev gates green, the neutral badge proving the request fires (calls:1), no refetch on Simple-mode toggle, worker inputs rejected before start. Mode-blindness fixed: the brief carries the run's hardware config, verified on the wire in a real browser. The provider is stubbed, so this proves the request path, not answer quality.",
+    "notes": [
+      "the local browser smoke is 153/153, zero failures, measured this session; the 147/147 previously claimed here predates the six battery-only advisor gates",
+      "P0.3a gave the Jev price one canonical constant (0.00042) shared by the gate and the worker, replacing a private 42.0 that was 100,000x the D-13 rate; the worker now records TypeSafe token counts and cost",
+      "P0.3b removed the second Jev provider from every path - both fallback blocks, both key lookups, the health flag, the config key and the doc. OPENROUTER_API_KEY was also deleted as a live Cloudflare Worker secret",
+      "freeoffgridcalculator.com 403s non-browser clients, but a real browser passes it and serves the app: verified in Chromium this session, mounts, FX 200, RUM 204. Its only CSP finding is the blocked inline __CF$cv$params script"
+    ],
+    "dirty_paths": []
+  },
+  "target": "chore/p0.3c-score-and-scope @ 2c249e2",
+  "scope": "P0.3",
+  "auto_facts": {
+    "tree_clean": true,
+    "secrets_clean": true,
+    "env_ignored": true,
+    "test_count": 73,
+    "dirty_paths": []
+  },
+  "live_jev": {
+    "is_fallback": false,
+    "provider": "typesafe",
+    "model": "jev-1.13.0",
+    "input_tokens": 4315,
+    "cost_usd": 0.0000018123,
+    "notes": []
+  },
+  "evidence_source": "evidence/advisor-and-release.json",
+  "scoped": {
+    "scope": "P0.3",
+    "facets": [
+      "correctness",
+      "docs",
+      "security",
+      "testing"
+    ],
+    "semantic_score": 92.5,
+    "score": 97.75,
+    "min_score": 99,
+    "facets_short_of_proven": [
+      "correctness",
+      "security"
+    ],
+    "exit_rule_binds_from": "P0.4",
+    "exit_rule_binding": false,
+    "ratchet": {
+      "status": "met",
+      "baseline_ts": "2026-09-26",
+      "baseline_ref": "P0.3c-baseline-2",
+      "facets_compared": 16,
+      "regressions": []
+    },
+    "pass": false
+  }
+}

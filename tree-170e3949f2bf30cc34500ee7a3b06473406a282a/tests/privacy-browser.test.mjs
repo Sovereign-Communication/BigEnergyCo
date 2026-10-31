@@ -1,0 +1,391 @@
+// The privacy facet's RUNTIME half.
+//
+// scripts/check-privacy.mjs is a static gate and its six clauses are all
+// statements about source. Every one of them has a runtime version, and the
+// runtime is where privacy claims break, because the mechanisms that break them
+// are exactly the ones a grep cannot see: an HttpOnly cookie is invisible to
+// `document.cookie` AND to any source scan, a third-party request from injected
+// markup or a CSS url() never appears in a JavaScript string, and storage
+// written by a worker never appears at all.
+//
+// These tests are mostly about WIRING. A privacy measurement that only one
+// person can run by hand is not a gate — it is a habit, and the facet's own
+// standard is that "an unrun adversarial or live check is not proven". So the
+// browser gate must run in CI, its outcome must be recorded in the artifact the
+// Jev gate reads, and the evidence line must name it.
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+import { cookieGateDecision } from "../scripts/cold-start-preflight.mjs";
+import { composePrivacyFacetLine } from "../scripts/lib/privacy-facet-line.mjs";
+
+const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
+const read = (rel) => readFileSync(path.join(ROOT, rel), "utf8");
+
+// Assertions below run against COMMENTS STRIPPED source. Half of them are
+// "this text must not exist", and a file that explains the rule it once broke
+// would fail its own guard — and a guard that punishes the explanation gets
+// deleted rather than obeyed. Same reason scripts/check-comparison.mjs scans
+// rendered copy rather than the source around it.
+const readCode = (rel) =>
+  read(rel)
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/^\s*\/\/.*$/gm, "");
+
+// ── the measurement is real, and it looks where a cookie actually hides ─────
+
+test("the browser flow asks the browser for cookies, not the page", () => {
+  const flow = readCode("scripts/smoke/privacy.mjs");
+  // Network.getCookies is the browser's own store and includes HttpOnly
+  // cookies. document.cookie alone would pass a page setting a session cookie,
+  // which is the whole reason this flow exists.
+  assert.match(flow, /Network\.getCookies/);
+  assert.match(flow, /document\.cookie/);
+  // Both, not either.
+  assert.match(flow, /httpOnlyCount/);
+  assert.match(flow, /localStorage/);
+  assert.match(flow, /sessionStorage/);
+  // And it reads the wire the runtime already collects rather than asserting a
+  // number typed somewhere else.
+  assert.match(flow, /b\.requests/);
+});
+
+test("the browser gate fails closed when nothing was measured", () => {
+  const gate = readCode("scripts/check-privacy-browser.mjs");
+  // The facet standard is explicit: an unrun check is not a proven one. A gate
+  // that reports "no breaches observed" when the browser never started is
+  // worse than no gate, because it reads as a pass.
+  assert.match(gate, /if \(!measured\)/);
+  assert.match(
+    gate,
+    /nothing was measured — an unmeasured risk is not a passed gate/,
+  );
+  assert.match(gate, /process\.exit\(1\)/);
+});
+
+test("third-party egress is checked against the shipped policy, not a guess", () => {
+  const gate = readCode("scripts/check-privacy-browser.mjs");
+  // This clause was originally a hand-written allowlist of one host, and it
+  // failed on its first real run, correctly: the page fetches
+  // open.er-api.com/v6/latest/USD to keep the per-country currency table
+  // current. A hardcoded list here would be a THIRD declaration of the same
+  // fact, free to drift from the CSP that actually ships. Reading the CSP
+  // means a new origin can only pass if somebody deliberately added it.
+  assert.match(gate, /connect-src/);
+  assert.match(gate, /_headers/);
+  assert.doesNotMatch(
+    gate,
+    /nasa\.gov\.i\.test\(o\)/,
+    "the hardcoded NASA-only allowlist is back",
+  );
+  // The declaration is allowed to be small but not unbounded.
+  assert.match(gate, /declared\.length <= 8/);
+  // And the wire itself is inspected for identifiers, which no source scan can
+  // do: a coordinate finer than 0.01 deg is ~1.1 km of location, so the gate
+  // looks for three or more decimal places in a coordinate query parameter.
+  assert.ok(
+    gate.includes("\\d{3,}"),
+    "the gate must reject a coordinate finer than 0.01 deg on the wire",
+  );
+  assert.match(gate, /free-text query/);
+});
+
+test("the declared FX egress is declared, and the site still needs it", () => {
+  // The decision this pass made explicitly: open.er-api.com stays.
+  const headers = read("_headers");
+  assert.match(
+    headers,
+    /connect-src[^;]*https:\/\/open\.er-api\.com/,
+    "the FX origin must be in the shipped CSP",
+  );
+  const ui = read("assets/js/sizing/ui.js");
+  assert.match(ui, /open\.er-api\.com/);
+  // Removing the call would silently revert per-country currency to a stale
+  // static table, so if it ever goes it must go with a replacement, not by
+  // accident. This test fails loudly if the feature is half-removed.
+  assert.match(ui, /refreshFxRates/);
+  assert.match(ui, /perUSD/);
+  // And the request must stay a parameterless GET of a public table: nothing
+  // about the visitor may ride along in it.
+  assert.match(ui, /fetch\("https:\/\/open\.er-api\.com\/v6\/latest\/USD"/);
+});
+
+// ── the wiring: a measurement only one person can run by hand is not a gate ──
+
+test("GATE: the browser privacy gate runs in CI, in a job with a browser", () => {
+  const yml = read(".github/workflows/test.yml");
+  // web-smoke is the job that already drives real Chrome on the staged build.
+  assert.match(yml, /node scripts\/check-privacy-browser\.mjs/);
+  // It must record its outcome, or the Jev gate cannot see it.
+  assert.match(
+    yml,
+    /privacyBrowser: "\$\{\{ steps\.privacy-browser\.outcome \}\}"/,
+  );
+  // And upload the measurement itself.
+  assert.match(yml, /jev-privacy-browser/);
+  assert.match(yml, /jev-artifacts\/privacy-browser\.json/);
+  // `if: always()` so an unmeasured privacy facet is recorded as unmeasured
+  // rather than skipped, which would read as a pass.
+  const step = yml.slice(
+    yml.indexOf("node scripts/check-privacy-browser.mjs") - 400,
+    yml.indexOf("node scripts/check-privacy-browser.mjs") + 80,
+  );
+  assert.match(step, /if: always\(\)/);
+});
+
+test("GATE: the browser privacy gate has its own npm script", () => {
+  const pkg = JSON.parse(read("package.json"));
+  assert.equal(
+    pkg.scripts["gate:privacy-browser"],
+    "node scripts/check-privacy-browser.mjs",
+  );
+  // It is deliberately NOT in `npm run seo`: that chain is the offline
+  // preflight and needs no browser, and adding one would make every local
+  // preflight depend on a Chrome install.
+  assert.doesNotMatch(pkg.scripts.seo, /check-privacy-browser/);
+});
+
+// ── the decision the measurement feeds ──────────────────────────────────────
+
+test("cookieGateDecision treats an unmeasured run as a refusal", () => {
+  const unmeasured = cookieGateDecision({ ok: false });
+  assert.equal(unmeasured.provision, false);
+  assert.equal(unmeasured.action, "do_not_provision");
+  assert.match(unmeasured.why, /unmeasured risk is not a passed gate/);
+  // A measurement with no cookieCount is unmeasured, however ok:true says.
+  assert.equal(cookieGateDecision({ ok: true }).provision, false);
+  assert.equal(cookieGateDecision(null).provision, false);
+  // Zero cookies is the only thing that provisions.
+  assert.equal(
+    cookieGateDecision({ ok: true, cookieCount: 0 }).provision,
+    true,
+  );
+  // One cookie is a refusal that names the cookie.
+  const one = cookieGateDecision({
+    ok: true,
+    cookieCount: 1,
+    cookieNames: ["__cf_bm"],
+  });
+  assert.equal(one.provision, false);
+  assert.match(one.why, /__cf_bm/);
+});
+
+// ── the evidence line ───────────────────────────────────────────────────────
+
+test("EVIDENCE: the privacy facet line names both gates and the measurement", () => {
+  const ev = JSON.parse(read("evidence/advisor-and-release.json"));
+  const line = ev.facet_evidence.privacy;
+  assert.ok(line && line.length > 40, "the facet line is a measurement");
+  // Both halves: the source claims and the runtime measurement.
+  assert.match(line, /check-privacy\.mjs/);
+  assert.match(line, /check-privacy-browser\.mjs/);
+  // The runtime numbers, not "we checked".
+  assert.match(line, /0 cookies/i);
+  assert.match(line, /HttpOnly/);
+  assert.match(line, /0\.01 deg/);
+  // And it must not assert the negation of what the gates prove. Note that
+  // "unmeasured" is NOT in this list: the line legitimately says an unmeasured
+  // run returns do_not_provision, which is the gate's own rule, not its
+  // negation. A negation list too crude to distinguish those two stops meaning
+  // anything.
+  for (const bad of [
+    "cookies are set",
+    "no browser measurement",
+    "privacy is not measured",
+    "third-party egress is undisclosed",
+  ])
+    assert.ok(
+      !line.includes(bad),
+      `the line asserts the gate's negation: ${bad}`,
+    );
+  // The egress that the browser gate found must be named, or the finding is
+  // invisible to the reader.
+  assert.match(line, /open\.er-api\.com/);
+});
+
+// ── the measurement the judge actually reads (2026-10-06) ───────────────────
+//
+// The browser gate ran on every PR and its result reached nobody: the report
+// was uploaded as `jev-privacy-browser` while `jev-complete` downloads
+// `jev-results-*`. A real browser measurement that no record could read is the
+// exact defect the resilience and experience gates were renamed to prevent, and
+// it was still happening here — which is why the privacy facet fell back to a
+// typed sentence naming a fraction of what had been checked.
+test("WIRING: the privacy report is uploaded under a name the gate downloads", () => {
+  const wf = read(".github/workflows/test.yml");
+  // The upload name IS the wire. A report under any other name is downloaded
+  // by nobody and the judge never sees it.
+  assert.match(wf, /name: jev-results-privacy-browser/);
+  assert.ok(
+    !/name: jev-privacy-browser/.test(wf),
+    "the pre-2026-10-06 name downloads nothing; the facet falls back to prose",
+  );
+  // And the pattern has to actually match it, or the rename is cosmetic.
+  assert.match(wf, /pattern: jev-results-\*/);
+});
+
+test("WIRING: the privacy report declares the axis so the builder adopts it", () => {
+  const gate = read("scripts/check-privacy-browser.mjs");
+  // `facet_axes` is what makes build-jev-evidence.mjs prefer the composed line
+  // over the typed one, with no change to the builder itself.
+  assert.match(gate, /const FACET_AXES = \["privacy"\]/);
+  assert.match(gate, /facet_axes: FACET_AXES/);
+  assert.match(gate, /facet_line: composeFacetLine\(/);
+  assert.match(gate, /from "\.\/lib\/privacy-facet-line\.mjs"/);
+});
+
+test("CLIP: the composed privacy line fits the clip the builder enforces", () => {
+  // COMPLETE_FACET_CLIP is 280 and the builder refuses an over-length line
+  // PER LINE rather than truncating quietly. The first draft of this line was
+  // 754 chars and the builder caught it, so the gate now asserts its own
+  // length; this test pins that the assertion is still wired.
+  const gate = read("scripts/check-privacy-browser.mjs");
+  assert.match(gate, /COMPLETE_FACET_CLIP/);
+  // The composer returns an overflow NUMBER and the gate fails on it, rather
+  // than the gate comparing lengths itself - so the arithmetic is testable and
+  // the clip is enforced in one place.
+  assert.match(gate, /composePrivacyFacetLine\(m, COMPLETE_FACET_CLIP\)/);
+  assert.match(gate, /if \(overflow\)/);
+  const composer = read("scripts/lib/privacy-facet-line.mjs");
+  assert.match(composer, /line\.length - clip/);
+  // The clip itself must not be widened to fit a longer sentence: raising it
+  // would raise the cost of every one of the 21 axes at once.
+  const budget = read("scripts/lib/jev-complete.mjs");
+  assert.match(
+    budget,
+    /export const COMPLETE_FACET_CLIP = 280;/,
+    "the per-axis clip is 280 and this change must not quietly raise it",
+  );
+});
+
+// A synthetic measurement. The composer is pure, so this needs no browser, no
+// staged build and no artifact on disk - which is the whole point of it living
+// in scripts/lib rather than inside the gate that starts Chrome on import.
+const MEASURED = {
+  cookieCount: 0,
+  httpOnlyCount: 0,
+  localStorageKeys: [],
+  sessionStorageKeys: [],
+  identifying: [],
+  coordinateFindings: [],
+  requestCount: 90,
+  journeysDriven: [
+    { name: "city-search", requests: 2 },
+    { name: "sizing-run", requests: 3 },
+    { name: "advisor", requests: 1 },
+  ],
+  thirdPartyOrigins: [
+    "https://nominatim.openstreetmap.org",
+    "https://open.er-api.com",
+  ],
+};
+
+test("COMPOSED: the privacy line reads its numbers out of the measurement", () => {
+  // Every number in the line must come from `measured`, so a bad run reports a
+  // bad line instead of a stale good one. Asserted against the composer
+  // DIRECTLY - the previous version of this test branched on the artifact
+  // existing, and because `jev-artifacts/` is gitignored it took the fallback
+  // branch on every CI runner, so these assertions never ran where they matter.
+  const { line, overflow } = composePrivacyFacetLine(MEASURED, 280);
+  assert.equal(overflow, 0, `the composed line overflows by ${overflow} chars`);
+  assert.ok(line.length <= 280, `${line.length} chars would be cut in transit`);
+  assert.match(line, /90 requests/);
+  assert.match(line, /0 cookies \(0 HttpOnly\)/);
+  assert.match(line, /0 storage keys/);
+  assert.match(line, /0 with an identifier, 0 over 0\.01 deg/);
+  // Every clause the rubric names has to be in the line the judge reads. This
+  // is the assertion that would have caught the earlier draft, which spent
+  // the clip on connect-src origins and left three clauses unsaid.
+  for (const clause of [
+    /nothing logged/,
+    /no ad\/tracker\/affiliate\/lead capture/,
+    /advisor egress disclosed/,
+    /nothing unasked/,
+    /geolocation click-gated/,
+  ])
+    assert.match(line, clause, `the line must carry the clause ${clause}`);
+});
+
+test("COMPOSED: a bad run composes a line that says so", () => {
+  // The line must not be able to flatter a run. If the browser measured
+  // cookies, the line says cookies - the gate is red either way, but a line
+  // that read "0 cookies" off a 3-cookie run would cost every facet at once.
+  const dirty = {
+    ...MEASURED,
+    cookieCount: 3,
+    httpOnlyCount: 1,
+    coordinateFindings: ["lat=51.50735123"],
+    identifying: ["gclid=abc"],
+  };
+  const { line } = composePrivacyFacetLine(dirty, 280);
+  assert.match(line, /3 cookies \(1 HttpOnly\)/);
+  assert.doesNotMatch(line, /0 cookies/);
+  assert.match(line, /1 with an identifier/);
+  assert.match(line, /1 over 0\.01 deg/);
+  // The two leak counts must be reported SEPARATELY. A line that said "N with
+  // an identifier or over 0.01 deg" while printing only N would read 0 for a
+  // run that leaked a coarse coordinate - an under-reporting evidence line is
+  // worse than none, so this pins the split.
+  const coordOnly = composePrivacyFacetLine(
+    { ...MEASURED, coordinateFindings: ["lat=51.50735123"] },
+    280,
+  ).line;
+  assert.match(coordOnly, /0 with an identifier, 1 over 0\.01 deg/);
+});
+
+test("COMPOSED: an over-long line is reported, never truncated", () => {
+  // The builder cuts an over-length line in transit, silently dropping the end
+  // of the sentence. So overflow has to be a number the caller can fail on.
+  const { line, overflow } = composePrivacyFacetLine(
+    { ...MEASURED, thirdPartyOrigins: ["https://a.example"] },
+    40,
+  );
+  assert.ok(overflow > 0, "a 40-char clip must report overflow");
+  assert.equal(line.length - 40, overflow);
+  assert.ok(
+    line.length > 40,
+    "the line is returned whole; clipping is the caller's job",
+  );
+});
+
+// ── the consent clause (added 2026-10-06) ───────────────────────────────────
+//
+// The security rubric asks for "sensitive actions (geolocation, auto-runs) only
+// on explicit user consent" and NOTHING measured it. The browser gate can prove
+// a coordinate never left at full precision; it cannot prove the browser was
+// never asked for one without being asked first. `permissions-policy:
+// geolocation=` is a weaker claim - it constrains what a page may do, not what
+// it does, and a page that grabs the coordinate on load satisfies it too.
+test("CONSENT: the geolocation clause is measured, not asserted", () => {
+  const gate = read("scripts/check-privacy.mjs");
+  assert.match(gate, /consent: getCurrentPosition called from one module only/);
+  assert.match(
+    gate,
+    /consent: geolocation fires only from the btnGeoLocate click handler/,
+  );
+});
+
+test("CONSENT: the clause would notice geolocation moved off the click", () => {
+  // A clause that cannot fail is a rubber stamp. This proves the wiring the
+  // clause reads is the wiring that exists: the API is called in exactly one
+  // module, and that module is reached from a click on a real button.
+  const ui = readCode("assets/js/sizing/ui.js");
+  const picker = readCode("assets/js/sizing/location-picker.js");
+  const apiCalls = [ui, picker].filter((s) =>
+    /\.getCurrentPosition\s*\(/.test(s),
+  );
+  assert.equal(
+    apiCalls.length,
+    1,
+    "the geolocation API is called in one module",
+  );
+  assert.match(
+    ui,
+    /addEventListener\(\s*"click"[\s\S]{0,400}?locateMe\s*\(/,
+    "locateMe must be reached from a click handler",
+  );
+  assert.match(read("index.html"), /id="btnGeoLocate"/);
+});

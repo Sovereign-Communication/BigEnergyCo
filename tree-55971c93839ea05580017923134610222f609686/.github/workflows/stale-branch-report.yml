@@ -1,0 +1,77 @@
+# Stale branch report — READ-ONLY.
+#
+# Lists branches with no open PR and no commits in STALE_DAYS, then opens
+# (or updates) a tracking issue with the list. This workflow NEVER deletes
+# anything; deletions stay manual per the 100%-certainty purge rule.
+name: Stale branch report
+
+on:
+  schedule:
+    # Weekly, Monday 09:00 UTC.
+    - cron: "0 9 * * 1"
+  workflow_dispatch:
+    inputs:
+      stale_days:
+        description: "Branches with no commits in N days count as stale"
+        required: false
+        default: "14"
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: List stale branches
+        id: stale
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          STALE_DAYS: ${{ inputs.stale_days || '14' }}
+        run: |
+          cutoff=$(date -u -d "$STALE_DAYS days ago" +%Y-%m-%dT%H:%M:%SZ)
+          # All branches with last commit date.
+          gh api "repos/${{ github.repository }}/branches?per_page=100" --paginate \
+            --jq '.[].name' | while read -r branch; do
+            [ "$branch" = "main" ] && continue
+            last_commit=$(gh api "repos/${{ github.repository }}/branches/$branch" \
+              --jq '.commit.commit.author.date')
+            # Skip if an open PR exists for the branch.
+            open_pr=$(gh api "repos/${{ github.repository }}/pulls?head=${{ github.repository_owner }}:$branch&state=open" \
+              --jq 'length')
+            if [ "$open_pr" = "0" ] && [ "$last_commit" \< "$cutoff" ]; then
+              echo "$branch (last commit $last_commit)"
+            fi
+          done | tee /tmp/stale.txt
+          count=$(wc -l < /tmp/stale.txt)
+          echo "count=$count" >> "$GITHUB_OUTPUT"
+          {
+            echo "branches<<EOF"
+            cat /tmp/stale.txt
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Open or update tracking issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          title="Stale branch report"
+          body="Branches with no open PR and no commits in the last ${{ inputs.stale_days || '14' }} days (READ-ONLY — deletions are manual per the 100%-certainty rule):
+
+          \`\`\`
+          ${{ steps.stale.outputs.branches }}
+          \`\`\`
+
+          Count: ${{ steps.stale.outputs.count }}
+          Generated: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          # Reuse the open report issue if one exists.
+          existing=$(gh issue list --search "$title in:title" --state open --json number --jq '.[0].number')
+          if [ -n "$existing" ]; then
+            gh issue edit "$existing" --body "$body"
+            echo "Updated issue #$existing"
+          else
+            gh issue create --title "$title" --body "$body" --label "maintenance"
+            echo "Created new issue"
+          fi

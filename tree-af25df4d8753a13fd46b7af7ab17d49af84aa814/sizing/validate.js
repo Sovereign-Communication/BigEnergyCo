@@ -1,0 +1,295 @@
+// Jev sanity check — client side.
+//
+// The deterministic engine remains the single source of truth for every
+// number on screen. This module reads the finished result, asks the worker's
+// /api/jev route (TypeSafe's System One model — typed probabilities, no
+// prose) for an independent plausibility judgment, and renders a badge. It
+// can fail in every possible way — network, key, upstream, shape — and every
+// failure mode is the same: no badge, nothing else changes.
+//
+// The interpretation thresholds below were set from measured jev-1.13.0
+// calibration probes (textbook / German-winter / broken-PV cases): the noul
+// "plausible" probability separates good from broken sizing cleanly, while
+// the "verdict" choice carries a conservative bias and may only ever *add*
+// a flag, never grant a pass on its own.
+const API_FALLBACK = "https://bigenergyco-api.bigenergyco.workers.dev";
+const FETCH_TIMEOUT_MS = 3500; // quoted 70-500ms; badge must never hang the UI
+
+export const SANITY_THRESHOLDS = {
+  flagPlausibleMax: 0.3,
+  flagRedFlagMin: 1.5,
+  flagImpossibleConfidence: 0.6,
+  passPlausibleMin: 0.6,
+  passRedFlagMax: 1.0,
+};
+
+/**
+ * Numbers only — no location names, no free text (nothing to inject, nothing
+ * that identifies the visitor). Optional climate fields are omitted when the
+ * payload lacks them; the worker treats them as optional.
+ */
+export function sanityState(p, entry) {
+  if (!p || !entry) return null;
+  const a = p.assumptions || {};
+  const payback =
+    typeof entry.paybackYearsHi === "number" &&
+    typeof entry.paybackYearsLo === "number"
+      ? (entry.paybackYearsLo + entry.paybackYearsHi) / 2
+      : entry.paybackYears;
+  return {
+    mode: p.mode,
+    dailyKwh: +p.dailyKwh,
+    pvKw: +entry.pvKw,
+    battKwh: +entry.battKwh,
+    costLo: +entry.costLo,
+    costHi: +entry.costHi,
+    cutPct: +(entry.cutPct ?? 0),
+    ...(Number.isFinite(+payback) ? { paybackYears: +payback } : {}),
+    specificYieldKwhPerKwDay: p.annualYieldPerKw
+      ? +(p.annualYieldPerKw / 365).toFixed(3)
+      : undefined,
+    worstMonthGhi: a.worstMonth
+      ? +a.worstMonth.averageDailyGhi.toFixed(3)
+      : undefined,
+    meanTempC: typeof a.meanTempC === "number" ? a.meanTempC : undefined,
+  };
+}
+
+/**
+ * Confidence-gated interpretation. Returns { level, ...data } with level one
+ * of "pass" | "flag" | "uncertain", or null when there is nothing to show.
+ */
+export function interpretSanity(data) {
+  if (!data || data.available !== true) return null;
+  const p = data.plausible;
+  if (typeof p !== "number" || !Number.isFinite(p)) return null;
+  const impossibleConfident =
+    data.verdict === "impossible" &&
+    (data.verdictConfidence ?? 0) >= SANITY_THRESHOLDS.flagImpossibleConfidence;
+  const flag =
+    p <= SANITY_THRESHOLDS.flagPlausibleMax ||
+    (data.redFlag ?? 0) >= SANITY_THRESHOLDS.flagRedFlagMin ||
+    impossibleConfident;
+  if (flag) return { ...data, level: "flag" };
+  const pass =
+    p >= SANITY_THRESHOLDS.passPlausibleMin &&
+    (data.redFlag ?? 0) <= SANITY_THRESHOLDS.passRedFlagMax &&
+    data.verdict !== "impossible";
+  return { ...data, level: pass ? "pass" : "uncertain" };
+}
+
+/**
+ * Feature gate: the badge only ever asks the worker when the deployed worker
+ * says the Jev route is live (/api/health carries jevSanity:true only with
+ * the key present). Every disabled state stays completely silent — no POST, no
+ * failed requests, no console noise — and activating the feature server-side
+ * needs no client redeploy: a page LOADED after the worker turns the route on
+ * gets the feature with no new JS shipped.
+ *
+ * Asked AT MOST ONCE per page session, not once per render. Owner ruling
+ * (2026-09-29): the per-render re-ask cost a redundant `GET /api/health` on
+ * every badge render, which a real-browser measurement counted at 4 warm
+ * requests across one slider session — the `performance` facet's
+ * "zero redundant network pulls" claim, and it was not zero. The stated
+ * trade-off: a tab already open ACROSS an activation loses mid-session pickup.
+ * A page loaded after activation still gets the feature, which is the guarantee
+ * the comment above has always claimed.
+ *
+ * A transport failure is deliberately NOT memoized. Nothing was learned from a
+ * request that never completed, so a page that loaded while offline is still
+ * able to pick the feature up once it is back — only a completed answer is
+ * remembered, and it is remembered for the life of the page.
+ */
+const _healthAnswers = new Map();
+
+/** Test-only: forget this session's answers. A page reload is the real reset. */
+export function resetJevHealthForTest() {
+  _healthAnswers.clear();
+}
+
+export async function jevEnabled(base) {
+  const key = String(base);
+  if (_healthAnswers.has(key)) return _healthAnswers.get(key);
+  let res;
+  try {
+    res = await fetch(base + "/api/health", { cache: "no-store" });
+  } catch {
+    // No memo: a network that never answered has told us nothing.
+    return false;
+  }
+  let answer = false;
+  if (res.ok) {
+    try {
+      const data = await res.json();
+      answer = data && data.jevSanity === true;
+    } catch {
+      answer = false;
+    }
+  }
+  _healthAnswers.set(key, answer);
+  return answer;
+}
+
+/** Fire-and-forget probe. Any failure resolves to null — never throws. */
+export async function requestSanity(state) {
+  if (!state) return null;
+  const local =
+    typeof location !== "undefined" &&
+    (location.hostname === "127.0.0.1" || location.hostname === "localhost");
+  const base = local
+    ? ""
+    : (typeof window !== "undefined" && window.CF_API_URL) || API_FALLBACK;
+  if (!(await jevEnabled(base))) return null;
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
+    const res = await fetch(base + "/api/jev", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ state }),
+      signal: ctrl.signal,
+    });
+    clearTimeout(timer);
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Renders the badge. `t` is the locale lookup, `onAsk` (optional) wires the
+ * flag case's advisor button to the same askAdvisor flow the results row
+ * uses. Returns the element (or null when nothing was rendered).
+ */
+export function renderSanityBadge(container, interp, t, onAsk) {
+  if (!container || !interp || typeof t !== "function") return null;
+  const badge = document.createElement("p");
+  badge.className = "sanity-badge sanity-" + interp.level;
+  badge.setAttribute("role", "status");
+  if (interp.level === "flag") {
+    badge.textContent = t("sanityFlag");
+    if (typeof onAsk === "function") {
+      const ask = document.createElement("button");
+      ask.type = "button";
+      ask.className = "sanity-ask btn btn-outline";
+      ask.textContent = t("sanityAskAdvisor");
+      ask.addEventListener("click", onAsk);
+      badge.appendChild(ask);
+    }
+  } else if (interp.level === "pass") {
+    badge.textContent = t("sanityOk");
+  } else if (interp.level === "uncertain") {
+    badge.textContent = t("sanityUncertain");
+  } else {
+    return null;
+  }
+  badge.title = t("sanityTooltip");
+  container.appendChild(badge);
+  return badge;
+}
+
+/**
+ * Build the second-opinion context handed to the prose advisor.
+ *
+ * Jev is deliberately not a second sizing engine: it sees only bounded engine
+ * numbers and returns a plausibility judgment. Keep that boundary explicit so
+ * the model cannot turn a pass into a safety certificate or a flag into a
+ * reason to silently replace the deterministic result.
+ */
+export function sanityResponseIsCurrent(
+  requestId,
+  activeRequestId,
+  requestedKey,
+  currentKey,
+) {
+  return (
+    Number.isInteger(requestId) &&
+    requestId === activeRequestId &&
+    typeof requestedKey === "string" &&
+    requestedKey === currentKey
+  );
+}
+
+export function advisorJevContext(
+  status,
+  interp,
+  reviewedState,
+  selectedLabel,
+) {
+  const boundedLabel =
+    typeof selectedLabel === "string"
+      ? selectedLabel
+          .replace(/[\\r\\n\\[\\]]/g, " ")
+          .trim()
+          .slice(0, 80)
+      : "";
+  const stateFields =
+    reviewedState && typeof reviewedState === "object"
+      ? [
+          ["mode", reviewedState.mode],
+          ["daily_kwh", reviewedState.dailyKwh],
+          ["pv_kw", reviewedState.pvKw],
+          ["battery_kwh", reviewedState.battKwh],
+          ["cost_low", reviewedState.costLo],
+          ["cost_high", reviewedState.costHi],
+          ["cut_pct", reviewedState.cutPct],
+          ["payback_years", reviewedState.paybackYears],
+          ["specific_yield", reviewedState.specificYieldKwhPerKwDay],
+          ["worst_month_ghi", reviewedState.worstMonthGhi],
+          ["mean_temp_c", reviewedState.meanTempC],
+        ]
+          .filter(([, value]) => value !== undefined && value !== null)
+          .map(([key, value]) =>
+            typeof value === "number" && Number.isFinite(value)
+              ? `${key}=${value.toFixed(2)}`
+              : `${key}=${String(value)
+                  .replace(/[^a-z0-9_-]/gi, "")
+                  .slice(0, 20)}`,
+          )
+          .join(", ")
+      : "";
+  const reviewed = [
+    "selected deterministic system",
+    boundedLabel || "the selected system",
+    stateFields
+      ? `Jev numeric inputs: ${stateFields}`
+      : "Jev numeric inputs unavailable",
+  ].join(": ");
+
+  if (status === "pending") {
+    return `[JEV REVIEW — PENDING] ${reviewed}. The independent numeric plausibility check has not returned yet. Do not claim that Jev approved or rejected this result; explain the calculator figures and any uncertainty.`;
+  }
+  if (status === "unavailable") {
+    return `[JEV REVIEW — UNAVAILABLE] ${reviewed}. No independent Jev result is available for this run. Do not imply that an independent check occurred; rely on the deterministic brief, state uncertainty, and invite verification.`;
+  }
+  if (status !== "available" || !interp) return "";
+  const plausible = Number.isFinite(Number(interp.plausible))
+    ? Number(interp.plausible)
+    : null;
+  const confidence = Number.isFinite(Number(interp.verdictConfidence))
+    ? Number(interp.verdictConfidence)
+    : null;
+  const redFlag = Number.isFinite(Number(interp.redFlag))
+    ? Number(interp.redFlag)
+    : null;
+  const level = ["pass", "flag", "uncertain"].includes(interp.level)
+    ? interp.level
+    : "unknown";
+  const verdict = /^[a-z_]{1,32}$/i.test(String(interp.verdict || ""))
+    ? String(interp.verdict)
+    : "unavailable";
+  const details = [
+    `level=${level}`,
+    `verdict=${verdict}`,
+    plausible === null ? null : `plausible=${plausible.toFixed(2)}`,
+    confidence === null ? null : `verdict_confidence=${confidence.toFixed(2)}`,
+    redFlag === null ? null : `red_flag=${redFlag.toFixed(2)}`,
+  ]
+    .filter(Boolean)
+    .join(", ");
+  return (
+    "[JEV REVIEW — INDEPENDENT NUMERIC PLAUSIBILITY CHECK] " +
+    `${reviewed}; ${details}. Jev saw sizing numbers only, not location names or free text. Treat this as a second opinion, not ground truth: it does not validate local prices, product specifications, code compliance, or safety. Do not override the deterministic calculator figures. If level=flag, explain what deserves checking and ask for missing inputs; if level=pass or uncertain, do not overstate certainty.`
+  );
+}

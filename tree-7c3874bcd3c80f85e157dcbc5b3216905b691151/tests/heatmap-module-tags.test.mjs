@@ -1,0 +1,49 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+import { deployList } from "../scripts/lib/deploy-manifest.mjs";
+
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
+const readRepo = (path) => readFileSync(join(ROOT, path), "utf8");
+
+test("the heatmap module tag matches the module source", () => {
+  const html = readRepo("solar-heatmap/index.html");
+  const js = readRepo("assets/js/heatmap.js");
+  assert.match(js, /^\s*import /m);
+  assert.match(
+    html,
+    /<script type="module" src="\.\.\/assets\/js\/heatmap\.js\?v=[^"]+"><\/script>/,
+  );
+});
+
+test("every shipped page loads module scripts as modules", () => {
+  const bad = [];
+  for (const page of deployList().filter((candidate) =>
+    candidate.endsWith(".html"),
+  )) {
+    const source = readRepo(page);
+    for (const match of source.matchAll(
+      /<script\b([^>]*?)src="([^"]+)"([^>]*?)>/g,
+    )) {
+      const attributes = match[1] + " " + match[3];
+      const src = match[2].split("?")[0];
+      if (/^(?:[a-z]+:)?\/\//i.test(match[2])) continue;
+      let script;
+      try {
+        script = readRepo(join(dirname(page), src));
+      } catch {
+        continue;
+      }
+      if (
+        /^\s*(?:import|export)\s/m.test(script) &&
+        !/type="module"/.test(attributes)
+      ) {
+        bad.push(page + " -> " + src);
+      }
+    }
+  }
+  assert.deepEqual(bad, []);
+});

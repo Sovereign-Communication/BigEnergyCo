@@ -1,0 +1,1346 @@
+{
+  "plan_item": "P0.4",
+  "plan_refs": [
+    "Q-02",
+    "Q-03"
+  ],
+  "metric": "lighthouse",
+  "generated_at": "2026-09-28T08:05:51.129Z",
+  "code_sha": "bd5f7038d35e66bd3d44637989799cae543f127e",
+  "facet_axes": [
+    "performance"
+  ],
+  "unit": "score 0-100, median of 3 runs, on the staged build",
+  "stage": "_pages_lighthouse",
+  "lighthouse_version": "13.5.0",
+  "chrome": "C:/Program Files/Google/Chrome/Application/chrome.exe",
+  "throttling": "simulate (Lighthouse default mobile/desktop)",
+  "categories": [
+    "performance",
+    "accessibility",
+    "best-practices",
+    "seo"
+  ],
+  "ratchet_categories": [
+    "accessibility",
+    "best-practices",
+    "seo"
+  ],
+  "reported_only": {
+    "performance": "measured and reported, not ratcheted: on an unchanged tree the score is bimodal over 21 runs (home/mobile 61-73, heatmap/desktop 40-76) because Lighthouse's performance composite is dominated by its SIMULATED throttling model. The bootstrapped median is still 18 points wide at k=21, so no affordable run count makes a floor reproducible and a floor that wide would not catch a real regression. The reading is reported with its spread so the trend is visible."
+  },
+  "variance_calibration": {
+    "method": "repeated Lighthouse runs of the same staged build with no change between them, then a 20000-trial bootstrap of the median-of-k over the observed runs",
+    "performance_not_ratcheted": {
+      "home/mobile": {
+        "n": 21,
+        "runs": [
+          61,
+          61,
+          61,
+          61,
+          61,
+          61,
+          69,
+          69,
+          69,
+          69,
+          69,
+          69,
+          70,
+          70,
+          70,
+          70,
+          71,
+          71,
+          71,
+          72,
+          73
+        ],
+        "min": 61,
+        "median": 69,
+        "max": 73,
+        "shape": "bimodal: six runs at 61, then nothing below 69",
+        "median_width_by_k": {
+          "3": 12,
+          "9": 12,
+          "15": 10,
+          "21": 10
+        }
+      },
+      "heatmap/desktop": {
+        "n": 21,
+        "runs": [
+          40,
+          53,
+          57,
+          61,
+          62,
+          64,
+          64,
+          64,
+          64,
+          65,
+          65,
+          66,
+          72,
+          72,
+          72,
+          73,
+          73,
+          74,
+          75,
+          75,
+          76
+        ],
+        "min": 40,
+        "median": 65,
+        "max": 76,
+        "shape": "bimodal: a 40-66 cluster and a 72-76 cluster with nothing between",
+        "median_width_by_k": {
+          "3": 36,
+          "9": 23,
+          "15": 18,
+          "21": 18
+        }
+      }
+    },
+    "ratcheted_categories_are_deterministic": {
+      "note": "over the same samples, accessibility / best-practices / seo read an identical value on every run, which is what makes a floor on them reproducible",
+      "home/mobile": "accessibility, best-practices, seo all 100 on 21/21 runs",
+      "heatmap/desktop": "accessibility, best-practices, seo all 100 on 21/21 runs"
+    },
+    "best_practices_targeted_checks": {
+      "note": "two targets read 96 on best-practices in the 3-run first measurement, so each was re-measured over 9 runs before a floor was declared on it",
+      "heatmap/mobile": {
+        "n": 9,
+        "runs": [
+          96,
+          96,
+          96,
+          96,
+          96,
+          96,
+          96,
+          96,
+          96
+        ],
+        "distinct": [
+          96
+        ],
+        "failing_audit": "image-size-responsive",
+        "reading": "stable at 96. The floor is 96 and the failing audit is named: an image is served larger than it is displayed. That is a finding for the page's own cluster, not a threshold this gate may move."
+      },
+      "404/mobile": {
+        "n": 9,
+        "runs": [
+          96,
+          100,
+          100,
+          100,
+          100,
+          100,
+          100,
+          100,
+          100
+        ],
+        "distinct": [
+          96,
+          100
+        ],
+        "failing_audit": "errors-in-console",
+        "reading": "NOT stable: 96 once, 100 eight times, from a console error that fires intermittently. The floor is 96 — the observed minimum — because a console error that starts firing on every load is a real regression this gate should catch."
+      },
+      "heatmap/desktop": {
+        "n": 9,
+        "runs": [
+          100,
+          100,
+          100,
+          100,
+          100,
+          100,
+          100,
+          100,
+          100
+        ],
+        "distinct": [
+          100
+        ],
+        "reading": "stable at 100"
+      }
+    }
+  },
+  "targets": [
+    {
+      "id": "home/mobile",
+      "page": "index.html",
+      "formFactor": "mobile",
+      "runs": 3
+    },
+    {
+      "id": "home/desktop",
+      "page": "index.html",
+      "formFactor": "desktop",
+      "runs": 3
+    },
+    {
+      "id": "city/mobile",
+      "page": "solar-calculator/phoenix/index.html",
+      "formFactor": "mobile",
+      "runs": 3
+    },
+    {
+      "id": "city/desktop",
+      "page": "solar-calculator/phoenix/index.html",
+      "formFactor": "desktop",
+      "runs": 3
+    },
+    {
+      "id": "heatmap/mobile",
+      "page": "solar-heatmap/index.html",
+      "formFactor": "mobile",
+      "runs": 3
+    },
+    {
+      "id": "heatmap/desktop",
+      "page": "solar-heatmap/index.html",
+      "formFactor": "desktop",
+      "runs": 3
+    },
+    {
+      "id": "about/mobile",
+      "page": "about/index.html",
+      "formFactor": "mobile",
+      "runs": 3
+    },
+    {
+      "id": "about/desktop",
+      "page": "about/index.html",
+      "formFactor": "desktop",
+      "runs": 3
+    },
+    {
+      "id": "blog-index/mobile",
+      "page": "blog/index.html",
+      "formFactor": "mobile",
+      "runs": 3
+    },
+    {
+      "id": "blog-index/desktop",
+      "page": "blog/index.html",
+      "formFactor": "desktop",
+      "runs": 3
+    },
+    {
+      "id": "blog-post/mobile",
+      "page": "blog/battery-longevity-and-dod-reference/index.html",
+      "formFactor": "mobile",
+      "runs": 3
+    },
+    {
+      "id": "blog-post/desktop",
+      "page": "blog/battery-longevity-and-dod-reference/index.html",
+      "formFactor": "desktop",
+      "runs": 3
+    },
+    {
+      "id": "404/mobile",
+      "page": "404.html",
+      "formFactor": "mobile",
+      "runs": 3
+    },
+    {
+      "id": "404/desktop",
+      "page": "404.html",
+      "formFactor": "desktop",
+      "runs": 3
+    }
+  ],
+  "measured": [
+    {
+      "id": "home/mobile",
+      "page": "index.html",
+      "formFactor": "mobile",
+      "runs": 3,
+      "scores": {
+        "performance": 84,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "runScores": [
+        {
+          "performance": null,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        {
+          "performance": 84,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        {
+          "performance": 69,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        }
+      ],
+      "speed": {
+        "lcp_s": 3.4245068683814863,
+        "cls": 0.1213804003253434,
+        "tbt_ms": 97.95306563583881,
+        "fcp_s": 3.1922611496531634
+      }
+    },
+    {
+      "id": "home/desktop",
+      "page": "index.html",
+      "formFactor": "desktop",
+      "runs": 3,
+      "scores": {
+        "performance": 56,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "runScores": [
+        {
+          "performance": 56,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        {
+          "performance": 56,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        {
+          "performance": 56,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        }
+      ],
+      "speed": {
+        "lcp_s": 6.543204328765434,
+        "cls": 0.0037355824154819348,
+        "tbt_ms": 16.5,
+        "fcp_s": 4.724496211829404
+      }
+    },
+    {
+      "id": "city/mobile",
+      "page": "solar-calculator/phoenix/index.html",
+      "formFactor": "mobile",
+      "runs": 3,
+      "scores": {
+        "performance": 100,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "runScores": [
+        {
+          "performance": 100,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        {
+          "performance": 100,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        {
+          "performance": 99,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        }
+      ],
+      "speed": {
+        "lcp_s": 1.0572791,
+        "cls": 0,
+        "tbt_ms": 84,
+        "fcp_s": 0.7998843000000001
+      }
+    },
+    {
+      "id": "city/desktop",
+      "page": "solar-calculator/phoenix/index.html",
+      "formFactor": "desktop",
+      "runs": 3,
+      "scores": {
+        "performance": 93,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "runScores": [
+        {
+          "performance": 97,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        {
+          "performance": 93,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        {
+          "performance": 93,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        }
+      ],
+      "speed": {
+        "lcp_s": 1.24521725,
+        "cls": 0,
+        "tbt_ms": 4,
+        "fcp_s": 1.24521725
+      }
+    },
+    {
+      "id": "heatmap/mobile",
+      "page": "solar-heatmap/index.html",
+      "formFactor": "mobile",
+      "runs": 3,
+      "scores": {
+        "performance": 73,
+        "accessibility": 100,
+        "best-practices": 96,
+        "seo": 100
+      },
+      "runScores": [
+        {
+          "performance": 72,
+          "accessibility": 100,
+          "best-practices": 96,
+          "seo": 100
+        },
+        {
+          "performance": 73,
+          "accessibility": 100,
+          "best-practices": 96,
+          "seo": 100
+        },
+        {
+          "performance": 84,
+          "accessibility": 100,
+          "best-practices": 96,
+          "seo": 100
+        }
+      ],
+      "speed": {
+        "lcp_s": 1.6288737999999998,
+        "cls": 0,
+        "tbt_ms": 1079.1620999999996,
+        "fcp_s": 1.6288737999999994
+      }
+    },
+    {
+      "id": "heatmap/desktop",
+      "page": "solar-heatmap/index.html",
+      "formFactor": "desktop",
+      "runs": 3,
+      "scores": {
+        "performance": 78,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "runScores": [
+        {
+          "performance": 78,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        {
+          "performance": 78,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        {
+          "performance": 78,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        }
+      ],
+      "speed": {
+        "lcp_s": 1.6162830000000001,
+        "cls": 0,
+        "tbt_ms": 193.5,
+        "fcp_s": 1.6162830000000001
+      }
+    },
+    {
+      "id": "about/mobile",
+      "page": "about/index.html",
+      "formFactor": "mobile",
+      "runs": 3,
+      "scores": {
+        "performance": 100,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "runScores": [
+        {
+          "performance": 100,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        {
+          "performance": 100,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        {
+          "performance": 100,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        }
+      ],
+      "speed": {
+        "lcp_s": 1.0571606999999998,
+        "cls": 0,
+        "tbt_ms": 46,
+        "fcp_s": 0.79489815
+      }
+    },
+    {
+      "id": "about/desktop",
+      "page": "about/index.html",
+      "formFactor": "desktop",
+      "runs": 3,
+      "scores": {
+        "performance": 97,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "runScores": [
+        {
+          "performance": 97,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        {
+          "performance": 96,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        {
+          "performance": 97,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        }
+      ],
+      "speed": {
+        "lcp_s": 1.0603088,
+        "cls": 0,
+        "tbt_ms": 0,
+        "fcp_s": 0.9391544000000001
+      }
+    },
+    {
+      "id": "blog-index/mobile",
+      "page": "blog/index.html",
+      "formFactor": "mobile",
+      "runs": 3,
+      "scores": {
+        "performance": 100,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "runScores": [
+        {
+          "performance": 100,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        {
+          "performance": 98,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        {
+          "performance": 100,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        }
+      ],
+      "speed": {
+        "lcp_s": 1.0575573999999996,
+        "cls": 0,
+        "tbt_ms": 6.5,
+        "fcp_s": 0.9924587
+      }
+    },
+    {
+      "id": "blog-index/desktop",
+      "page": "blog/index.html",
+      "formFactor": "desktop",
+      "runs": 3,
+      "scores": {
+        "performance": 96,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "runScores": [
+        {
+          "performance": 96,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        {
+          "performance": 96,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        {
+          "performance": 96,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        }
+      ],
+      "speed": {
+        "lcp_s": 1.0572054,
+        "cls": 0,
+        "tbt_ms": 0,
+        "fcp_s": 1.0206027
+      }
+    },
+    {
+      "id": "blog-post/mobile",
+      "page": "blog/battery-longevity-and-dod-reference/index.html",
+      "formFactor": "mobile",
+      "runs": 3,
+      "scores": {
+        "performance": 100,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "runScores": [
+        {
+          "performance": 96,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        {
+          "performance": 100,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        {
+          "performance": 100,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        }
+      ],
+      "speed": {
+        "lcp_s": 1.2635336556111882,
+        "cls": 0,
+        "tbt_ms": 0,
+        "fcp_s": 1.2635336556111882
+      }
+    },
+    {
+      "id": "blog-post/desktop",
+      "page": "blog/battery-longevity-and-dod-reference/index.html",
+      "formFactor": "desktop",
+      "runs": 3,
+      "scores": {
+        "performance": 92,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "runScores": [
+        {
+          "performance": 93,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        {
+          "performance": 91,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        {
+          "performance": 92,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        }
+      ],
+      "speed": {
+        "lcp_s": 1.3263424960531451,
+        "cls": 0,
+        "tbt_ms": 0.5,
+        "fcp_s": 1.3263424960531451
+      }
+    },
+    {
+      "id": "404/mobile",
+      "page": "404.html",
+      "formFactor": "mobile",
+      "runs": 3,
+      "scores": {
+        "performance": 100,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 63
+      },
+      "runScores": [
+        {
+          "performance": 100,
+          "accessibility": 100,
+          "best-practices": 96,
+          "seo": 63
+        },
+        {
+          "performance": 100,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 63
+        },
+        {
+          "performance": null,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 63
+        }
+      ],
+      "speed": {
+        "lcp_s": 0.79847215,
+        "cls": 0,
+        "tbt_ms": 68,
+        "fcp_s": 0.6626481
+      }
+    },
+    {
+      "id": "404/desktop",
+      "page": "404.html",
+      "formFactor": "desktop",
+      "runs": 3,
+      "scores": {
+        "performance": 99,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 63
+      },
+      "runScores": [
+        {
+          "performance": 99,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 63
+        },
+        {
+          "performance": 99,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 63
+        },
+        {
+          "performance": 99,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 63
+        }
+      ],
+      "speed": {
+        "lcp_s": 0.73635695,
+        "cls": 0,
+        "tbt_ms": 0,
+        "fcp_s": 0.73635695
+      }
+    }
+  ],
+  "first_measurement": {
+    "home/mobile": {
+      "performance": {
+        "min": 61,
+        "median": 64,
+        "max": 73
+      },
+      "accessibility": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "best-practices": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "seo": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      }
+    },
+    "home/desktop": {
+      "performance": {
+        "min": 56,
+        "median": 56,
+        "max": 56
+      },
+      "accessibility": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "best-practices": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "seo": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      }
+    },
+    "city/mobile": {
+      "performance": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "accessibility": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "best-practices": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "seo": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      }
+    },
+    "city/desktop": {
+      "performance": {
+        "min": 96,
+        "median": 97,
+        "max": 97
+      },
+      "accessibility": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "best-practices": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "seo": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      }
+    },
+    "heatmap/mobile": {
+      "performance": {
+        "min": 87,
+        "median": 91,
+        "max": 91
+      },
+      "accessibility": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "best-practices": {
+        "min": 96,
+        "median": 96,
+        "max": 96
+      },
+      "seo": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      }
+    },
+    "heatmap/desktop": {
+      "performance": {
+        "min": 73,
+        "median": 75,
+        "max": 76
+      },
+      "accessibility": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "best-practices": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "seo": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      }
+    },
+    "about/mobile": {
+      "performance": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "accessibility": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "best-practices": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "seo": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      }
+    },
+    "about/desktop": {
+      "performance": {
+        "min": 97,
+        "median": 97,
+        "max": 97
+      },
+      "accessibility": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "best-practices": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "seo": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      }
+    },
+    "blog-index/mobile": {
+      "performance": {
+        "min": 99,
+        "median": 100,
+        "max": 100
+      },
+      "accessibility": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "best-practices": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "seo": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      }
+    },
+    "blog-index/desktop": {
+      "performance": {
+        "min": 96,
+        "median": 97,
+        "max": 97
+      },
+      "accessibility": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "best-practices": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "seo": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      }
+    },
+    "blog-post/mobile": {
+      "performance": {
+        "min": 96,
+        "median": 96,
+        "max": 100
+      },
+      "accessibility": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "best-practices": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "seo": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      }
+    },
+    "blog-post/desktop": {
+      "performance": {
+        "min": 93,
+        "median": 93,
+        "max": 94
+      },
+      "accessibility": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "best-practices": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "seo": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      }
+    },
+    "404/mobile": {
+      "performance": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "accessibility": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "best-practices": {
+        "min": 96,
+        "median": 100,
+        "max": 100
+      },
+      "seo": {
+        "min": 63,
+        "median": 63,
+        "max": 63
+      }
+    },
+    "404/desktop": {
+      "performance": {
+        "min": 99,
+        "median": 100,
+        "max": 100
+      },
+      "accessibility": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "best-practices": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "seo": {
+        "min": 63,
+        "median": 63,
+        "max": 63
+      }
+    }
+  },
+  "floors": {
+    "home/mobile": {
+      "accessibility": 100,
+      "best-practices": 100,
+      "seo": 100
+    },
+    "home/desktop": {
+      "accessibility": 100,
+      "best-practices": 100,
+      "seo": 100
+    },
+    "city/mobile": {
+      "accessibility": 100,
+      "best-practices": 100,
+      "seo": 100
+    },
+    "city/desktop": {
+      "accessibility": 100,
+      "best-practices": 100,
+      "seo": 100
+    },
+    "heatmap/mobile": {
+      "accessibility": 100,
+      "best-practices": 96,
+      "seo": 100
+    },
+    "heatmap/desktop": {
+      "accessibility": 100,
+      "best-practices": 100,
+      "seo": 100
+    },
+    "about/mobile": {
+      "accessibility": 100,
+      "best-practices": 100,
+      "seo": 100
+    },
+    "about/desktop": {
+      "accessibility": 100,
+      "best-practices": 100,
+      "seo": 100
+    },
+    "blog-index/mobile": {
+      "accessibility": 100,
+      "best-practices": 100,
+      "seo": 100
+    },
+    "blog-index/desktop": {
+      "accessibility": 100,
+      "best-practices": 100,
+      "seo": 100
+    },
+    "blog-post/mobile": {
+      "accessibility": 100,
+      "best-practices": 100,
+      "seo": 100
+    },
+    "blog-post/desktop": {
+      "accessibility": 100,
+      "best-practices": 100,
+      "seo": 100
+    },
+    "404/mobile": {
+      "accessibility": 100,
+      "best-practices": 96,
+      "seo": 63
+    },
+    "404/desktop": {
+      "accessibility": 100,
+      "best-practices": 100,
+      "seo": 63
+    }
+  },
+  "absolute_targets": {
+    "performance": 99,
+    "accessibility": 100,
+    "best-practices": 100,
+    "seo": 100
+  },
+  "speed_ceilings": {
+    "lcp_s": {
+      "mobile": 1.8,
+      "desktop": 1
+    },
+    "cls": 0.02,
+    "tbt_ms": 100
+  },
+  "regressions": [],
+  "improvements": [
+    {
+      "id": "404/mobile",
+      "category": "best-practices",
+      "from": 96,
+      "to": 100,
+      "message": "404/mobile/best-practices: 96 -> 100"
+    }
+  ],
+  "breaches": [
+    {
+      "id": "home/mobile",
+      "category": "performance",
+      "score": 84,
+      "absolute": 99,
+      "blocking_from": "P5 (new shell) / P8 (everything), plan §3.2"
+    },
+    {
+      "id": "home/desktop",
+      "category": "performance",
+      "score": 56,
+      "absolute": 99,
+      "blocking_from": "P5 (new shell) / P8 (everything), plan §3.2"
+    },
+    {
+      "id": "city/desktop",
+      "category": "performance",
+      "score": 93,
+      "absolute": 99,
+      "blocking_from": "P5 (new shell) / P8 (everything), plan §3.2"
+    },
+    {
+      "id": "heatmap/mobile",
+      "category": "performance",
+      "score": 73,
+      "absolute": 99,
+      "blocking_from": "P5 (new shell) / P8 (everything), plan §3.2"
+    },
+    {
+      "id": "heatmap/mobile",
+      "category": "best-practices",
+      "score": 96,
+      "absolute": 100,
+      "blocking_from": "P5 (new shell) / P8 (everything), plan §3.2"
+    },
+    {
+      "id": "heatmap/desktop",
+      "category": "performance",
+      "score": 78,
+      "absolute": 99,
+      "blocking_from": "P5 (new shell) / P8 (everything), plan §3.2"
+    },
+    {
+      "id": "about/desktop",
+      "category": "performance",
+      "score": 97,
+      "absolute": 99,
+      "blocking_from": "P5 (new shell) / P8 (everything), plan §3.2"
+    },
+    {
+      "id": "blog-index/desktop",
+      "category": "performance",
+      "score": 96,
+      "absolute": 99,
+      "blocking_from": "P5 (new shell) / P8 (everything), plan §3.2"
+    },
+    {
+      "id": "blog-post/desktop",
+      "category": "performance",
+      "score": 92,
+      "absolute": 99,
+      "blocking_from": "P5 (new shell) / P8 (everything), plan §3.2"
+    },
+    {
+      "id": "404/mobile",
+      "category": "seo",
+      "score": 63,
+      "absolute": 100,
+      "blocking_from": "P5 (new shell) / P8 (everything), plan §3.2"
+    },
+    {
+      "id": "404/desktop",
+      "category": "seo",
+      "score": 63,
+      "absolute": 100,
+      "blocking_from": "P5 (new shell) / P8 (everything), plan §3.2"
+    }
+  ],
+  "speed_over": [
+    {
+      "id": "home/mobile",
+      "metric": "lcp_s",
+      "value": 3.4245068683814863,
+      "ceiling": 1.8
+    },
+    {
+      "id": "home/mobile",
+      "metric": "cls",
+      "value": 0.1213804003253434,
+      "ceiling": 0.02
+    },
+    {
+      "id": "home/desktop",
+      "metric": "lcp_s",
+      "value": 6.543204328765434,
+      "ceiling": 1
+    },
+    {
+      "id": "city/desktop",
+      "metric": "lcp_s",
+      "value": 1.24521725,
+      "ceiling": 1
+    },
+    {
+      "id": "heatmap/mobile",
+      "metric": "tbt_ms",
+      "value": 1079.1620999999996,
+      "ceiling": 100
+    },
+    {
+      "id": "heatmap/desktop",
+      "metric": "lcp_s",
+      "value": 1.6162830000000001,
+      "ceiling": 1
+    },
+    {
+      "id": "heatmap/desktop",
+      "metric": "tbt_ms",
+      "value": 193.5,
+      "ceiling": 100
+    },
+    {
+      "id": "about/desktop",
+      "metric": "lcp_s",
+      "value": 1.0603088,
+      "ceiling": 1
+    },
+    {
+      "id": "blog-index/desktop",
+      "metric": "lcp_s",
+      "value": 1.0572054,
+      "ceiling": 1
+    },
+    {
+      "id": "blog-post/desktop",
+      "metric": "lcp_s",
+      "value": 1.3263424960531451,
+      "ceiling": 1
+    }
+  ],
+  "holes": [],
+  "unmeasured": [],
+  "enforcement": "regression-blocking from P0 on accessibility, best-practices, seo; the other categories are measured and reported but not ratcheted, for the measured reason in `reported_only`. Absolute Q-02 thresholds become blocking at P5 (new shell) / P8 (everything) per plan §3.2, and are reported as breaches until then.",
+  "scope_limit": "this gate measures the first-paint claim of the performance facet only. Warm interactions and NASA/weather memoization are not Lighthouse's subject and are not measured here.",
+  "facet_line": "Lighthouse 13.5.0, 14 targets, median of 3. ratcheted accessibility 100, best-practices 96-100, seo 63-100. performance NOT ratcheted, 56-100 this run, 40-76 over 21 calibration runs. first-paint claim only, not warm interactions or memoization."
+}

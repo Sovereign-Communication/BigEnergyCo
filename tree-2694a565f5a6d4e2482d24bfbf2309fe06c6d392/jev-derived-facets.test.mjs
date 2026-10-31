@@ -1,0 +1,573 @@
+// The judge could not see the Lighthouse measurement, and the `performance`
+// facet line it read instead was a HAND-TYPED PROXY: "eager first-load JS is
+// 786,390 bytes… Perf suite 4/4". A real browser measurement existed as a CI
+// artifact and nothing composed it into the record, which is the same defect
+// class as `ci_green` reading true on a red quality-lab run until #161 fixed
+// it.
+//
+// These tests are written before the wiring. All of them fail against the tree
+// they landed on: there is no derived-facet pass in the builder, the Lighthouse
+// report declares no facet axes, and the workflow uploads the report under a
+// name the judge never downloads.
+//
+// What is being prevented here is specific and twofold:
+//
+//   1. A hand-typed number reaching the judge as if it were a measurement. The
+//      `performance` line must come from the run that produced it.
+//   2. A real measurement reaching the judge MISREPRESENTED. The Lighthouse
+//      performance score is bimodal on an unchanged tree (home/mobile 61-73,
+//      heatmap/desktop 40-76 over 21 runs), so a line that prints one median
+//      with no spread and no "this is not ratcheted" is as false as a stale
+//      byte count — it just fails in the direction of looking good.
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync, writeFileSync, mkdtempSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { COMPLETE_FACET_CLIP } from "../scripts/lib/jev-complete.mjs";
+
+const WORKFLOW_YAML = readFileSync(".github/workflows/test.yml", "utf8");
+const PROSE = JSON.parse(
+  readFileSync("evidence/advisor-and-release.json", "utf8"),
+);
+
+test("EVIDENCE: the performance facet line is derived from the run, not typed by hand", () => {
+  // The defect, pinned as a standing condition rather than a one-off: if the
+  // prose file goes back to carrying a hand-typed performance line, there are
+  // two sources of truth for the same facet and the stale one wins by accident.
+  assert.equal(
+    Object.hasOwn(PROSE.facet_evidence || {}, "performance"),
+    false,
+    "evidence/advisor-and-release.json must not carry a hand-typed " +
+      "`performance` line. The Lighthouse gate composes it from the run that " +
+      "measured it, so a typed line here is a second, unverified source for the " +
+      "same facet - and it is the one that was wrong.",
+  );
+  // The accessibility axis is derived the same way and for the same reason: the
+  // smoke suite measures the calculator's own controls (keyboard reach, control
+  // names, WCAG AA contrast, reduced motion) in a real browser on every run, and
+  // the hand-typed sentence that used to stand here was the only source for all
+  // four numbers. Composed at the measurement means a run that stops measuring
+  // the controls says so, instead of leaving the claim standing.
+  assert.equal(
+    Object.hasOwn(PROSE.facet_evidence || {}, "accessibility"),
+    false,
+    "evidence/advisor-and-release.json must not carry a hand-typed " +
+      "`accessibility` line either. The smoke run composes it from the run that " +
+      "measured the controls, so a typed line here is a second, unverifiable " +
+      "source for the same facet.",
+  );
+  // …and the other axes stay typed, because nothing measures them yet. This is
+  // the scope boundary: the measured facets are derived, not everything.
+  assert.ok(
+    Object.keys(PROSE.facet_evidence || {}).length > 10,
+    "the remaining axes keep their prose lines; only the measured ones are derived",
+  );
+});
+
+test("EVIDENCE: the experience facet line is derived from the run, not typed by hand", () => {
+  // The same standing condition as `performance`, for the same reason. The typed
+  // line was a fact about test coverage - "30 of 153 smoke gates are
+  // battery-only" - which is true and says nothing a visitor touches. Now that
+  // scripts/check-experience.mjs measures the axis, a typed line here would be a
+  // second source of truth for it, and it would be the stale one.
+  assert.equal(
+    Object.hasOwn(PROSE.facet_evidence || {}, "experience"),
+    false,
+    "evidence/advisor-and-release.json must not carry a hand-typed " +
+      "`experience` line. The experience gate composes it from the run that " +
+      "walked the journey, so a typed line here is a second, unverified " +
+      "source for the same facet.",
+  );
+  // And the removal is recorded where a reader will look for it, rather than
+  // leaving a silent gap that reads as "never measured" when it means
+  // "measured, and the old wording was wrong".
+  assert.ok(
+    (PROSE.notes || []).some((n) =>
+      /`experience` facet line was REMOVED/.test(n),
+    ),
+    "the removal note must sit in notes[] beside the performance one",
+  );
+});
+
+test("EVIDENCE: a gate report declares which facet axes it speaks for", async () => {
+  const { LIGHTHOUSE_TARGETS } =
+    await import("../scripts/lib/lighthouse-budgets.mjs");
+  assert.ok(LIGHTHOUSE_TARGETS.length, "the gate declares its targets");
+
+  // The report the job uploads has to say which facets it is the evidence for,
+  // or the builder has to keep a list of gate names beside it — which is the
+  // exact list-beside-the-code defect #161 removed from ci_green.
+  const gateSrc = readFileSync("scripts/check-lighthouse.mjs", "utf8");
+  assert.match(
+    gateSrc,
+    /facet_axes\s*:/,
+    "the Lighthouse report must declare facet_axes, so the builder discovers " +
+      "which facets it speaks for instead of holding a list of gate names",
+  );
+  assert.match(
+    gateSrc,
+    /performance/,
+    "…and the axis it speaks for is the one the gate measures",
+  );
+});
+
+test("EVIDENCE: a derived facet line must fit the transport clip", () => {
+  // COMPLETE_FACET_CLIP is 280 characters. A line longer than that is SILENTLY
+  // clipped on its way to the judge, which for this cluster is the worst
+  // possible failure: the honest part ("this score is not reproducible, do not
+  // read it as a fact") is exactly what gets cut off the end.
+  assert.equal(
+    COMPLETE_FACET_CLIP,
+    280,
+    "the per-axis clip this test budgets against; if it moves, re-measure",
+  );
+  const src = readFileSync("scripts/check-lighthouse.mjs", "utf8");
+  assert.match(
+    src,
+    /COMPLETE_FACET_CLIP|facet_line/,
+    "the gate composes its own facet line and must know the clip it has to fit",
+  );
+  assert.match(
+    readFileSync(BUILDER, "utf8"),
+    /COMPLETE_FACET_CLIP/,
+    "the builder must validate a composed line against the clip and name the " +
+      "problem, rather than letting transport cut it silently",
+  );
+});
+
+test("EVIDENCE: the composed performance line carries the spread, not one number", async () => {
+  // The real content check. A line that reads like "performance 84" is false
+  // here: the same unchanged tree measured 61-73 on home/mobile and 40-76 on
+  // heatmap/desktop across 21 runs. The line must therefore say the score is
+  // not ratcheted, and must carry a spread, or it is a single stable fact
+  // presented where none exists.
+  const { composeFacetLine } =
+    await import("../scripts/lib/lighthouse-budgets.mjs").catch(() => ({}));
+  assert.equal(
+    typeof composeFacetLine,
+    "function",
+    "the gate must own composing its facet line, so the honesty rules live " +
+      "with the measurement rather than in the transport",
+  );
+
+  const report = {
+    lighthouse_version: "13.5.0",
+    measured: [
+      {
+        id: "home/mobile",
+        formFactor: "mobile",
+        scores: {
+          performance: 84,
+          accessibility: 100,
+          "best-practices": 100,
+          seo: 100,
+        },
+        runScores: [
+          { performance: 84 },
+          { performance: 61 },
+          { performance: 73 },
+        ],
+        speed: { lcp_s: 4.6, cls: 0.121, tbt_ms: 22 },
+      },
+      {
+        id: "heatmap/desktop",
+        formFactor: "desktop",
+        scores: {
+          performance: 66,
+          accessibility: 100,
+          "best-practices": 100,
+          seo: 100,
+        },
+        runScores: [{ performance: 66 }],
+        speed: { lcp_s: 1.7, cls: 0, tbt_ms: 203 },
+      },
+    ],
+    regressions: [],
+    holes: [],
+    ratchet_categories: ["accessibility", "best-practices", "seo"],
+  };
+
+  const line = composeFacetLine(report);
+  assert.equal(typeof line, "string");
+  assert.ok(
+    line.length <= COMPLETE_FACET_CLIP,
+    `the composed line is ${line.length} chars, over the ${COMPLETE_FACET_CLIP} ` +
+      "clip: it would be cut on the way to the judge, and the honest tail is " +
+      "what gets cut",
+  );
+  assert.doesNotMatch(
+    line,
+    /786,?390/,
+    "the stale hand-typed byte proxy must not survive into the record",
+  );
+  // It has to name the split, or the judge cannot tell a ratcheted fact from a
+  // noisy one.
+  assert.match(
+    line,
+    /not ratcheted|ratchet/i,
+    "the line must say the score is not ratcheted, or the judge cannot tell a " +
+      "stable measurement from a noisy one",
+  );
+  // And it has to carry a spread for the performance number it does report.
+  assert.match(
+    line,
+    /\d+\s*[-–]\s*\d+|spread|range/i,
+    "a performance score with no spread is a single stable fact presented " +
+      "where none exists; the line must carry the observed range",
+  );
+  // The deterministic categories ARE facts and may be stated as such.
+  assert.match(
+    line,
+    /accessibility|access/,
+    "the three deterministic categories reproduce exactly and belong on the " +
+      "record as facts",
+  );
+  // And the limit of the gate must be on it, or a green gate reads as a proof.
+  assert.match(
+    line,
+    /first paint|warm|memo|one of|not measur|does not/i,
+    "the line must state what the gate does not cover, so a green Lighthouse " +
+      "is not read as proving the facet's three claims",
+  );
+});
+
+const BUILDER = "scripts/build-jev-evidence.mjs";
+
+/** Run the real builder over an artifacts dir and return the parsed evidence. */
+function buildWith(dir, prose) {
+  const prosePath = join(dir, "prose.json");
+  writeFileSync(prosePath, JSON.stringify(prose));
+  const out = join(dir, "evidence.json");
+  const r = spawnSync(
+    process.execPath,
+    [
+      BUILDER,
+      "--artifacts",
+      dir,
+      "--prose",
+      prosePath,
+      "--out",
+      out,
+      "--sha",
+      "abc1234",
+      "--run-id",
+      "999",
+      "--now",
+      "2026-09-27T00:00:00.000Z",
+    ],
+    { encoding: "utf8" },
+  );
+  return {
+    status: r.status,
+    stderr: r.stderr,
+    out: r.status === 0 ? JSON.parse(readFileSync(out, "utf8")) : null,
+  };
+}
+
+/** A minimal all-green job set: the five required gates, nothing else. */
+const JOBS = {
+  test: {
+    job: "test",
+    conclusion: "success",
+    steps: { unit_tests: "success", prettier: "success", seo: "success" },
+  },
+  "web-smoke": {
+    job: "web-smoke",
+    conclusion: "success",
+    steps: { smoke: "success" },
+  },
+  "quality-lab": {
+    job: "quality-lab",
+    conclusion: "success",
+    steps: { "a11y-matrix": "success" },
+  },
+  lighthouse: {
+    job: "lighthouse",
+    conclusion: "success",
+    steps: { lighthouse: "success" },
+  },
+  coverage: {
+    job: "coverage",
+    conclusion: "success",
+    steps: { coverage: "success" },
+  },
+  // Required for the same reason as `quality-lab` and `lighthouse` above: the
+  // workflow declares it and the required set is derived from the workflow, so
+  // a new gate is required without a code edit and every green-run fixture has
+  // to carry it.
+  "quality-evidence": {
+    job: "quality-evidence",
+    conclusion: "success",
+    steps: { "quality-evidence": "success" },
+  },
+};
+
+function artifactsWith(extra) {
+  const dir = mkdtempSync(join(tmpdir(), "jev-derived-"));
+  for (const [name, job] of Object.entries(JOBS))
+    writeFileSync(join(dir, `${name}.json`), JSON.stringify(job));
+  for (const [name, body] of Object.entries(extra || {}))
+    writeFileSync(join(dir, name), JSON.stringify(body));
+  return dir;
+}
+
+const PROSE_MIN = {
+  tests_summary: "t",
+  ci_summary: "c",
+  smoke_note: "s",
+  seo_summary: "q",
+  advisor_audit: "a",
+  notes: ["n"],
+  facet_evidence: {
+    spec: "a spec line",
+    performance: "A HAND-TYPED LINE THAT MUST NOT SURVIVE",
+  },
+};
+
+test("EVIDENCE: the builder puts the run's numbers on the judge's record", () => {
+  const dir = artifactsWith({
+    "lighthouse-report.json": {
+      metric: "lighthouse",
+      lighthouse_version: "13.5.0",
+      facet_axes: ["performance"],
+      facet_line:
+        "Lighthouse 13.5.0, 14 targets. ratcheted accessibility 100. performance NOT ratcheted, 40-76 over 21 calibration runs.",
+      measured: [],
+    },
+  });
+  const { status, stderr, out } = buildWith(dir, PROSE_MIN);
+  assert.equal(status, 0, stderr);
+  assert.equal(
+    out.facet_evidence.performance.startsWith("Lighthouse 13.5.0, 14 targets"),
+    true,
+    "the judge's performance line must be the one composed from this run's report",
+  );
+  assert.doesNotMatch(
+    out.facet_evidence.performance,
+    /HAND-TYPED/,
+    "a typed line in the prose file must be OVERRIDDEN, not merged and not kept",
+  );
+  assert.ok(
+    out.derived_facet_lines?.some(
+      (d) => d.axis === "performance" && d.source === "lighthouse-report.json",
+    ),
+    `the record must say which report the line came from: ${JSON.stringify(out.derived_facet_lines)}`,
+  );
+});
+
+test("EVIDENCE: a missing gate report leaves the axis absent, not clean", () => {
+  // No report in the artifacts dir, and a typed line the builder must NOT fall
+  // back to. This is the `ci_green: true` on a red run, one layer over: a
+  // measurement that does not exist must never reach the judge as a claim.
+  const dir = artifactsWith({});
+  const { status, stderr, out } = buildWith(dir, PROSE_MIN);
+  assert.equal(status, 0, stderr);
+  assert.ok(
+    out.derived_facet_lines === undefined ||
+      out.derived_facet_lines.length === 0,
+    "no report means no derived line",
+  );
+  // The typed line the prose file still carries is the problem this cluster
+  // fixes, so the committed file no longer has one — and if a hand-run supplies
+  // one, it is what the judge would read. The standing condition is in the
+  // committed prose, pinned by the first test in this file.
+  assert.equal(
+    Object.hasOwn(PROSE_MIN.facet_evidence, "performance"),
+    true,
+    "this fixture deliberately carries a typed line so the override above is " +
+      "tested against something",
+  );
+});
+
+test("EVIDENCE: a report with an over-long line is a named problem, not a trim", () => {
+  const dir = artifactsWith({
+    "lighthouse-report.json": {
+      metric: "lighthouse",
+      facet_axes: ["performance"],
+      facet_line: "x".repeat(COMPLETE_FACET_CLIP + 1),
+    },
+  });
+  const { status, stderr, out } = buildWith(dir, PROSE_MIN);
+  assert.equal(
+    status,
+    1,
+    "an over-long facet line must FAIL the build. Clipping is silent, and for " +
+      "this facet the honest tail is exactly what a clip removes.",
+  );
+  assert.match(
+    stderr,
+    /facet_line is \d+ chars, over the 280-char per-axis clip/,
+    `the over-long line must be named: ${stderr}`,
+  );
+  assert.doesNotMatch(
+    out?.facet_evidence?.performance || "",
+    /x{100}/,
+    "…and must not be silently trimmed into the record",
+  );
+});
+
+test("CI: the report reaches the judge through the download the job already does", () => {
+  // The judge's download is `pattern: jev-results-*`. A report uploaded under
+  // any other name is downloaded by nobody and the builder never sees it — which
+  // is precisely the state this cluster is fixing. The name has to match the
+  // convention that already exists rather than a new mechanism beside it.
+  assert.match(
+    WORKFLOW_YAML,
+    /pattern:\s*jev-results-\*/,
+    "the judge downloads jev-results-*; that pattern is the wire",
+  );
+  assert.match(
+    WORKFLOW_YAML,
+    /name:\s*jev-results-lighthouse-report/,
+    "the Lighthouse report must be uploaded under a name that pattern picks up, " +
+      "so a new gate report needs no change to the judge's download step",
+  );
+});
+
+test("EVIDENCE: the translation facet line is derived from the run, not typed by hand", () => {
+  // THIRD axis to move, and the first where the typed line was not merely
+  // weak but unrepresentable: 1233 characters against a 280-character transport
+  // clip. The judge read its first clause — a sentence about check-i18n and key
+  // parity — and the cut fell mid-sentence, while the sweep that actually
+  // answers the demand ("no raw key name reaching a visitor") sat unread under
+  // `experience`. Two stories about one facet, and the weaker one won.
+  assert.equal(
+    Object.hasOwn(PROSE.facet_evidence || {}, "translation"),
+    false,
+    "evidence/advisor-and-release.json must not carry a hand-typed " +
+      "`translation` line. scripts/check-experience.mjs composes that axis " +
+      "from the run that walked six locales, so a typed line here is a second, " +
+      "unfalsifiable source for a facet that can now be measured.",
+  );
+  const note = (PROSE.notes || []).find((n) =>
+    /`translation` facet line was REMOVED/.test(n),
+  );
+  assert.ok(
+    note,
+    "the removal must be recorded in notes[], or the axis reads as never measured",
+  );
+  // The note has to preserve what the deletion would otherwise lose: that
+  // parity still lives somewhere, and that the back-translation clause is still
+  // open. A removal note that only says "removed" is a lost fact.
+  assert.match(note, /check-i18n/, "the note must say where parity went");
+  assert.match(
+    note,
+    /back-translat/i,
+    "and that back-translation is still open",
+  );
+  assert.match(note, /P5\.5/, "and the plan item that does not exist yet");
+});
+
+test("EVIDENCE: parity is not lost with the translation line — it has an axis", () => {
+  // The typed translation line was the only prose the judge read about key
+  // parity. Removing it without somewhere else to stand would trade one gap for
+  // another, so the parity claim must still be reachable: the `i18n` axis
+  // carries it, and it must still be there.
+  assert.equal(
+    Object.hasOwn(PROSE.facet_evidence || {}, "i18n"),
+    true,
+    "the i18n axis carries the parity and placeholder claims and must survive",
+  );
+  assert.match(
+    PROSE.facet_evidence.i18n,
+    /parity/i,
+    "and it must still actually say so",
+  );
+});
+test("EVIDENCE: one gate may compose a DIFFERENT line per axis", () => {
+  // The mechanism behind moving `translation` onto the browser gate. The
+  // builder applies one string to every axis in facet_axes, which is right when
+  // a gate speaks for one facet and wrong the moment it speaks for two: the
+  // journey walk's sentence would then also be the translation facet's proof.
+  const dir = artifactsWith({
+    "experience-report.json": {
+      metric: "experience",
+      facet_axes: ["experience", "translation"],
+      facet_lines: {
+        experience: "WALKED, 1 Chrome, 1 city: 9/9 steps acknowledge.",
+        translation:
+          "RUNTIME, 6 locales x 3 re-entry points: 0 raw keys on 19 pages.",
+      },
+    },
+  });
+  const { status, out } = buildWith(dir, PROSE_MIN);
+  assert.equal(status, 0);
+  assert.equal(
+    out?.facet_evidence?.experience,
+    "WALKED, 1 Chrome, 1 city: 9/9 steps acknowledge.",
+  );
+  assert.equal(
+    out?.facet_evidence?.translation,
+    "RUNTIME, 6 locales x 3 re-entry points: 0 raw keys on 19 pages.",
+    "each axis must get the line composed FOR it, not the first one that exists",
+  );
+});
+
+test("EVIDENCE: a single facet_line still serves a one-axis report", () => {
+  // Backward compatibility is the point: three other gates emit one string and
+  // must keep working untouched.
+  const dir = artifactsWith({
+    "lighthouse-report.json": {
+      metric: "lighthouse",
+      facet_axes: ["performance"],
+      facet_line: "PLAYTEST, 1 Chrome, 1 city: cold 5.8s, repeat 40ms.",
+    },
+  });
+  const { status, out } = buildWith(dir, PROSE_MIN);
+  assert.equal(status, 0);
+  assert.equal(
+    out?.facet_evidence?.performance,
+    "PLAYTEST, 1 Chrome, 1 city: cold 5.8s, repeat 40ms.",
+  );
+});
+
+test("EVIDENCE: two axes served by ONE sentence is refused, not published", () => {
+  // The failure this whole move exists to prevent, asserted at the boundary
+  // where it would otherwise happen quietly: a gate claiming two axes with a
+  // single line, so the second facet's proof line is a copy of the first's.
+  const dir = artifactsWith({
+    "experience-report.json": {
+      metric: "experience",
+      facet_axes: ["experience", "translation"],
+      facet_line: "WALKED, 1 Chrome, 1 city: 9/9 steps acknowledge.",
+    },
+  });
+  const { status, stderr, out } = buildWith(dir, PROSE_MIN);
+  assert.equal(
+    status,
+    1,
+    "publishing one sentence under two facet names is the silent-wins failure",
+  );
+  assert.match(
+    stderr,
+    /translation/,
+    `the missing line must be named: ${stderr}`,
+  );
+  assert.equal(
+    out?.facet_evidence?.translation,
+    undefined,
+    "and nothing may be published for the axis that had no line of its own",
+  );
+});
+
+test("EVIDENCE: an over-long per-axis line is a named problem, not a trim", () => {
+  const dir = artifactsWith({
+    "experience-report.json": {
+      metric: "experience",
+      facet_axes: ["experience", "translation"],
+      facet_lines: {
+        experience: "short enough",
+        translation: "x".repeat(COMPLETE_FACET_CLIP + 1),
+      },
+    },
+  });
+  const { status, stderr } = buildWith(dir, PROSE_MIN);
+  assert.equal(status, 1, "an over-long line must FAIL the build");
+  assert.match(
+    stderr,
+    /facet_lines\.translation is \d+ chars, over the 280-char per-axis clip/,
+    `the offending axis and its field must be named: ${stderr}`,
+  );
+});

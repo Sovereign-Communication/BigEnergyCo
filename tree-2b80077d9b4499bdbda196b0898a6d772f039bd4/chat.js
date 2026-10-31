@@ -1,0 +1,1091 @@
+// Advisor chat bridge + modal helpers, extracted verbatim from index.html.
+// Loads as a deferred CLASSIC script after the sizing module in index.html.
+// Its top-level function declarations intentionally become window globals
+// (sendChatMsg, openSizingModal, ...); ui.js registers interaction handlers
+// through whenDOMReady, so this script has installed shared behavior before
+// those handlers can run. Keep it classic or the advisor UI breaks.
+
+// -- Cloudflare API Bridge URL (updated automatically by patch_and_publish.py) --
+
+var CF_API_URL = "https://bigenergyco-api.bigenergyco.workers.dev";
+
+var chatHistory = [];
+
+// Focus return for modals: opening stores the element that had focus so
+// closing can hand it back instead of dropping keyboard users at <body>.
+var lastModalOpener = null;
+
+function rememberOpener() {
+  lastModalOpener =
+    document.activeElement && document.activeElement !== document.body
+      ? document.activeElement
+      : null;
+}
+
+function restoreOpener() {
+  if (lastModalOpener && document.contains(lastModalOpener)) {
+    try {
+      lastModalOpener.focus();
+    } catch (e) {
+      /* focus is best-effort */
+    }
+  }
+  lastModalOpener = null;
+}
+
+window.openSizingModal = function () {
+  var modal = document.getElementById("sizingModal");
+
+  if (modal) {
+    if (modal.style.display !== "flex") rememberOpener();
+    modal.style.display = "flex";
+
+    var closer = document.getElementById("btnCloseSizing");
+
+    if (closer) closer.focus();
+  }
+};
+
+window.closeSizingModal = function () {
+  var modal = document.getElementById("sizingModal");
+
+  if (modal) modal.style.display = "none";
+  restoreOpener();
+};
+
+window.openLegalModal = function () {
+  var modal = document.getElementById("legalModal");
+
+  if (modal) {
+    if (modal.style.display !== "flex") rememberOpener();
+    modal.style.display = "flex";
+
+    var closer = document.getElementById("btnCloseLegal");
+
+    if (closer) closer.focus();
+  }
+};
+
+window.closeLegalModal = function () {
+  var modal = document.getElementById("legalModal");
+
+  if (modal) modal.style.display = "none";
+  restoreOpener();
+};
+
+window.toggleMobileNav = function () {
+  var btn = document.getElementById("btnNavToggle");
+
+  var drawer = document.getElementById("mobileNavDrawer");
+
+  if (!btn || !drawer) return;
+
+  var isOpen = drawer.classList.contains("open");
+
+  if (isOpen) {
+    drawer.classList.remove("open");
+
+    btn.classList.remove("open");
+
+    btn.setAttribute("aria-expanded", "false");
+  } else {
+    drawer.classList.add("open");
+
+    btn.classList.add("open");
+
+    btn.setAttribute("aria-expanded", "true");
+  }
+};
+
+window.closeMobileNav = function () {
+  var btn = document.getElementById("btnNavToggle");
+
+  var drawer = document.getElementById("mobileNavDrawer");
+
+  if (btn) {
+    btn.classList.remove("open");
+    btn.setAttribute("aria-expanded", "false");
+  }
+
+  if (drawer) drawer.classList.remove("open");
+};
+
+// Esc closes whichever modal or drawer is open; focus stays out of hidden overlays.
+document.addEventListener("keydown", function (e) {
+  if (e.key !== "Escape") return;
+
+  window.closeMobileNav();
+
+  var sizing = document.getElementById("sizingModal");
+
+  var legal = document.getElementById("legalModal");
+
+  var system = document.getElementById("systemModal");
+
+  if (sizing && sizing.style.display === "flex") {
+    window.closeSizingModal();
+    return;
+  }
+
+  if (legal && legal.style.display === "flex") {
+    window.closeLegalModal();
+    return;
+  }
+
+  if (system && system.style.display === "flex") {
+    // Route through the wired closer so focus returns to the opener; if the
+    // app module hasn't loaded yet, hide directly as a fallback.
+    var sysCloser = document.getElementById("btnCloseSystem");
+    if (sysCloser) sysCloser.click();
+    if (system.style.display === "flex") system.style.display = "none";
+    return;
+  }
+});
+
+// Focus trap + background isolation, centralized for all three modals
+// (sizing, legal, system). Tab cycles inside the open dialog; everything
+// else in <body> goes inert and the page stops scrolling underneath.
+
+function becoVisibleModal() {
+  var ids = ["sizingModal", "legalModal", "systemModal"];
+  for (var i = 0; i < ids.length; i++) {
+    var m = document.getElementById(ids[i]);
+    if (m && m.style.display === "flex") return m;
+  }
+  return null;
+}
+
+function becoFocusables(root) {
+  if (!root || !root.querySelectorAll) return [];
+  return Array.prototype.filter.call(
+    root.querySelectorAll(
+      'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [role="button"], [tabindex]:not([tabindex="-1"])',
+    ),
+    function (el) {
+      return el.getClientRects().length > 0;
+    },
+  );
+}
+
+document.addEventListener("keydown", function (e) {
+  if (e.key !== "Tab") return;
+  var modal = becoVisibleModal();
+  if (!modal) return;
+  var items = becoFocusables(modal);
+  if (!items.length) {
+    e.preventDefault();
+    return;
+  }
+  var first = items[0];
+  var last = items[items.length - 1];
+  if (e.shiftKey && document.activeElement === first) {
+    e.preventDefault();
+    last.focus();
+  } else if (!e.shiftKey && document.activeElement === last) {
+    e.preventDefault();
+    first.focus();
+  }
+});
+
+function becoRefreshModalState() {
+  var modal = becoVisibleModal();
+  Array.prototype.forEach.call(document.body.children, function (child) {
+    if (!child.setAttribute) return;
+    if (child.tagName === "SCRIPT" || child.tagName === "STYLE") return;
+    if (modal && child !== modal) child.setAttribute("inert", "");
+    else child.removeAttribute("inert");
+  });
+  document.documentElement.style.overflow = modal ? "hidden" : "";
+}
+
+if (typeof MutationObserver !== "undefined" && document.body) {
+  new MutationObserver(becoRefreshModalState).observe(document.body, {
+    attributes: true,
+    attributeFilter: ["style"],
+    childList: true,
+    subtree: true,
+  });
+  becoRefreshModalState();
+}
+
+window.scrollToCalc = function () {
+  var calcElem = document.getElementById("calculator");
+
+  if (calcElem) calcElem.scrollIntoView({ behavior: window.scrollBehavior() });
+};
+
+// Render AI text as plain text, never as markup  -  the model's output is untrusted input.
+// Locale values own the whole sentence, including where a runtime value lands:
+// the {placeholder} contract (i18n.js translate) keeps word order translatable
+// instead of gluing pre-translated fragments together in code here.
+function chatText(key, fallback, vars) {
+  if (typeof window.becoT === "function") {
+    const value = window.becoT(key, vars);
+    if (value && value !== key) return value;
+  }
+  return fallback;
+}
+
+/**
+ * Compose a degraded reply in the visitor's language from the worker's i18n
+ * keys, or return null to say "use the English text instead".
+ *
+ * Returning null rather than throwing is deliberate: a missing key, an
+ * unknown language, or a malformed payload must degrade to English, never to a
+ * blank message and never to a half-translated sentence with an English clause
+ * in the middle. Every early return below is a documented fallback, and
+ * tests/worker-i18n.test.mjs asserts each one.
+ */
+function localizedDegradedReply(data) {
+  if (!data || !data.i18n) return null;
+  if (typeof window.becoT !== "function") return null; // no dictionary loaded
+
+  var keys = data.i18n;
+  // The worker cannot see the dictionary, so the key set is data from the
+  // network. Anything unexpected here falls back to English rather than
+  // rendering whatever a malformed payload asks for.
+  if (typeof keys.line !== "string" || typeof keys.why !== "string")
+    return null;
+
+  function t(key, vars) {
+    if (typeof key !== "string") return null;
+    var value = window.becoT(key, vars);
+    // becoT echoes the key back when a locale is missing it, which is the
+    // signal to use the worker's English text instead of showing a key.
+    if (!value || value === key) return null;
+    return value;
+  }
+
+  var why = t(keys.why);
+  if (!why) return null;
+
+  var line = t(keys.line, { why: why });
+  if (!line) return null;
+
+  // Blank line between every paragraph, matching the English original. A
+  // degraded message is a wall of text by nature; without the spacing it reads
+  // as one run-on block, which is the opposite of the calm it is trying to be.
+  var parts = [line, ""];
+  var reassure = t(keys.reassure);
+  if (!reassure) return null;
+  parts.push(reassure, "");
+  var body = t(keys.body);
+  if (!body) return null;
+  parts.push(body, "");
+  var retry = t(keys.retry);
+  if (!retry) return null;
+  parts.push(retry);
+
+  return parts.join("\n");
+}
+
+function renderBotReply(replyText, degraded, data) {
+  var chatWindow = document.getElementById("chatWindow");
+
+  if (!chatWindow) return;
+
+  var botDiv = document.createElement("div");
+
+  botDiv.className = "chat-msg bot";
+
+  // A degraded reply is a real answer, not an error: it carries the same
+  // disclaimer and the same history weight, and it is LABELLED so the visitor
+  // knows the live advisor did not answer. Hiding that label would make an
+  // outage indistinguishable from the product working (R-CF-10).
+  if (degraded) botDiv.setAttribute("data-degraded", "true");
+
+  var body = document.createElement("div");
+
+  body.style.whiteSpace = "pre-wrap";
+
+  body.textContent = replyText;
+
+  botDiv.appendChild(body);
+  if (degraded) {
+    var label = document.createElement("div");
+
+    label.style.cssText =
+      "margin-top:0.4rem;font-size:0.7rem;letter-spacing:0.06em;" +
+      "text-transform:uppercase;color:var(--text-muted);" +
+      "border:1px solid var(--border-card);border-radius:4px;" +
+      "padding:0.15rem 0.4rem;display:inline-block;";
+
+    // The label key comes from the payload when present, so the worker stays the
+    // single owner of the key set; chatText's second argument is the explicit
+    // English fallback for a client with no dictionary.
+    label.textContent = chatText(
+      (data && data.i18n && data.i18n.label) || "advisorDegradedLabel",
+      "Offline \u00b7 not the live AI",
+    );
+
+    botDiv.appendChild(label);
+  }
+
+  // The disclaimer travels with every answer, not buried in a modal nobody opens.
+
+  var note = document.createElement("div");
+
+  note.style.cssText =
+    "margin-top:0.6rem;padding-top:0.5rem;border-top:1px solid var(--border-card);" +
+    "font-size:0.75rem;color:var(--text-muted);line-height:1.45;";
+
+  note.textContent = chatText(
+    "advisorBotNote",
+    "AI-generated estimate  -  may be inaccurate, including prices and specifications. " +
+      "Not engineering advice. Verify with a licensed electrician or engineer before " +
+      "buying or building anything.",
+  );
+
+  botDiv.appendChild(note);
+
+  chatWindow.appendChild(botDiv);
+
+  chatWindow.scrollTop = chatWindow.scrollHeight;
+
+  chatHistory.push({ role: "bot", content: body.textContent });
+}
+
+function sendChatMsg() {
+  var chatInput = document.getElementById("chatInput");
+
+  var chatWindow = document.getElementById("chatWindow");
+
+  if (!chatInput || !chatWindow) return;
+
+  var userMsg = chatInput.value.trim();
+
+  if (!userMsg) return;
+
+  var userDiv = document.createElement("div");
+
+  userDiv.className = "chat-msg user";
+
+  userDiv.innerText = userMsg;
+
+  chatWindow.appendChild(userDiv);
+
+  chatHistory.push({ role: "user", content: userMsg });
+
+  chatInput.value = "";
+
+  chatWindow.scrollTop = chatWindow.scrollHeight;
+
+  // Same-origin fetch via proxy_server.py (port 7510)
+
+  var loadingDiv = document.createElement("div");
+
+  loadingDiv.className = "chat-msg bot";
+
+  loadingDiv.innerText = chatText("advisorThinking", "\u23F3 Thinking...");
+
+  loadingDiv.id = "loadingMsg";
+
+  chatWindow.appendChild(loadingDiv);
+
+  chatWindow.scrollTop = chatWindow.scrollHeight;
+
+  var cleanHistory = chatHistory.slice(-6).map(function (m) {
+    return {
+      role: m.role === "bot" || m.role === "assistant" ? "assistant" : "user",
+
+      content: m.content || "",
+    };
+  });
+
+  // Build the body WITHOUT the token first, so the POST can go out the moment
+  // it is ready when no challenge is configured. `sendBody` is replaced below
+  // by the token-bearing one only if a token is actually produced.
+  var payload = JSON.stringify({
+    message: userMsg,
+    history: cleanHistory,
+    language: window.becoLang || "en",
+  });
+
+  // ── Turnstile (B1 / R-CF-02) ──────────────────────────────────────────
+  // The worker fails CLOSED on /api/chat once TURNSTILE_SECRET_KEY exists, so
+  // the token is not optional decoration: without it the advisor is a 403 with
+  // no client-side recovery. askTurnstileToken() resolves to null whenever the
+  // widget is unconfigured, unavailable, expired or errored - every one of
+  // those is NON-FATAL, because an unprovisioned server accepts a tokenless
+  // call and a provisioned one answers 403 honestly rather than hanging.
+  function askTurnstileToken() {
+    if (typeof window.requestTurnstileToken !== "function") {
+      return Promise.resolve(null);
+    }
+    try {
+      return Promise.resolve(
+        window.requestTurnstileToken({
+          doc: document,
+          win: window,
+          container: turnstileContainer(chatWindow),
+        }),
+      ).catch(function () {
+        return null;
+      });
+    } catch (e) {
+      return Promise.resolve(null);
+    }
+  }
+
+  // A Turnstile token is single-use and short-lived, so it is requested PER
+  // ATTEMPT, never cached across the busy-retry below: a replayed token is
+  // exactly what the server is entitled to reject with "invalid_token".
+  function bodyWithToken() {
+    return askTurnstileToken().then(function (token) {
+      if (!token) return payload;
+      var body;
+      try {
+        body = JSON.parse(payload);
+      } catch (e) {
+        return payload;
+      }
+      body.turnstileToken = token;
+      return JSON.stringify(body);
+    });
+  }
+
+  // Where the widget renders. One reusable host per chat window, cleared before
+  // each render so a spent widget never leaves an iframe behind.
+  function turnstileContainer(win) {
+    if (!win) return null;
+    var existing = document.getElementById("turnstileHost");
+    if (existing) return existing;
+    var host = document.createElement("div");
+    host.id = "turnstileHost";
+    host.style.cssText =
+      "margin:0.5rem 0;min-height:0;display:flex;justify-content:center;";
+    win.appendChild(host);
+    return host;
+  }
+
+  function setLoadingText(t) {
+    var el = document.getElementById("loadingMsg");
+    if (el) el.innerText = t;
+  }
+
+  function postTo(url, body) {
+    // Bound the advisor request: a hung POST must surface the "unreachable"
+    // path instead of leaving "Thinking…" on screen forever.
+    var timeoutSignal =
+      typeof AbortSignal !== "undefined" && AbortSignal.timeout
+        ? AbortSignal.timeout(30000)
+        : undefined;
+    var opts = {
+      method: "POST",
+
+      headers: { "Content-Type": "application/json" },
+
+      body: body,
+    };
+    if (timeoutSignal) opts.signal = timeoutSignal;
+    return fetch(url, opts).then(function (res) {
+      if (!res.ok) {
+        var err = new Error("HTTP " + res.status);
+
+        err.status = res.status;
+
+        err.retryAfter =
+          parseInt(res.headers.get("Retry-After") || "0", 10) || 0;
+
+        throw err;
+      }
+
+      return res.json();
+    });
+  }
+
+  function attemptSend(retriesLeft) {
+    var apiBase2 =
+      window.location.hostname === "127.0.0.1" ||
+      window.location.hostname === "localhost"
+        ? ""
+        : CF_API_URL || "";
+
+    return bodyWithToken()
+      .then(function (body) {
+        return postTo(apiBase2 + "/api/chat", body);
+      })
+      .catch(function (err) {
+        // Busy (free AI quota)  -  wait out the provider and retry once automatically.
+
+        if ((err.status === 503 || err.status === 429) && retriesLeft > 0) {
+          var waitSecs = Math.min(Math.max(err.retryAfter || 4, 3), 15);
+
+          setLoadingText(
+            chatText(
+              "advisorBusyRetry",
+              " The free AI engine is busy  -  retrying in " + waitSecs + "s…",
+              { secs: waitSecs },
+            ),
+          );
+
+          return new Promise(function (resolve) {
+            setTimeout(resolve, waitSecs * 1000);
+          }).then(function () {
+            return attemptSend(retriesLeft - 1);
+          });
+        }
+
+        throw err;
+      });
+  }
+
+  attemptSend(2)
+    .then(function (data) {
+      var loading = document.getElementById("loadingMsg");
+
+      if (loading && loading.parentNode)
+        loading.parentNode.removeChild(loading);
+
+      if (data && data.reply) {
+        // A degraded reply arrives with BOTH the worker's canonical English
+        // text and a set of i18n keys. A browser resolves the keys through
+        // assets/js/shared/locales.js so the failure message is in the
+        // visitor's own language; a client with no dictionary (or a language
+        // the dictionary lacks) falls back to the English text the worker
+        // already sent. The fallback is explicit and asserted, not accidental.
+        renderBotReply(
+          localizedDegradedReply(data) || data.reply,
+          !!(data && data.degraded),
+          data,
+        );
+      } else {
+        renderBotReply(
+          chatText("advisorNoReply", " No reply received. Please try again."),
+        );
+      }
+    })
+
+    .catch(function (err) {
+      // Log the status only: the error object can carry user message text.
+      console.error("Chat API error:", err && err.status);
+
+      var loading = document.getElementById("loadingMsg");
+
+      if (loading && loading.parentNode)
+        loading.parentNode.removeChild(loading);
+
+      if (err && (err.status === 503 || err.status === 429)) {
+        renderBotReply(
+          chatText(
+            "advisorBusy",
+            " The free AI engine is swamped right now (HTTP " +
+              err.status +
+              "  -  it runs on a shared free quota).\n\n" +
+              "Please wait about a minute and send that again.",
+            { status: err.status },
+          ),
+        );
+      } else {
+        renderBotReply(
+          chatText(
+            "advisorUnreachable",
+            " The AI advisor is unreachable right now" +
+              (err && err.status ? " (HTTP " + err.status + ")" : "") +
+              ".\n\nCheck your connection and try again in a moment.",
+            { status: err && err.status ? " (HTTP " + err.status + ")" : "" },
+          ),
+        );
+      }
+    });
+}
+
+// Per-mode memory for the intake value: toggling bill <-> kWh restores what
+// was typed last instead of clobbering it with the placeholder default.
+var intakeMemory = {};
+var intakeLastMode = null;
+
+function toggleIntakeMode() {
+  var modeEl = document.getElementById("intakeMode");
+
+  var label = document.getElementById("intakeValueLabel");
+
+  var input = document.getElementById("intakeValue");
+
+  if (!modeEl || !label || !input) return;
+
+  var mode = modeEl.value;
+
+  if (intakeLastMode && intakeLastMode !== mode) {
+    intakeMemory[intakeLastMode] = input.value;
+  }
+  intakeLastMode = mode;
+
+  if (mode === "bill") {
+    label.innerText = "Monthly Electric Bill ($ USD):";
+
+    input.placeholder = "e.g. 400";
+
+    if (!input.value) input.value = intakeMemory.bill || "400";
+  } else {
+    label.innerText = "Daily Energy Consumption (kWh / day):";
+
+    input.placeholder = "e.g. 35";
+
+    if (!input.value) input.value = intakeMemory.kwh || "35";
+  }
+}
+
+function toggleInverterDetail() {
+  var wrap = document.getElementById("inverterDetailWrap");
+
+  var yes = document.getElementById("inverterHelpYes");
+
+  if (!wrap || !yes) return;
+
+  wrap.style.display = yes.checked ? "block" : "none";
+}
+
+// Heuristic: does the free-text inverter answer actually tell the advisor anything?
+
+// Needs some substance AND at least one concrete signal (brand, model number,
+
+// power/voltage figure, or an explicit "I don't have one yet").
+
+function inverterDetailIsUseful(text) {
+  var t = (text || "").trim();
+
+  // No minimum length: short answers like "SMA 5kW" or "EG4 6000" name real
+  // hardware and are useful. The patterns below decide, not string length.
+  return (
+    /\d\s*(k?w|kva|v|a)\b/i.test(t) ||
+    /\b(victron|sol-?ark|eg4|schneider|conext|growatt|deye|sma|fronius|outback|midnite|studer|must|srne|pip|voltronic|luxpower|solis|goodwe|huawei|enphase|tesla)\b/i.test(
+      t,
+    ) ||
+    /\b(no|none|don'?t|do not|haven'?t|not yet|nothing)\b.{0,30}\b(inverter|yet)\b/i.test(
+      t,
+    ) ||
+    /\b(split[- ]?phase|single[- ]?phase|three[- ]?phase|3[- ]?phase|off[- ]?grid|grid[- ]?tie|hybrid)\b/i.test(
+      t,
+    )
+  );
+}
+
+function buildIntakeBrief() {
+  var modeEl = document.getElementById("intakeMode");
+
+  var valEl = document.getElementById("intakeValue");
+
+  var regionEl = document.getElementById("destRegion");
+
+  var yesEl = document.getElementById("inverterHelpYes");
+
+  var detailEl = document.getElementById("inverterDetail");
+
+  // NEW: Climate context fields
+
+  var climateEl = document.getElementById("destClimate");
+
+  var spaceEl = document.getElementById("destSpace");
+
+  var maintenanceEl = document.getElementById("maintenanceComfort");
+
+  var mode = modeEl ? modeEl.value : "bill";
+
+  var val = valEl ? valEl.value.trim() : "";
+
+  var region = regionEl ? regionEl.value : "Global DDP Port";
+
+  var wantsInverterHelp = !!(yesEl && yesEl.checked);
+
+  var detail = detailEl ? detailEl.value.trim() : "";
+
+  // NEW: Extract climate context
+
+  var climate = climateEl ? climateEl.value : "unknown";
+
+  var space = spaceEl ? spaceEl.value : "unknown";
+
+  var maintenance = maintenanceEl ? maintenanceEl.value : "unknown";
+
+  var lines = ["Please size an off-grid battery system for me."];
+
+  lines.push(
+    mode === "bill"
+      ? "Basis: monthly electric bill of $" + (val || "unspecified") + " USD."
+      : "Basis: daily consumption of " + (val || "unspecified") + " kWh/day.",
+  );
+
+  lines.push("Destination region: " + region + ".");
+
+  // Hardware config, read from the SAME selects the sizing form uses - not a
+  // second source of truth and not a new mechanism. Without this the advisor
+  // had no way to know the run had no array: the brief opened "Please size an
+  // off-grid battery system for me" and a battery-only visitor could be handed
+  // panel, inverter and off-grid-budget advice for a system that has none.
+  // The battery-only branch is the one that matters: it states the absence and
+  // bars the advice, so the model sizes against peak load on the connection the
+  // user already has instead of quietly designing a solar system.
+  var hwEl = document.getElementById("hardwareConfig");
+
+  var goalEl = document.getElementById("systemGoal");
+
+  var hardware = hwEl ? hwEl.value : "";
+
+  var goal = goalEl ? goalEl.value : "";
+
+  if (hardware === "battery") {
+    lines.push(
+      "System: BATTERY ONLY - this run builds NO solar panels. Do not assume, " +
+        "recommend, or cost any panels, array, or solar inverter; a solar array " +
+        "is out of scope unless I ask for it explicitly. Size the battery " +
+        "against the peak load it must carry on the grid connection I already " +
+        "have (" +
+        (goal === "offgrid" ? "off-grid" : "grid-tied") +
+        "), and do not promise a bill cut the battery cannot deliver.",
+    );
+  } else {
+    lines.push(
+      "System: battery plus solar panels (" +
+        (goal === "offgrid" ? "off-grid" : "grid-tied") +
+        ").",
+    );
+  }
+
+  // NEW: Add climate context for better battery chemistry recommendations
+
+  lines.push("Climate: " + climate + ".");
+
+  lines.push("Available space for batteries: " + space + ".");
+
+  lines.push("Maintenance comfort level: " + maintenance + ".");
+
+  lines.push(
+    "[ADVISOR INSTRUCTION: Use these climate/space/maintenance details to reason about chemistry, stated as " +
+      "trade-offs and ranges  -  never a hard sell. (a) Cold sites (frequently below -10°C): LFP cannot be charged " +
+      "below 0°C without heating  -  recommend sodium-ion IF genuinely purchasable in my country, or LFP WITH a " +
+      "heated/insulated enclosure, and say which you would pick and why. (b) Temperate/tropical sites: LFP is " +
+      "the mature default (lowest cost per kWh-cycle, widest availability); suggest sodium-ion only if locally " +
+      "available and certification is not required  -  note most sodium-ion packs still lack UL 9540/CE listing. " +
+      "(c) Tight space: prefer LFP (higher energy density than sodium-ion). Always state " +
+      "certification, availability, and warranty caveats for anything you highlight.]",
+  );
+
+  if (!wantsInverterHelp) {
+    lines.push(
+      "Inverter: I do not need inverter assistance  -  battery bank sizing only.",
+    );
+  } else if (inverterDetailIsUseful(detail)) {
+    lines.push("Inverter: I need inverter assistance. Details: " + detail);
+  } else {
+    if (detail)
+      lines.push(
+        'Inverter: I need inverter assistance. What I said so far: "' +
+          detail +
+          '"',
+      );
+    else
+      lines.push(
+        "Inverter: I need inverter assistance but have not given any details.",
+      );
+
+    lines.push(
+      "[ADVISOR INSTRUCTION: The inverter information above is missing or too vague to size " +
+        "against. Give the battery sizing you can from the load basis, then ask me the specific " +
+        "follow-up questions you need  -  whether I already own an inverter (make/model) or need a " +
+        "recommendation, my continuous and surge power needs, AC voltage/phase, and whether the " +
+        "system is off-grid, hybrid, or grid-tied. Do not invent an inverter for me.]",
+    );
+  }
+
+  return lines.join("\n");
+}
+
+function runIntakeCalculation() {
+  var chatInput = document.getElementById("chatInput");
+
+  if (!chatInput) return;
+
+  // If the visitor typed a question, honor that instead of overwriting it.
+
+  if (!chatInput.value.trim()) chatInput.value = buildIntakeBrief();
+
+  sendChatMsg();
+}
+
+function updateCalc() {
+  var targetKwhInput = document.getElementById("targetKwh");
+
+  if (!targetKwhInput) return;
+
+  var targetKwh = parseFloat(targetKwhInput.value);
+
+  // Empty/invalid storage input must leave the previous figures alone, never
+  // render "NaN kWh" or "~Infinity years" into the comparison panel.
+  if (!isFinite(targetKwh) || targetKwh <= 0) return;
+
+  var targetKwhVal = document.getElementById("targetKwhVal");
+
+  if (targetKwhVal) targetKwhVal.innerText = targetKwh + " kWh Usable Storage";
+
+  // Scoped prices come from the same pricing module the sizing engine
+
+  // uses (window.BECO_BATT_COST is set by ui.js). No second source of truth.
+
+  var scopes = window.BECO_BATT_COST ? window.BECO_BATT_COST(targetKwh) : null;
+
+  if (!scopes) return;
+
+  function money(v) {
+    return "$" + Math.round(v).toLocaleString();
+  }
+
+  function range(s) {
+    return money(s.lo) + "\u2013" + money(s.hi);
+  }
+
+  var cellsCostVal = document.getElementById("cellsCostVal");
+
+  var landedCostVal = document.getElementById("landedCostVal");
+
+  var retailCostVal = document.getElementById("retailCostVal");
+
+  if (cellsCostVal) cellsCostVal.innerText = range(scopes.cells);
+
+  if (retailCostVal) retailCostVal.innerText = range(scopes.powmr);
+
+  if (landedCostVal) landedCostVal.innerText = range(scopes.landed);
+
+  document.querySelectorAll(".cmp-kwh").forEach(function (td) {
+    td.innerText = targetKwh + " kWh";
+  });
+
+  var landedMidVal = document.getElementById("landedMidVal");
+
+  if (landedMidVal) {
+    var mid = (scopes.landed.lo + scopes.landed.hi) / 2;
+
+    landedMidVal.innerText = "\u2248" + money(mid);
+  }
+
+  // The grid-energy equivalence box that used to end this function was DEAD:
+  // it read #gridEqBox/#gridEqText, and neither id exists in any page, so its
+  // own `if (!gridEqBox || !gridEqText) return;` guard made the block - and
+  // its "before adding panels ... a real off-grid budget" copy - unreachable.
+  // Verified in a browser: both getElementById calls return null. Deleted
+  // rather than localised: adding six translations for a string that never
+  // rendered would record a claim about a surface that does not exist.
+  //
+  // Its only consumer, `utilityRate`, went with it, so that read is gone too.
+  // #utilityRate still drives this panel's other event wiring in
+  // setupEventListeners; nothing else about the panel changed.
+}
+
+function scrollToSection(id) {
+  var target = document.getElementById(id);
+
+  if (target) {
+    target.scrollIntoView({
+      behavior: window.scrollBehavior(),
+      block: "start",
+    });
+  }
+}
+
+function setupEventListeners() {
+  var navSizeArray = document.getElementById("btnNavSizeArray");
+
+  var heroSizing = document.getElementById("btnHeroSizing");
+
+  var heroCompare = document.getElementById("btnHeroCompare");
+
+  var calcAdvisor = document.getElementById("btnCalcAdvisor");
+
+  var terms1 = document.getElementById("btnLegalTerms1");
+
+  var terms2 = document.getElementById("btnLegalTerms2");
+
+  var terms3 = document.getElementById("btnLegalTerms3");
+
+  var closeSizing = document.getElementById("btnCloseSizing");
+
+  var closeLegal = document.getElementById("btnCloseLegal");
+
+  var intakeCalc = document.getElementById("btnIntakeCalculate");
+
+  var sendChat = document.getElementById("btnSendChat");
+
+  var targetKwhInput = document.getElementById("targetKwh");
+
+  var utilityRateSelect = document.getElementById("utilityRate");
+
+  var intakeModeSelect = document.getElementById("intakeMode");
+
+  var chatInput = document.getElementById("chatInput");
+
+  // The deterministic sizer is the product; the AI advisor explains results.
+
+  if (navSizeArray)
+    navSizeArray.addEventListener("click", function () {
+      scrollToSection("sizing");
+    });
+
+  if (heroSizing)
+    heroSizing.addEventListener("click", function () {
+      scrollToSection("sizing");
+    });
+
+  if (calcAdvisor)
+    calcAdvisor.addEventListener("click", function () {
+      scrollToSection("sizing");
+    });
+
+  if (heroCompare) heroCompare.addEventListener("click", window.scrollToCalc);
+
+  if (terms1) terms1.addEventListener("click", window.openLegalModal);
+
+  if (terms2) terms2.addEventListener("click", window.openLegalModal);
+
+  if (terms3) terms3.addEventListener("click", window.openLegalModal);
+
+  if (closeSizing)
+    closeSizing.addEventListener("click", window.closeSizingModal);
+
+  if (closeLegal) closeLegal.addEventListener("click", window.closeLegalModal);
+
+  if (intakeCalc) intakeCalc.addEventListener("click", runIntakeCalculation);
+
+  if (sendChat) sendChat.addEventListener("click", sendChatMsg);
+
+  var navToggle = document.getElementById("btnNavToggle");
+
+  if (navToggle) navToggle.addEventListener("click", window.toggleMobileNav);
+
+  // The system modal's footer "Close" button used to inline-call
+  // btnCloseSystem.click(). Binding it here keeps the handler out of the
+  // markup, which is what lets CSP drop script-src 'unsafe-inline'. Same route
+  // as the Escape handler: go through the wired closer so focus returns to the
+  // opener, and only hide directly if the app module never loaded.
+
+  var closeSystemSheet = document.getElementById("btnCloseSystemSheet");
+
+  if (closeSystemSheet)
+    closeSystemSheet.addEventListener("click", function () {
+      var wired = document.getElementById("btnCloseSystem");
+
+      if (wired) wired.click();
+
+      var modal = document.getElementById("systemModal");
+
+      if (modal && modal.style.display === "flex") modal.style.display = "none";
+    });
+
+  document.querySelectorAll(".mobile-nav-link").forEach(function (link) {
+    link.addEventListener("click", window.closeMobileNav);
+  });
+
+  document.addEventListener("click", function (e) {
+    var header = document.querySelector("header");
+
+    if (header && !header.contains(e.target)) {
+      window.closeMobileNav();
+    }
+  });
+
+  var invYes = document.getElementById("inverterHelpYes");
+
+  var invNo = document.getElementById("inverterHelpNo");
+
+  if (invYes) invYes.addEventListener("change", toggleInverterDetail);
+
+  if (invNo) invNo.addEventListener("change", toggleInverterDetail);
+
+  toggleInverterDetail();
+
+  if (targetKwhInput) targetKwhInput.addEventListener("input", updateCalc);
+
+  if (utilityRateSelect)
+    utilityRateSelect.addEventListener("change", updateCalc);
+
+  if (intakeModeSelect)
+    intakeModeSelect.addEventListener("change", toggleIntakeMode);
+
+  if (chatInput)
+    chatInput.addEventListener("keypress", function (e) {
+      if (e.key === "Enter") sendChatMsg();
+    });
+
+  updateCalc();
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", setupEventListeners);
+} else {
+  setupEventListeners();
+}
+
+// Divs styled as buttons (hero CTAs, "My location", terms, chat, close)
+
+// are clickable but not keyboard-operable by default. Give them a button
+
+// role, make them focusable, and fire their click on Enter/Space. This
+
+// also covers the modal .close-btn X buttons.
+
+function makeClickableDivsKeyboardOperable() {
+  document.querySelectorAll(".btn, .close-btn").forEach(function (el) {
+    if (el.tagName === "BUTTON" || el.tagName === "A") return;
+
+    if (el.getAttribute("role") === "button") return;
+
+    el.setAttribute("role", "button");
+
+    el.setAttribute("tabindex", "0");
+  });
+}
+
+function isClickableDivButton(t) {
+  return !!(
+    t &&
+    t.classList &&
+    (t.classList.contains("btn") || t.classList.contains("close-btn")) &&
+    t.getAttribute("role") === "button"
+  );
+}
+
+document.addEventListener("keydown", function (e) {
+  if (e.key !== "Enter" && e.key !== " ") return;
+
+  if (isClickableDivButton(e.target)) {
+    e.preventDefault();
+
+    e.target.click();
+  }
+});
+
+// Reduced-motion users get instant scrolling instead of JS smooth scroll.
+
+window.scrollBehavior = function scrollBehavior() {
+  return window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ? "auto"
+    : "smooth";
+};
+
+if (document.readyState === "loading") {
+  document.addEventListener(
+    "DOMContentLoaded",
+    makeClickableDivsKeyboardOperable,
+  );
+} else {
+  makeClickableDivsKeyboardOperable();
+}
+
+// Installable / offline-capable: after the first visit, the tool shell
+
+// loads with no network. Sizing math is client-side and satellite weather
+
+// is cached per location, so a visited site keeps working fully offline.
+
+if (
+  "serviceWorker" in navigator &&
+  (location.protocol === "https:" ||
+    location.hostname === "localhost" ||
+    location.hostname === "127.0.0.1")
+) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("./sw.js").catch(function () {
+      /* offline support unavailable  -  tool still works normally */
+    });
+  });
+}

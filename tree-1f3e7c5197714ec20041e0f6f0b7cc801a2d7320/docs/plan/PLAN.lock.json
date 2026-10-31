@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "plan": "docs/plan/MASTER_PLAN.md",
+  "genesis_sha256": "ee27dbd42166352f4dcda832e611c9dc5c7fa4759f332a0d3a91319f18003ec6",
+<<<<<<< HEAD
+  "current_sha256": "09f4a8379da73b95c97e9a3930565516d106ce61443569036488b3e1d16d3ee7"
+=======
+  "current_sha256": "269423b9d14d327fecf4ade03bec5d3098646269c346b3e390de2a1d3c7e6345"
+>>>>>>> 2eb349f8 (fix(jev): require 95 score and confidence for P9.5)
+}

@@ -1,0 +1,818 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#090d16" />
+    <link rel="icon" type="image/svg+xml" href="../assets/icon.svg" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="48x48"
+      href="../assets/favicon-48.png"
+    />
+    <link rel="apple-touch-icon" href="../assets/apple-touch-icon.png" />
+    <link rel="manifest" href="../manifest.webmanifest" />
+    <title>Global Solar Payback Heatmap — Where Does It Pay Off?</title>
+    <meta
+      name="description"
+      content="World map of solar payback for 40,000+ cities from NASA weather. See where solar pays fastest. Free, no signup."
+    />
+    <link
+      rel="canonical"
+      href="https://freeoffgridcalculator.com/solar-heatmap/"
+    />
+    <!-- hreflang is intentionally en + x-default only: the ?lang= variants
+         are client-side translations that canonical here, so Google would
+         discard them as non-indexable targets. -->
+    <link
+      rel="alternate"
+      hreflang="en"
+      href="https://freeoffgridcalculator.com/solar-heatmap/"
+    />
+    <link
+      rel="alternate"
+      hreflang="x-default"
+      href="https://freeoffgridcalculator.com/solar-heatmap/"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Free Off-Grid Calculator" />
+    <meta property="og:locale" content="en_US" />
+    <meta
+      property="og:title"
+      content="Global Solar Payback Heatmap — Where Does It Pay Off?"
+    />
+    <meta
+      property="og:description"
+      content="World map of solar payback for 40,000+ cities from NASA weather. See where solar pays fastest. Free, no signup."
+    />
+    <meta
+      property="og:url"
+      content="https://freeoffgridcalculator.com/solar-heatmap/"
+    />
+    <meta
+      property="og:image"
+      content="https://freeoffgridcalculator.com/assets/og-card.jpg"
+    />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="Global Solar Payback Heatmap — Where Does It Pay Off?"
+    />
+    <meta
+      name="twitter:description"
+      content="World map of solar payback for 40,000+ cities from NASA weather. See where solar pays fastest. Free, no signup."
+    />
+    <meta
+      name="twitter:image"
+      content="https://freeoffgridcalculator.com/assets/og-card.jpg"
+    />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebPage",
+            "@id": "https://freeoffgridcalculator.com/solar-heatmap/#page",
+            "name": "Global Solar Payback Heatmap",
+            "description": "Interactive world map showing solar payback periods for 40,000+ cities worldwide. Computed from real NASA satellite weather data.",
+            "url": "https://freeoffgridcalculator.com/solar-heatmap/",
+            "publisher": {
+              "@type": "Organization",
+              "name": "BigEnergyCo",
+              "url": "https://freeoffgridcalculator.com"
+            }
+          },
+          {
+            "@type": "BreadcrumbList",
+            "@id": "https://freeoffgridcalculator.com/solar-heatmap/#breadcrumb",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://freeoffgridcalculator.com/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Solar Calculator by City",
+                "item": "https://freeoffgridcalculator.com/solar-calculator/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "Global Solar Payback Heatmap",
+                "item": "https://freeoffgridcalculator.com/solar-heatmap/"
+              }
+            ]
+          }
+        ]
+      }
+    </script>
+    <!-- Leaflet CSS is loaded by the shared stylesheet module. -->
+    <style>
+      :root {
+        color-scheme: dark;
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 255, 255, 0.28) rgba(11, 15, 23, 0.85);
+        --accent: #00e699;
+        --text: #e5e7eb;
+        --muted: #9ca3af;
+        --bg: #0b0f17;
+        --card: rgba(255, 255, 255, 0.04);
+        --border: rgba(255, 255, 255, 0.12);
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: rgba(11, 15, 23, 0.85);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.22);
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.38);
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          Roboto,
+          sans-serif;
+        line-height: 1.7;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 1.25rem;
+      }
+      header {
+        border-bottom: 1px solid var(--border);
+        padding: max(1rem, env(safe-area-inset-top)) 0 1rem;
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+        background: rgba(11, 15, 23, 0.92);
+        position: sticky;
+        top: 0;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        z-index: 1000;
+      }
+      header .container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+      }
+      .logo {
+        font-weight: 800;
+        font-size: 1.25rem;
+        letter-spacing: -0.5px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        color: #fff;
+      }
+      .logo .highlight {
+        color: var(--accent);
+      }
+      nav {
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        flex-wrap: wrap;
+      }
+      nav a {
+        color: var(--muted);
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: color 0.2s;
+      }
+      nav a:hover,
+      nav a.active {
+        color: #fff;
+      }
+      .header-cta {
+        display: flex;
+        align-items: center;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 0.88rem;
+        cursor: pointer;
+        text-decoration: none !important;
+        transition: all 0.2s ease;
+        border: none;
+      }
+      .btn-primary {
+        background: linear-gradient(135deg, #00e699 0%, #00b377 100%);
+        color: #04120c;
+        box-shadow: 0 0 12px rgba(0, 230, 153, 0.25);
+      }
+      .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 0 18px rgba(0, 230, 153, 0.4);
+        color: #04120c;
+      }
+      h1 {
+        color: #fff;
+        font-size: 2.1rem;
+        line-height: 1.25;
+        letter-spacing: -0.5px;
+        margin-bottom: 0.75rem;
+      }
+      h2 {
+        color: #fff;
+        font-size: 1.35rem;
+        margin: 2.2rem 0 0.8rem;
+      }
+      p {
+        margin-bottom: 1rem;
+      }
+      strong {
+        color: #fff;
+      }
+
+      /* Map container */
+      #map-wrapper {
+        position: relative;
+        width: 100%;
+        margin: 1.5rem 0;
+      }
+      #map {
+        width: 100%;
+        height: 70vh;
+        min-height: 400px;
+        max-height: 800px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: #0d1117;
+      }
+      /* Override Leaflet styles for dark mode */
+      .leaflet-container {
+        background: #0d1117;
+      }
+      .leaflet-tile-pane {
+        filter: brightness(0.7) contrast(1.1) saturate(0.3);
+      }
+      .leaflet-popup-content-wrapper {
+        background: rgba(11, 15, 23, 0.95) !important;
+        color: var(--text) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 10px !important;
+        backdrop-filter: blur(10px);
+      }
+      .leaflet-popup-tip {
+        background: rgba(11, 15, 23, 0.95) !important;
+      }
+      .leaflet-popup-content {
+        font-family: inherit !important;
+        font-size: 0.9rem !important;
+        line-height: 1.6 !important;
+      }
+      .leaflet-popup-content a {
+        color: var(--accent) !important;
+        text-decoration: none !important;
+        font-weight: 600;
+      }
+      .leaflet-popup-close-button {
+        color: var(--muted) !important;
+      }
+      .leaflet-control-zoom a {
+        background: rgba(11, 15, 23, 0.85) !important;
+        color: var(--text) !important;
+        border-color: var(--border) !important;
+      }
+      .leaflet-control-attribution {
+        display: none;
+      }
+
+      /* Controls panel */
+      .controls {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        z-index: 800;
+        background: rgba(11, 15, 23, 0.92);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        max-width: 320px;
+      }
+      .controls label {
+        display: block;
+        color: var(--muted);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.3rem;
+        font-weight: 600;
+      }
+      .controls .group-label {
+        display: block;
+        color: var(--muted);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.3rem;
+        font-weight: 600;
+      }
+      .btn-group {
+        display: flex;
+        gap: 0;
+        margin-bottom: 0.6rem;
+      }
+      .btn-group button {
+        flex: 1;
+        padding: 0.35rem 0.5rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--muted);
+        cursor: pointer;
+        transition: all 0.15s;
+        font-family: inherit;
+      }
+      .btn-group button:first-child {
+        border-radius: 6px 0 0 6px;
+      }
+      .btn-group button:last-child {
+        border-radius: 0 6px 6px 0;
+      }
+      .btn-group button + button {
+        border-left: none;
+      }
+      .btn-group button.active {
+        background: rgba(0, 230, 153, 0.15);
+        color: var(--accent);
+        border-color: rgba(0, 230, 153, 0.4);
+      }
+      .btn-group button.active + button {
+        border-left-color: rgba(0, 230, 153, 0.4);
+      }
+
+      /* Legend */
+      .legend {
+        margin-top: 0.5rem;
+        font-size: 0.75rem;
+        color: var(--muted);
+      }
+      .legend-bar {
+        display: flex;
+        height: 10px;
+        border-radius: 5px;
+        overflow: hidden;
+        margin: 0.3rem 0;
+      }
+      .legend-bar div {
+        flex: 1;
+      }
+      .legend-labels {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.7rem;
+      }
+
+      /* Loading state */
+      #loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 70vh;
+        min-height: 400px;
+        max-height: 800px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: #0d1117;
+        color: var(--muted);
+        font-size: 1.1rem;
+      }
+      #loading .spinner {
+        width: 24px;
+        height: 24px;
+        border: 3px solid var(--border);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin-right: 0.75rem;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #loading .spinner {
+          animation: none;
+          border-top-color: var(--border);
+        }
+      }
+
+      /* Rankings section */
+      .rankings {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        margin: 1.5rem 0;
+      }
+      .rank-card {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 1rem 1.2rem;
+        background: var(--card);
+      }
+      .rank-card h3 {
+        color: var(--accent);
+        font-size: 1rem;
+        margin-bottom: 0.6rem;
+      }
+      .rank-card.worst h3 {
+        color: #ff6b6b;
+      }
+      .rank-card ol {
+        list-style: decimal;
+        margin-left: 1.2rem;
+        font-size: 0.9rem;
+      }
+      .rank-card li {
+        margin-bottom: 0.3rem;
+      }
+      .rank-card .years {
+        font-family: ui-monospace, Menlo, monospace;
+        font-weight: 700;
+        color: #fff;
+      }
+      .rank-card .detail {
+        color: var(--muted);
+        font-size: 0.8rem;
+      }
+
+      /* Disclaimer */
+      .disclaimer {
+        border: 1px solid rgba(255, 200, 50, 0.25);
+        background: rgba(255, 200, 50, 0.05);
+        border-radius: 10px;
+        padding: 1rem 1.2rem;
+        margin: 1.5rem 0;
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+      .disclaimer strong {
+        color: #ffc832;
+      }
+
+      footer {
+        border-top: 1px solid var(--border);
+        padding: 2.5rem 0 max(3rem, env(safe-area-inset-bottom));
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+        margin-top: 3rem;
+        color: var(--muted);
+        font-size: 0.85rem;
+        text-align: center;
+      }
+      footer a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+
+      @media (max-width: 700px) {
+        h1 {
+          font-size: 1.5rem;
+        }
+        .container {
+          padding: 0 1rem;
+        }
+        nav a {
+          margin-left: 0.65rem;
+          font-size: 0.85rem;
+        }
+        .controls {
+          top: 8px;
+          right: 8px;
+          padding: 0.5rem 0.65rem;
+          max-width: 250px;
+        }
+        .btn-group button {
+          padding: 0.3rem 0.35rem;
+          font-size: 0.72rem;
+          min-height: 44px;
+        }
+        .rankings {
+          grid-template-columns: 1fr;
+        }
+        #map {
+          height: 55vh;
+          min-height: 300px;
+        }
+      }
+      .skip-link {
+        position: absolute;
+        left: -9999px;
+        top: 0.5rem;
+        z-index: 20;
+        padding: 0.7rem 1rem;
+        background: #00e699;
+        color: #04120c;
+        font-weight: 800;
+        border-radius: 8px;
+      }
+      .skip-link:focus {
+        left: 0.75rem;
+      }
+      a:focus-visible,
+      button:focus-visible,
+      summary:focus-visible {
+        outline: 2px solid #00e699;
+        outline-offset: 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header>
+      <div class="container">
+        <a class="logo" href="../" aria-label="BigEnergyCo Home">
+          <span>⚡</span>
+          <span>BigEnergy<span class="highlight">Co</span></span>
+        </a>
+        <nav>
+          <a href="./" class="active">Heatmap</a>
+          <a href="../#bom">Hardware Reference</a>
+          <a href="../blog/">Guides &amp; Blog</a>
+          <a href="../about/">About</a>
+          <a href="../#legal">Terms &amp; Disclaimer</a>
+        </nav>
+        <div class="header-cta">
+          <a href="../#sizing" class="btn btn-primary">Size Your System</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main" class="container">
+      <article style="padding: 2rem 0 1rem">
+        <h1>🗺️ Global Solar Payback &amp; True Grid Cost Heatmap</h1>
+        <p>
+          What does electricity really cost around the world, and where does
+          going solar pay off fastest? This map models
+          <strong>40,000+ locations</strong> worldwide. Crucially, it accounts
+          for
+          <strong
+            >the percentage of the population serviced by the grid versus backup
+            generators</strong
+          >
+          — weighting paper utility tariffs with real fuel costs
+          ($0.40–$0.65/kWh) for an accurate picture of electricity costs across
+          the whole population.
+        </p>
+
+        <div id="map-wrapper">
+          <div id="loading" role="status">
+            <div class="spinner" aria-hidden="true"></div>
+            Loading 40,000 cities…
+          </div>
+          <div
+            id="map"
+            style="display: none"
+            role="application"
+            aria-label="Interactive world map of solar payback. The rankings table below lists the same data as text."
+          ></div>
+          <div class="controls" id="controls" style="display: none">
+            <span class="group-label" id="lblMetric">View / Metric</span>
+            <div
+              class="btn-group"
+              id="metric-btns"
+              role="group"
+              aria-labelledby="lblMetric"
+            >
+              <button
+                data-metric="cost"
+                class="active"
+                title="Population-weighted electricity cost ($/kWh) across grid &amp; generators"
+              >
+                True Grid Cost
+              </button>
+              <button
+                data-metric="p"
+                title="Years until solar installation pays for itself"
+              >
+                Payback
+              </button>
+              <button
+                data-metric="b"
+                title="Years until solar lifecycle net savings break even"
+              >
+                Break-even
+              </button>
+            </div>
+            <span class="group-label" id="lblBasis">Cost Basis</span>
+            <div
+              class="btn-group"
+              id="basis-btns"
+              role="group"
+              aria-labelledby="lblBasis"
+            >
+              <button
+                data-basis="real"
+                class="active"
+                title="Weighted average: accounts for grid coverage, outage rates &amp; generator fuel"
+              >
+                True Cost (Weighted)
+              </button>
+              <button
+                data-basis="grid"
+                title="Official utility paper tariff only"
+              >
+                Grid Only
+              </button>
+            </div>
+            <div id="usage-control-wrap" style="display: none">
+              <span class="group-label" id="lblUsage"
+                >Daily usage (kWh/day)</span
+              >
+              <div
+                class="btn-group"
+                id="usage-btns"
+                role="group"
+                aria-labelledby="lblUsage"
+              >
+                <button data-idx="0">5</button>
+                <button data-idx="1" class="active">10</button>
+                <button data-idx="2">20</button>
+                <button data-idx="3">30</button>
+              </div>
+            </div>
+            <div class="legend">
+              <div id="legend-title">True Grid Cost ($/kWh, weighted)</div>
+              <div class="legend-bar" id="legend-bar">
+                <div style="background: #00e699"></div>
+                <div style="background: #7ec850"></div>
+                <div style="background: #c8b400"></div>
+                <div style="background: #e68a00"></div>
+                <div style="background: #e64545"></div>
+                <div id="legend-bar-last" style="background: #991b1b"></div>
+              </div>
+              <div class="legend-labels" id="legend-labels">
+                <span>&le;$0.10</span>
+                <span>$0.18</span>
+                <span>$0.28</span>
+                <span>$0.40</span>
+                <span>$0.55</span>
+                <span>&gt;$0.55</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <h2>Key Takeaways</h2>
+        <div class="rankings" id="rankings">
+          <div class="rank-card" id="best-card">
+            <h3>⚡ Fastest Payback</h3>
+            <ol id="best-list"></ol>
+          </div>
+          <div class="rank-card worst" id="worst-card">
+            <h3>🔴 Slowest Payback</h3>
+            <ol id="worst-list"></ol>
+          </div>
+        </div>
+
+        <h2>How this works &amp; The Generator Paradox</h2>
+        <p>
+          Why do fragile grids look cheap on paper, but solar is actually
+          exploding there? In countries like
+          <strong
+            >Nigeria (43% un-electrified, remaining 57% on rolling
+            blackouts)</strong
+          >, Lebanon, Haiti, and Pakistan, official utility rates look low
+          ($0.05–$0.09/kWh) because power is heavily rationed or subsidized.
+          When the power cuts out, families and businesses burn petrol and
+          diesel generators at <strong>$0.40–$0.65/kWh</strong>.
+        </p>
+        <ul style="margin: 0 0 1rem 1.25rem">
+          <li>
+            <strong>True Grid Cost View (Default):</strong> Calculates the
+            weighted average cost of electricity across the entire population,
+            factoring in the percentage serviced by the grid versus backup
+            generators.
+          </li>
+          <li>
+            <strong>True Cost (Weighted) Basis:</strong> Blends official rates
+            with generator fuel costs weighted by unserved population and
+            average grid outage duration. Nigeria's true electricity cost is
+            ~$0.41/kWh (payback under 1.5 years) despite a nominal tariff of
+            $0.07/kWh.
+          </li>
+          <li>
+            <strong>Grid Only Basis:</strong> Assumes a 24/7 unlimited stable
+            grid at brochure utility prices.
+          </li>
+          <li>
+            <strong>Solar yield:</strong> Annual kWh per kW of panels simulated
+            from NASA satellite weather stations.
+          </li>
+          <li>
+            <strong>System cost:</strong> Panels + LFP battery + inverter at
+            landed-DIY pricing including regional freight.
+          </li>
+        </ul>
+        <p>
+          Want exact numbers for your specific location?
+          <a href="../#sizing" style="color: var(--accent); font-weight: 600"
+            >Run the full calculator →</a
+          >
+        </p>
+
+        <div class="disclaimer">
+          <strong>⚠️ Educational estimates only.</strong> Tariff data is
+          approximate regional averages. Solar yield uses the nearest of 66
+          reference stations, not your exact rooftop. Real payback depends on
+          your actual bill, roof orientation, shading, local incentives, and
+          installation costs. Run the full calculator or consult a professional
+          for exact figures.
+        </div>
+
+        <h2>Related guides</h2>
+        <ul>
+          <li>
+            <a href="../blog/how-to-cut-electricity-bill-with-solar/"
+              >How to cut your bill with solar</a
+            >
+          </li>
+          <li>
+            <a href="../blog/off-grid-vs-grid-tie-payback/"
+              >Off-grid vs grid-tied payback</a
+            >
+          </li>
+          <li>
+            <a href="../solar-calculator/"
+              >Solar sizing for 66 benchmark cities</a
+            >
+          </li>
+          <li><a href="../about/">About the method</a></li>
+        </ul>
+      </article>
+    </main>
+
+    <footer>
+      <div class="container">
+        <p>
+          Provided free, as-is, with no warranty. Educational estimates only —
+          verify everything with a licensed professional before building.
+        </p>
+        <p style="margin-top: 0.75rem">
+          <a href="../">Free Estimator</a> ·
+          <a href="../solar-calculator/">Worldwide Benchmarks</a> ·
+          <a href="../blog/">All Guides</a> · <a href="../about/">About</a> ·
+          <a href="mailto:lucasballek@gmail.com">Contact</a>
+        </p>
+      </div>
+    </footer>
+
+    <script
+      defer
+      src="../assets/vendor/leaflet/leaflet.js?v=20261022p"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin="anonymous"
+    ></script>
+<<<<<<< HEAD
+    <script src="../assets/js/heatmap-palette.js?v=20261022p"></script>
+    <script type="module" src="../assets/js/heatmap.js?v=20261022p"></script>
+=======
+    <script src="../assets/js/heatmap.js?v=20261006a"></script>
+>>>>>>> 2350d594 (fix(rebase): re-resolve the slider-canonical branch on current main)
+  </body>
+</html>

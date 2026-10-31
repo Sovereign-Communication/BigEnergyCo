@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+
+Sitemap: https://freeoffgridcalculator.com/sitemap.xml
+
+<!-- staged-guard probe -->

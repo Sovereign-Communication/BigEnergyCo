@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "plan": "docs/plan/MASTER_PLAN.md",
+  "genesis_sha256": "ee27dbd42166352f4dcda832e611c9dc5c7fa4759f332a0d3a91319f18003ec6",
+<<<<<<< HEAD
+  "current_sha256": "cfd4af76b4c4a29305a2c6d3ceae91e83ce43d22e4fa8c52f1e115a67847f59a"
+=======
+  "current_sha256": "6b64c66eb7096c4c9c2cd3b90b41027ecc4e40120a6230f84969680a9a46be4c"
+>>>>>>> dda865d1 (fix(plan): format P9 table and re-stamp A-004 pin to the final plan hash)
+}
