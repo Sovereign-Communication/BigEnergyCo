@@ -1,0 +1,1196 @@
+{
+ "home/mobile": {
+  "score": 74,
+  "fcp": 3753.1766880825517,
+  "lcp": 4734.012025699062,
+  "tbt": 35,
+  "tti": 4734.012025699063,
+  "si": 3753.1766880825517,
+  "lcpBreakdown": {
+   "type": "table",
+   "headings": [
+    {
+     "key": "label",
+     "valueType": "text",
+     "label": "Subpart"
+    },
+    {
+     "key": "duration",
+     "valueType": "ms",
+     "label": "Duration"
+    }
+   ],
+   "items": [
+    {
+     "subpart": "timeToFirstByte",
+     "label": "Time to first byte",
+     "duration": 15.248
+    },
+    {
+     "subpart": "elementRenderDelay",
+     "label": "Element render delay",
+     "duration": 275.394
+    }
+   ]
+  },
+  "renderBlocking": [],
+  "bootup": [
+   {
+    "url": "index.html",
+    "total": 841,
+    "scripting": 3
+   },
+   {
+    "url": "Unattributable",
+    "total": 270,
+    "scripting": 6
+   },
+   {
+    "url": "ui.js?v=20260930b",
+    "total": 128,
+    "scripting": 120
+   }
+  ],
+  "mainthread": [
+   {
+    "group": "styleLayout",
+    "groupLabel": "Style & Layout",
+    "duration": 763.6719999999999
+   },
+   {
+    "group": "other",
+    "groupLabel": "Other",
+    "duration": 356.59600000000034
+   },
+   {
+    "group": "scriptEvaluation",
+    "groupLabel": "Script Evaluation",
+    "duration": 140.7520000000001
+   },
+   {
+    "group": "parseHTML",
+    "groupLabel": "Parse HTML & CSS",
+    "duration": 49.852000000000004
+   },
+   {
+    "group": "paintCompositeRender",
+    "groupLabel": "Rendering",
+    "duration": 18.239999999999995
+   },
+   {
+    "group": "scriptParseCompile",
+    "groupLabel": "Script Parsing & Compilation",
+    "duration": 13.62
+   }
+  ],
+  "longTasks": [
+   {
+    "url": "index.html",
+    "start": 1304,
+    "dur": 364
+   },
+   {
+    "url": "ui.js?v=20260930b",
+    "start": 3522,
+    "dur": 120
+   },
+   {
+    "url": "Unattributable",
+    "start": 1668,
+    "dur": 74
+   }
+  ],
+  "networkRtt": 77.15299999999999,
+  "docLatency": {
+   "type": "checklist",
+   "items": {
+    "noRedirects": {
+     "label": "Avoids redirects",
+     "value": true
+    },
+    "serverResponseIsFast": {
+     "label": "Server responds quickly (observed 13 ms)",
+     "value": true
+    },
+    "usesCompression": {
+     "label": "Applies text compression",
+     "value": true
+    }
+   },
+   "debugData": {
+    "type": "debugdata",
+    "redirectDuration": 0,
+    "serverResponseTime": 13,
+    "uncompressedResponseBytes": 0,
+    "wastedBytes": 0
+   }
+  },
+  "networkDeps": {
+   "type": "list",
+   "items": [
+    {
+     "type": "list-section",
+     "value": {
+      "type": "network-tree",
+      "chains": {
+       "B9F7468CB9D53F6343E4F4C19D32D303": {
+        "url": "http://127.0.0.1:61202/index.html",
+        "navStartToEndTime": 50,
+        "transferSize": 125851,
+        "isLongest": true,
+        "children": {
+         "6672.11": {
+          "url": "http://127.0.0.1:61202/manifest.webmanifest",
+          "navStartToEndTime": 65,
+          "transferSize": 2042,
+          "isLongest": true,
+          "children": {}
+         }
+        }
+       }
+      },
+      "longestChain": {
+       "duration": 65
+      }
+     }
+    },
+    {
+     "type": "list-section",
+     "title": "Preconnected origins",
+     "description": "[preconnect](https://developer.chrome.com/docs/lighthouse/performance/uses-rel-preconnect/) hints help the browser establish a connection earlier in the page load, saving time when the first request for that origin is made. The following are the origins that the page preconnected to.",
+     "value": {
+      "type": "table",
+      "headings": [
+       {
+        "key": "origin",
+        "valueType": "text",
+        "subItemsHeading": {
+         "key": "warning"
+        },
+        "label": "Origin"
+       },
+       {
+        "key": "source",
+        "valueType": "node",
+        "label": "Source"
+       }
+      ],
+      "items": [
+       {
+        "origin": "https://power.larc.nasa.gov/",
+        "source": {
+         "type": "node",
+         "lhId": "page-1-LINK",
+         "path": "1,HTML,0,HEAD,41,LINK",
+         "selector": "head > link",
+         "boundingRect": {
+          "top": 0,
+          "bottom": 0,
+          "left": 0,
+          "right": 0,
+          "width": 0,
+          "height": 0
+         },
+         "snippet": "<link rel=\"preconnect\" href=\"https://power.larc.nasa.gov\" crossorigin=\"\">",
+         "nodeLabel": "head > link"
+        },
+        "subItems": {
+         "type": "subitems",
+         "items": [
+          {
+           "warning": "Unused preconnect. Only use preconnect for origins that the page is likely to request."
+          }
+         ]
+        }
+       },
+       {
+        "origin": "https://open.er-api.com/",
+        "source": {
+         "type": "node",
+         "lhId": "page-2-LINK",
+         "path": "1,HTML,0,HEAD,42,LINK",
+         "selector": "head > link",
+         "boundingRect": {
+          "top": 0,
+          "bottom": 0,
+          "left": 0,
+          "right": 0,
+          "width": 0,
+          "height": 0
+         },
+         "snippet": "<link rel=\"preconnect\" href=\"https://open.er-api.com\">",
+         "nodeLabel": "head > link"
+        },
+        "subItems": {
+         "type": "subitems",
+         "items": []
+        }
+       },
+       {
+        "origin": "https://nominatim.openstreetmap.org/",
+        "source": {
+         "type": "node",
+         "lhId": "page-3-LINK",
+         "path": "1,HTML,0,HEAD,43,LINK",
+         "selector": "head > link",
+         "boundingRect": {
+          "top": 0,
+          "bottom": 0,
+          "left": 0,
+          "right": 0,
+          "width": 0,
+          "height": 0
+         },
+         "snippet": "<link rel=\"preconnect\" href=\"https://nominatim.openstreetmap.org\" crossorigin=\"\">",
+         "nodeLabel": "head > link"
+        },
+        "subItems": {
+         "type": "subitems",
+         "items": [
+          {
+           "warning": "Unused preconnect. Only use preconnect for origins that the page is likely to request."
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "type": "list-section",
+     "title": "Preconnect candidates",
+     "description": "Add [preconnect](https://developer.chrome.com/docs/lighthouse/performance/uses-rel-preconnect/) hints to your most important origins, but try to use no more than 4.",
+     "value": {
+      "type": "text",
+      "value": "No additional origins are good candidates for preconnecting"
+     }
+    }
+   ]
+  },
+  "unusedJs": 1190,
+  "thirdParty": [
+   {
+    "entity": "er-api.com",
+    "mainThreadTime": 0,
+    "transferSize": 2151,
+    "subItems": {
+     "type": "subitems",
+     "items": [
+      {
+       "url": "https://open.er-api.com/v6/latest/USD",
+       "mainThreadTime": 0,
+       "transferSize": 2151
+      }
+     ]
+    }
+   }
+  ]
+ },
+ "home/desktop": {
+  "score": 56,
+  "fcp": 4761.799269373751,
+  "lcp": 6595.390320763572,
+  "tbt": 42.5,
+  "tti": 6595.390320763572,
+  "si": 4761.799269373751,
+  "lcpBreakdown": {
+   "type": "table",
+   "headings": [
+    {
+     "key": "label",
+     "valueType": "text",
+     "label": "Subpart"
+    },
+    {
+     "key": "duration",
+     "valueType": "ms",
+     "label": "Duration"
+    }
+   ],
+   "items": [
+    {
+     "subpart": "timeToFirstByte",
+     "label": "Time to first byte",
+     "duration": 10.311
+    },
+    {
+     "subpart": "elementRenderDelay",
+     "label": "Element render delay",
+     "duration": 428.518
+    }
+   ]
+  },
+  "renderBlocking": [],
+  "bootup": [
+   {
+    "url": "index.html",
+    "total": 1273,
+    "scripting": 3
+   },
+   {
+    "url": "Unattributable",
+    "total": 278,
+    "scripting": 5
+   },
+   {
+    "url": "ui.js?v=20260930b",
+    "total": 142,
+    "scripting": 134
+   }
+  ],
+  "mainthread": [
+   {
+    "group": "styleLayout",
+    "groupLabel": "Style & Layout",
+    "duration": 1171.72
+   },
+   {
+    "group": "other",
+    "groupLabel": "Other",
+    "duration": 365.85600000000034
+   },
+   {
+    "group": "scriptEvaluation",
+    "groupLabel": "Script Evaluation",
+    "duration": 156.70800000000008
+   },
+   {
+    "group": "parseHTML",
+    "groupLabel": "Parse HTML & CSS",
+    "duration": 43.407999999999994
+   },
+   {
+    "group": "paintCompositeRender",
+    "groupLabel": "Rendering",
+    "duration": 35.019999999999996
+   },
+   {
+    "group": "scriptParseCompile",
+    "groupLabel": "Script Parsing & Compilation",
+    "duration": 10.975999999999997
+   }
+  ],
+  "longTasks": [
+   {
+    "url": "index.html",
+    "start": 1303,
+    "dur": 576
+   },
+   {
+    "url": "ui.js?v=20260930b",
+    "start": 3528,
+    "dur": 135
+   },
+   {
+    "url": "Unattributable",
+    "start": 1879,
+    "dur": 93
+   },
+   {
+    "url": "Unattributable",
+    "start": 1213,
+    "dur": 51
+   }
+  ],
+  "networkRtt": 0.0801211989285365,
+  "docLatency": {
+   "type": "checklist",
+   "items": {
+    "noRedirects": {
+     "label": "Avoids redirects",
+     "value": true
+    },
+    "serverResponseIsFast": {
+     "label": "Server responds quickly (observed 8 ms)",
+     "value": true
+    },
+    "usesCompression": {
+     "label": "Applies text compression",
+     "value": true
+    }
+   },
+   "debugData": {
+    "type": "debugdata",
+    "redirectDuration": 0,
+    "serverResponseTime": 8,
+    "uncompressedResponseBytes": 0,
+    "wastedBytes": 0
+   }
+  },
+  "networkDeps": {
+   "type": "list",
+   "items": [
+    {
+     "type": "list-section",
+     "value": {
+      "type": "network-tree",
+      "chains": {
+       "A8EA5902155BF2F8EAF3B410961B5224": {
+        "url": "http://127.0.0.1:61202/index.html",
+        "navStartToEndTime": 48,
+        "transferSize": 125851,
+        "isLongest": true,
+        "children": {
+         "6732.11": {
+          "url": "http://127.0.0.1:61202/manifest.webmanifest",
+          "navStartToEndTime": 57,
+          "transferSize": 2042,
+          "isLongest": true,
+          "children": {}
+         }
+        }
+       }
+      },
+      "longestChain": {
+       "duration": 57
+      }
+     }
+    },
+    {
+     "type": "list-section",
+     "title": "Preconnected origins",
+     "description": "[preconnect](https://developer.chrome.com/docs/lighthouse/performance/uses-rel-preconnect/) hints help the browser establish a connection earlier in the page load, saving time when the first request for that origin is made. The following are the origins that the page preconnected to.",
+     "value": {
+      "type": "table",
+      "headings": [
+       {
+        "key": "origin",
+        "valueType": "text",
+        "subItemsHeading": {
+         "key": "warning"
+        },
+        "label": "Origin"
+       },
+       {
+        "key": "source",
+        "valueType": "node",
+        "label": "Source"
+       }
+      ],
+      "items": [
+       {
+        "origin": "https://power.larc.nasa.gov/",
+        "source": {
+         "type": "node",
+         "lhId": "page-3-LINK",
+         "path": "1,HTML,0,HEAD,41,LINK",
+         "selector": "head > link",
+         "boundingRect": {
+          "top": 0,
+          "bottom": 0,
+          "left": 0,
+          "right": 0,
+          "width": 0,
+          "height": 0
+         },
+         "snippet": "<link rel=\"preconnect\" href=\"https://power.larc.nasa.gov\" crossorigin=\"\">",
+         "nodeLabel": "head > link"
+        },
+        "subItems": {
+         "type": "subitems",
+         "items": [
+          {
+           "warning": "Unused preconnect. Only use preconnect for origins that the page is likely to request."
+          }
+         ]
+        }
+       },
+       {
+        "origin": "https://open.er-api.com/",
+        "source": {
+         "type": "node",
+         "lhId": "page-4-LINK",
+         "path": "1,HTML,0,HEAD,42,LINK",
+         "selector": "head > link",
+         "boundingRect": {
+          "top": 0,
+          "bottom": 0,
+          "left": 0,
+          "right": 0,
+          "width": 0,
+          "height": 0
+         },
+         "snippet": "<link rel=\"preconnect\" href=\"https://open.er-api.com\">",
+         "nodeLabel": "head > link"
+        },
+        "subItems": {
+         "type": "subitems",
+         "items": []
+        }
+       },
+       {
+        "origin": "https://nominatim.openstreetmap.org/",
+        "source": {
+         "type": "node",
+         "lhId": "page-5-LINK",
+         "path": "1,HTML,0,HEAD,43,LINK",
+         "selector": "head > link",
+         "boundingRect": {
+          "top": 0,
+          "bottom": 0,
+          "left": 0,
+          "right": 0,
+          "width": 0,
+          "height": 0
+         },
+         "snippet": "<link rel=\"preconnect\" href=\"https://nominatim.openstreetmap.org\" crossorigin=\"\">",
+         "nodeLabel": "head > link"
+        },
+        "subItems": {
+         "type": "subitems",
+         "items": [
+          {
+           "warning": "Unused preconnect. Only use preconnect for origins that the page is likely to request."
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "type": "list-section",
+     "title": "Preconnect candidates",
+     "description": "Add [preconnect](https://developer.chrome.com/docs/lighthouse/performance/uses-rel-preconnect/) hints to your most important origins, but try to use no more than 4.",
+     "value": {
+      "type": "text",
+      "value": "No additional origins are good candidates for preconnecting"
+     }
+    }
+   ]
+  },
+  "unusedJs": 1510,
+  "thirdParty": [
+   {
+    "entity": "er-api.com",
+    "mainThreadTime": 0,
+    "transferSize": 1965,
+    "subItems": {
+     "type": "subitems",
+     "items": [
+      {
+       "url": "https://open.er-api.com/v6/latest/USD",
+       "mainThreadTime": 0,
+       "transferSize": 1965
+      }
+     ]
+    }
+   }
+  ]
+ },
+ "heatmap/mobile": {
+  "score": 83,
+  "fcp": 2289.5193999999997,
+  "lcp": 2289.5193999999997,
+  "tbt": 484.5,
+  "tti": 3111.8250325,
+  "si": 2289.5193999999997,
+  "lcpBreakdown": {
+   "type": "table",
+   "headings": [
+    {
+     "key": "label",
+     "valueType": "text",
+     "label": "Subpart"
+    },
+    {
+     "key": "duration",
+     "valueType": "ms",
+     "label": "Duration"
+    }
+   ],
+   "items": [
+    {
+     "subpart": "timeToFirstByte",
+     "label": "Time to first byte",
+     "duration": 7.001
+    },
+    {
+     "subpart": "elementRenderDelay",
+     "label": "Element render delay",
+     "duration": 497.336
+    }
+   ]
+  },
+  "renderBlocking": [],
+  "bootup": [
+   {
+    "url": "leaflet.js",
+    "total": 1616,
+    "scripting": 1217
+   },
+   {
+    "url": "Unattributable",
+    "total": 843,
+    "scripting": 9
+   },
+   {
+    "url": "index.html",
+    "total": 527,
+    "scripting": 6
+   }
+  ],
+  "mainthread": [
+   {
+    "group": "scriptEvaluation",
+    "groupLabel": "Script Evaluation",
+    "duration": 1241.4439999999986
+   },
+   {
+    "group": "other",
+    "groupLabel": "Other",
+    "duration": 1005.5040000000008
+   },
+   {
+    "group": "styleLayout",
+    "groupLabel": "Style & Layout",
+    "duration": 484.9280000000001
+   },
+   {
+    "group": "garbageCollection",
+    "groupLabel": "Garbage Collection",
+    "duration": 177.76800000000006
+   },
+   {
+    "group": "paintCompositeRender",
+    "groupLabel": "Rendering",
+    "duration": 61.647999999999755
+   },
+   {
+    "group": "parseHTML",
+    "groupLabel": "Parse HTML & CSS",
+    "duration": 16.627999999999997
+   },
+   {
+    "group": "scriptParseCompile",
+    "groupLabel": "Script Parsing & Compilation",
+    "duration": 16.171999999999997
+   }
+  ],
+  "longTasks": [
+   {
+    "url": "Unattributable",
+    "start": 1116,
+    "dur": 436
+   },
+   {
+    "url": "leaflet.js",
+    "start": 2524,
+    "dur": 407
+   },
+   {
+    "url": "leaflet.js",
+    "start": 2931,
+    "dur": 305
+   },
+   {
+    "url": "index.html",
+    "start": 817,
+    "dur": 197
+   },
+   {
+    "url": "Unattributable",
+    "start": 1014,
+    "dur": 102
+   }
+  ],
+  "networkRtt": 84.19400000000002,
+  "docLatency": {
+   "type": "checklist",
+   "items": {
+    "noRedirects": {
+     "label": "Avoids redirects",
+     "value": true
+    },
+    "serverResponseIsFast": {
+     "label": "Server responds quickly (observed 5 ms)",
+     "value": true
+    },
+    "usesCompression": {
+     "label": "Applies text compression",
+     "value": true
+    }
+   },
+   "debugData": {
+    "type": "debugdata",
+    "redirectDuration": 0,
+    "serverResponseTime": 5,
+    "uncompressedResponseBytes": 0,
+    "wastedBytes": 0
+   }
+  },
+  "networkDeps": {
+   "type": "list",
+   "items": [
+    {
+     "type": "list-section",
+     "value": {
+      "type": "network-tree",
+      "chains": {
+       "874258F6543EF8EEC0B51A4756E52939": {
+        "url": "http://127.0.0.1:61202/solar-heatmap/index.html",
+        "navStartToEndTime": 35,
+        "transferSize": 26976,
+        "isLongest": true,
+        "children": {
+         "10264.4": {
+          "url": "http://127.0.0.1:61202/assets/js/heatmap.js?v=20260930b",
+          "navStartToEndTime": 50,
+          "transferSize": 23200,
+          "isLongest": true,
+          "children": {
+           "10264.9": {
+            "url": "http://127.0.0.1:61202/assets/data/heatmap-grid.json?v=20260930b",
+            "navStartToEndTime": 747,
+            "transferSize": 6990287,
+            "isLongest": true,
+            "children": {}
+           }
+          }
+         },
+         "10264.3": {
+          "url": "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js",
+          "navStartToEndTime": 480,
+          "transferSize": 42944,
+          "children": {}
+         },
+         "10264.2": {
+          "url": "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css",
+          "navStartToEndTime": 381,
+          "transferSize": 3979,
+          "children": {}
+         },
+         "10264.7": {
+          "url": "http://127.0.0.1:61202/manifest.webmanifest",
+          "navStartToEndTime": 47,
+          "transferSize": 2042,
+          "children": {}
+         }
+        }
+       }
+      },
+      "longestChain": {
+       "duration": 747
+      }
+     }
+    },
+    {
+     "type": "list-section",
+     "title": "Preconnected origins",
+     "description": "[preconnect](https://developer.chrome.com/docs/lighthouse/performance/uses-rel-preconnect/) hints help the browser establish a connection earlier in the page load, saving time when the first request for that origin is made. The following are the origins that the page preconnected to.",
+     "value": {
+      "type": "text",
+      "value": "no origins were preconnected"
+     }
+    },
+    {
+     "type": "list-section",
+     "title": "Preconnect candidates",
+     "description": "Add [preconnect](https://developer.chrome.com/docs/lighthouse/performance/uses-rel-preconnect/) hints to your most important origins, but try to use no more than 4.",
+     "value": {
+      "type": "text",
+      "value": "No additional origins are good candidates for preconnecting"
+     }
+    }
+   ]
+  },
+  "unusedJs": 230,
+  "thirdParty": [
+   {
+    "entity": "Unpkg",
+    "mainThreadTime": 143.2050006389618,
+    "transferSize": 46923,
+    "subItems": {
+     "type": "subitems",
+     "items": [
+      {
+       "url": "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js",
+       "mainThreadTime": 143.2050006389618,
+       "transferSize": 42944
+      },
+      {
+       "url": "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css",
+       "mainThreadTime": 0,
+       "transferSize": 3979
+      }
+     ]
+    }
+   },
+   {
+    "entity": "cartocdn.com",
+    "mainThreadTime": 0,
+    "transferSize": 16022,
+    "subItems": {
+     "type": "subitems",
+     "items": [
+      {
+       "url": "https://c.basemaps.cartocdn.com/dark_all/2/1/1@2x.png",
+       "mainThreadTime": 0,
+       "transferSize": 2719
+      },
+      {
+       "url": "https://a.basemaps.cartocdn.com/dark_all/2/2/2@2x.png",
+       "mainThreadTime": 0,
+       "transferSize": 2719
+      },
+      {
+       "url": "https://b.basemaps.cartocdn.com/dark_all/2/1/0@2x.png",
+       "mainThreadTime": 0,
+       "transferSize": 2719
+      },
+      {
+       "url": "https://d.basemaps.cartocdn.com/dark_all/2/2/1@2x.png",
+       "mainThreadTime": 0,
+       "transferSize": 2719
+      },
+      {
+       "url": "https://c.basemaps.cartocdn.com/dark_all/2/2/0@2x.png",
+       "mainThreadTime": 0,
+       "transferSize": 2573
+      },
+      {
+       "url": "https://d.basemaps.cartocdn.com/dark_all/2/1/2@2x.png",
+       "mainThreadTime": 0,
+       "transferSize": 2573
+      }
+     ]
+    }
+   }
+  ]
+ },
+ "heatmap/desktop": {
+  "score": 67,
+  "fcp": 1948.7021,
+  "lcp": 2098.7526000000003,
+  "tbt": 287.92425000000003,
+  "tti": 2936.735925,
+  "si": 2058.467962650463,
+  "lcpBreakdown": {
+   "type": "table",
+   "headings": [
+    {
+     "key": "label",
+     "valueType": "text",
+     "label": "Subpart"
+    },
+    {
+     "key": "duration",
+     "valueType": "ms",
+     "label": "Duration"
+    }
+   ],
+   "items": [
+    {
+     "subpart": "timeToFirstByte",
+     "label": "Time to first byte",
+     "duration": 11.211
+    },
+    {
+     "subpart": "elementRenderDelay",
+     "label": "Element render delay",
+     "duration": 268.983
+    }
+   ]
+  },
+  "renderBlocking": [],
+  "bootup": [
+   {
+    "url": "leaflet.js",
+    "total": 1365,
+    "scripting": 983
+   },
+   {
+    "url": "Unattributable",
+    "total": 817,
+    "scripting": 7
+   },
+   {
+    "url": "index.html",
+    "total": 594,
+    "scripting": 6
+   }
+  ],
+  "mainthread": [
+   {
+    "group": "scriptEvaluation",
+    "groupLabel": "Script Evaluation",
+    "duration": 1002.9639999999999
+   },
+   {
+    "group": "other",
+    "groupLabel": "Other",
+    "duration": 998.6040000000003
+   },
+   {
+    "group": "styleLayout",
+    "groupLabel": "Style & Layout",
+    "duration": 541.0199999999999
+   },
+   {
+    "group": "garbageCollection",
+    "groupLabel": "Garbage Collection",
+    "duration": 150.75199999999995
+   },
+   {
+    "group": "paintCompositeRender",
+    "groupLabel": "Rendering",
+    "duration": 64.27999999999987
+   },
+   {
+    "group": "scriptParseCompile",
+    "groupLabel": "Script Parsing & Compilation",
+    "duration": 18.868000000000002
+   },
+   {
+    "group": "parseHTML",
+    "groupLabel": "Parse HTML & CSS",
+    "duration": 18.392
+   }
+  ],
+  "longTasks": [
+   {
+    "url": "Unattributable",
+    "start": 1163,
+    "dur": 410
+   },
+   {
+    "url": "leaflet.js",
+    "start": 2549,
+    "dur": 353
+   },
+   {
+    "url": "leaflet.js",
+    "start": 2902,
+    "dur": 259
+   },
+   {
+    "url": "index.html",
+    "start": 831,
+    "dur": 226
+   },
+   {
+    "url": "Unattributable",
+    "start": 1057,
+    "dur": 106
+   },
+   {
+    "url": "Unattributable",
+    "start": 757,
+    "dur": 62
+   }
+  ],
+  "networkRtt": 0.17505,
+  "docLatency": {
+   "type": "checklist",
+   "items": {
+    "noRedirects": {
+     "label": "Avoids redirects",
+     "value": true
+    },
+    "serverResponseIsFast": {
+     "label": "Server responds quickly (observed 8 ms)",
+     "value": true
+    },
+    "usesCompression": {
+     "label": "Applies text compression",
+     "value": true
+    }
+   },
+   "debugData": {
+    "type": "debugdata",
+    "redirectDuration": 0,
+    "serverResponseTime": 8,
+    "uncompressedResponseBytes": 0,
+    "wastedBytes": 0
+   }
+  },
+  "networkDeps": {
+   "type": "list",
+   "items": [
+    {
+     "type": "list-section",
+     "value": {
+      "type": "network-tree",
+      "chains": {
+       "EBE93610F00EC57F78A4E2D376347585": {
+        "url": "http://127.0.0.1:61202/solar-heatmap/index.html",
+        "navStartToEndTime": 45,
+        "transferSize": 26976,
+        "isLongest": true,
+        "children": {
+         "5280.4": {
+          "url": "http://127.0.0.1:61202/assets/js/heatmap.js?v=20260930b",
+          "navStartToEndTime": 45,
+          "transferSize": 23200,
+          "isLongest": true,
+          "children": {
+           "5280.9": {
+            "url": "http://127.0.0.1:61202/assets/data/heatmap-grid.json?v=20260930b",
+            "navStartToEndTime": 546,
+            "transferSize": 6990287,
+            "isLongest": true,
+            "children": {}
+           }
+          }
+         },
+         "5280.3": {
+          "url": "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js",
+          "navStartToEndTime": 238,
+          "transferSize": 42940,
+          "children": {}
+         },
+         "5280.2": {
+          "url": "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css",
+          "navStartToEndTime": 124,
+          "transferSize": 3939,
+          "children": {}
+         },
+         "5280.7": {
+          "url": "http://127.0.0.1:61202/manifest.webmanifest",
+          "navStartToEndTime": 59,
+          "transferSize": 2042,
+          "children": {}
+         }
+        }
+       }
+      },
+      "longestChain": {
+       "duration": 546
+      }
+     }
+    },
+    {
+     "type": "list-section",
+     "title": "Preconnected origins",
+     "description": "[preconnect](https://developer.chrome.com/docs/lighthouse/performance/uses-rel-preconnect/) hints help the browser establish a connection earlier in the page load, saving time when the first request for that origin is made. The following are the origins that the page preconnected to.",
+     "value": {
+      "type": "text",
+      "value": "no origins were preconnected"
+     }
+    },
+    {
+     "type": "list-section",
+     "title": "Preconnect candidates",
+     "description": "Add [preconnect](https://developer.chrome.com/docs/lighthouse/performance/uses-rel-preconnect/) hints to your most important origins, but try to use no more than 4.",
+     "value": {
+      "type": "text",
+      "value": "No additional origins are good candidates for preconnecting"
+     }
+    }
+   ]
+  },
+  "unusedJs": 150,
+  "thirdParty": [
+   {
+    "entity": "Unpkg",
+    "mainThreadTime": 109.51500034332275,
+    "transferSize": 46879,
+    "subItems": {
+     "type": "subitems",
+     "items": [
+      {
+       "url": "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js",
+       "mainThreadTime": 109.51500034332275,
+       "transferSize": 42940
+      },
+      {
+       "url": "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css",
+       "mainThreadTime": 0,
+       "transferSize": 3939
+      }
+     ]
+    }
+   },
+   {
+    "entity": "cartocdn.com",
+    "mainThreadTime": 0,
+    "transferSize": 41260,
+    "subItems": {
+     "type": "subitems",
+     "items": [
+      {
+       "url": "https://d.basemaps.cartocdn.com/dark_all/2/2/1.png",
+       "mainThreadTime": 0,
+       "transferSize": 2596
+      },
+      {
+       "url": "https://a.basemaps.cartocdn.com/dark_all/2/2/2.png",
+       "mainThreadTime": 0,
+       "transferSize": 2596
+      },
+      {
+       "url": "https://b.basemaps.cartocdn.com/dark_all/2/1/0.png",
+       "mainThreadTime": 0,
+       "transferSize": 2596
+      },
+      {
+       "url": "https://c.basemaps.cartocdn.com/dark_all/2/1/1.png",
+       "mainThreadTime": 0,
+       "transferSize": 2596
+      },
+      {
+       "url": "https://a.basemaps.cartocdn.com/dark_all/2/3/1.png",
+       "mainThreadTime": 0,
+       "transferSize": 2573
+      },
+      {
+       "url": "https://d.basemaps.cartocdn.com/dark_all/2/1/2.png",
+       "mainThreadTime": 0,
+       "transferSize": 2573
+      },
+      {
+       "url": "https://b.basemaps.cartocdn.com/dark_all/2/0/1.png",
+       "mainThreadTime": 0,
+       "transferSize": 2573
+      },
+      {
+       "url": "https://b.basemaps.cartocdn.com/dark_all/2/3/2.png",
+       "mainThreadTime": 0,
+       "transferSize": 2573
+      },
+      {
+       "url": "https://c.basemaps.cartocdn.com/dark_all/2/2/0.png",
+       "mainThreadTime": 0,
+       "transferSize": 2573
+      },
+      {
+       "url": "https://c.basemaps.cartocdn.com/dark_all/2/0/2.png",
+       "mainThreadTime": 0,
+       "transferSize": 2573
+      },
+      {
+       "url": "https://a.basemaps.cartocdn.com/dark_all/2/1/3.png",
+       "mainThreadTime": 0,
+       "transferSize": 2573
+      },
+      {
+       "url": "https://a.basemaps.cartocdn.com/dark_all/2/0/0.png",
+       "mainThreadTime": 0,
+       "transferSize": 2573
+      },
+      {
+       "url": "https://b.basemaps.cartocdn.com/dark_all/2/2/3.png",
+       "mainThreadTime": 0,
+       "transferSize": 2573
+      },
+      {
+       "url": "https://d.basemaps.cartocdn.com/dark_all/2/3/0.png",
+       "mainThreadTime": 0,
+       "transferSize": 2573
+      },
+      {
+       "url": "https://d.basemaps.cartocdn.com/dark_all/2/0/3.png",
+       "mainThreadTime": 0,
+       "transferSize": 2573
+      },
+      {
+       "url": "https://c.basemaps.cartocdn.com/dark_all/2/3/3.png",
+       "mainThreadTime": 0,
+       "transferSize": 2573
+      }
+     ]
+    }
+   }
+  ]
+ }
+}

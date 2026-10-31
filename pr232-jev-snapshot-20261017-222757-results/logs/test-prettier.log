@@ -1,0 +1,7 @@
+
+> bigenergyco@1.0.0 format:check
+> node scripts/check-format.mjs
+
+Checking formatting...
+All matched files use Prettier code style!
+format: OK - 734 tracked file(s) formatted as the runner will read them

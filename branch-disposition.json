@@ -1,0 +1,1023 @@
+[
+ {
+  "name": "chore/bump-asset-stamp",
+  "sha": "5e97184",
+  "state": "ok",
+  "files": 15,
+  "counts": {
+   "moved-past": 15
+  },
+  "unique": [],
+  "date": "2026-09-24",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "chore/bump-asset-tokens-post-42",
+  "sha": "5768eb6",
+  "state": "ok",
+  "files": 11,
+  "counts": {
+   "moved-past": 11
+  },
+  "unique": [],
+  "date": "2026-09-14",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "chore/bump-tokens-responsiveness",
+  "sha": "59374f5",
+  "state": "ok",
+  "files": 11,
+  "counts": {
+   "moved-past": 11
+  },
+  "unique": [],
+  "date": "2026-09-16",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "chore/csp-fixes-2",
+  "sha": "44cafef",
+  "state": "ok",
+  "files": 3,
+  "counts": {
+   "moved-past": 3
+  },
+  "unique": [],
+  "date": "2026-09-05",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "chore/csp-smoke-coverage",
+  "sha": "bdb2a53",
+  "state": "ok",
+  "files": 5,
+  "counts": {
+   "moved-past": 5
+  },
+  "unique": [],
+  "date": "2026-09-05",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "chore/fix-live-sanity-markers",
+  "sha": "b816e76",
+  "state": "ok",
+  "files": 1,
+  "counts": {
+   "moved-past": 1
+  },
+  "unique": [],
+  "date": "2026-09-05",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "chore/gsc-doc-property-type",
+  "sha": "260ef14",
+  "state": "ok",
+  "files": 4,
+  "counts": {
+   "moved-past": 3,
+   "identical": 1
+  },
+  "unique": [],
+  "date": "2026-09-16",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "chore/gsc-new-domain-verification",
+  "sha": "efd2dca",
+  "state": "ok",
+  "files": 4,
+  "counts": {
+   "moved-past": 4
+  },
+  "unique": [],
+  "date": "2026-09-16",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "chore/oversize-primary-and-tokens",
+  "sha": "7e2c2d9",
+  "state": "ok",
+  "files": 13,
+  "counts": {
+   "moved-past": 13
+  },
+  "unique": [],
+  "date": "2026-09-05",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "chore/p0.3c-score-and-scope",
+  "sha": "cf79f45",
+  "state": "ok",
+  "files": 0,
+  "counts": {},
+  "unique": [],
+  "date": "2026-09-27",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "chore/p0.3d-new-pack-facets",
+  "sha": "1358bf5",
+  "state": "ok",
+  "files": 0,
+  "counts": {},
+  "unique": [],
+  "date": "2026-09-27",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "chore/p0.3e-ci-evidence",
+  "sha": "84632e1",
+  "state": "ok",
+  "files": 0,
+  "counts": {},
+  "unique": [],
+  "date": "2026-09-27",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "chore/p0.4a-byte-budgets",
+  "sha": "0f86a82",
+  "state": "ok",
+  "files": 31,
+  "counts": {
+   "moved-past": 6,
+   "identical": 21,
+   "on-neither": 4
+  },
+  "unique": [
+   ".jev-p04a-report.json",
+   "scripts/check-byte-budgets.mjs",
+   "scripts/lib/byte-budgets.mjs",
+   "tests/byte-budgets.test.mjs"
+  ],
+  "date": "2026-09-26",
+  "live": true,
+  "mine": false
+ },
+ {
+  "name": "chore/p0.4b-a11y-matrix",
+  "sha": "dd3bdd7",
+  "state": "ok",
+  "files": 37,
+  "counts": {
+   "moved-past": 8,
+   "identical": 21,
+   "on-neither": 8
+  },
+  "unique": [
+   ".jev-p04a-report.json",
+   ".jev-p04b-report.json",
+   "scripts/check-a11y-matrix.mjs",
+   "scripts/check-byte-budgets.mjs",
+   "scripts/lib/byte-budgets.mjs",
+   "scripts/lib/quality-matrix.mjs",
+   "tests/byte-budgets.test.mjs",
+   "tests/quality-matrix.test.mjs"
+  ],
+  "date": "2026-09-26",
+  "live": true,
+  "mine": false
+ },
+ {
+  "name": "chore/p0.4b-quality-lab",
+  "sha": "6f560b7",
+  "state": "ok",
+  "files": 33,
+  "counts": {
+   "moved-past": 7,
+   "identical": 21,
+   "on-neither": 5
+  },
+  "unique": [
+   "scripts/check-byte-budgets.mjs",
+   "scripts/lib/byte-budgets.mjs",
+   "scripts/quality-lab-base.mjs",
+   "tests/byte-budgets.test.mjs",
+   "tests/quality-lab.test.mjs"
+  ],
+  "date": "2026-09-28",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "chore/p0.4c-a11y-fixes",
+  "sha": "f2cfc5b",
+  "state": "ok",
+  "files": 49,
+  "counts": {
+   "on-neither": 14,
+   "moved-past": 20,
+   "identical": 15
+  },
+  "unique": [
+   ".a11y-matrix-p04c-report.json",
+   ".jev-p04a-report.json",
+   ".jev-p04b-report.json",
+   ".jev-p04c-report.json",
+   "scripts/check-a11y-matrix.mjs",
+   "scripts/check-byte-budgets.mjs",
+   "scripts/check-lighthouse.mjs",
+   "scripts/lib/byte-budgets.mjs",
+   "scripts/lib/lighthouse-budgets.mjs",
+   "scripts/lib/quality-matrix.mjs",
+   "tests/a11y-markup.test.mjs",
+   "tests/byte-budgets.test.mjs",
+   "tests/lighthouse-gate.test.mjs",
+   "tests/quality-matrix.test.mjs"
+  ],
+  "date": "2026-09-27",
+  "live": true,
+  "mine": false
+ },
+ {
+  "name": "chore/phase-a-trust-security",
+  "sha": "6cb1d1c",
+  "state": "ok",
+  "files": 7,
+  "counts": {
+   "moved-past": 7
+  },
+  "unique": [],
+  "date": "2026-09-05",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "chore/phase-b-release-hygiene",
+  "sha": "988559f",
+  "state": "ok",
+  "files": 20,
+  "counts": {
+   "moved-past": 19,
+   "identical": 1
+  },
+  "unique": [],
+  "date": "2026-09-05",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "chore/phase-c-worker-hardening",
+  "sha": "10c6ef6",
+  "state": "ok",
+  "files": 5,
+  "counts": {
+   "moved-past": 4,
+   "identical": 1
+  },
+  "unique": [],
+  "date": "2026-09-05",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "chore/phase-de-ops-trust",
+  "sha": "5a803b9",
+  "state": "ok",
+  "files": 8,
+  "counts": {
+   "moved-past": 8
+  },
+  "unique": [],
+  "date": "2026-09-05",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "chore/phase-f-worker-trust",
+  "sha": "145c39d",
+  "state": "ok",
+  "files": 4,
+  "counts": {
+   "moved-past": 4
+  },
+  "unique": [],
+  "date": "2026-09-05",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "chore/phase-g-site-split",
+  "sha": "2886f86",
+  "state": "ok",
+  "files": 91,
+  "counts": {
+   "moved-past": 58,
+   "identical": 20,
+   "on-neither": 13
+  },
+  "unique": [
+   "CYCLE_LIFE_CORRECTION_SUMMARY.md",
+   "GROQ_AUDIT_AND_OPTIMIZATION.md",
+   "GROQ_IMPLEMENTATION_GUIDE.md",
+   "GROQ_ROADMAP_VISUAL.md",
+   "IMPLEMENTATION_COMPLETE.md",
+   "LAUNCH_AUDIT.md",
+   "PHASE2_PLAN.md",
+   "PHASE3_PLAN.md",
+   "PLAN.md",
+   "ROADMAP_10_PHASES.md",
+   "SEO_MASTER_PLAN.md",
+   "scripts/verify-chart-contract.mjs",
+   "scripts/verify-polish.mjs"
+  ],
+  "date": "2026-09-05",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "chore/prettier-exempt-generated",
+  "sha": "a5b84be",
+  "state": "ok",
+  "files": 2,
+  "counts": {
+   "moved-past": 1,
+   "identical": 1
+  },
+  "unique": [],
+  "date": "2026-09-05",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "chore/re-audit-rounds",
+  "sha": "58990b3",
+  "state": "ok",
+  "files": 16,
+  "counts": {
+   "moved-past": 11,
+   "on-neither": 2,
+   "identical": 3
+  },
+  "unique": [
+   "GROQ_IMPLEMENTATION_GUIDE.md",
+   "PLAN.md"
+  ],
+  "date": "2026-09-06",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "chore/record-current-state",
+  "sha": "d47eeca",
+  "state": "ok",
+  "files": 1,
+  "counts": {
+   "moved-past": 1
+  },
+  "unique": [],
+  "date": "2026-09-24",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "chore/record-invariant-release-line",
+  "sha": "efcfd5c",
+  "state": "ok",
+  "files": 1,
+  "counts": {
+   "moved-past": 1
+  },
+  "unique": [],
+  "date": "2026-09-24",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "chore/record-promote-ledger",
+  "sha": "5785ede",
+  "state": "ok",
+  "files": 1,
+  "counts": {
+   "moved-past": 1
+  },
+  "unique": [],
+  "date": "2026-09-24",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "chore/release-20260917a",
+  "sha": "e3d2827",
+  "state": "ok",
+  "files": 11,
+  "counts": {
+   "moved-past": 11
+  },
+  "unique": [],
+  "date": "2026-09-16",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "chore/repin-swap-strategy",
+  "sha": "88cac5e",
+  "state": "ok",
+  "files": 1,
+  "counts": {
+   "moved-past": 1
+  },
+  "unique": [],
+  "date": "2026-09-05",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "chore/smoke-visible-h1",
+  "sha": "25df361",
+  "state": "ok",
+  "files": 1,
+  "counts": {
+   "moved-past": 1
+  },
+  "unique": [],
+  "date": "2026-09-05",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "ci/concurrency-and-staging-drift",
+  "sha": "7f98e8f",
+  "state": "ok",
+  "files": 4,
+  "counts": {
+   "moved-past": 3,
+   "identical": 1
+  },
+  "unique": [],
+  "date": "2026-09-16",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "ci/quality-gates",
+  "sha": "6510c3c",
+  "state": "ok",
+  "files": 21,
+  "counts": {
+   "identical": 6,
+   "moved-past": 15
+  },
+  "unique": [],
+  "date": "2026-09-17",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "claude/jolly-goodall-414mjl",
+  "sha": "72ea08b",
+  "state": "ok",
+  "files": 0,
+  "counts": {},
+  "unique": [],
+  "date": "2026-09-26",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "claude/repo-maturity-audit-rtmi4q",
+  "sha": "16e1446",
+  "state": "ok",
+  "files": 2,
+  "counts": {
+   "on-neither": 2
+  },
+  "unique": [
+   "MATURITY_SCORECARD.txt",
+   "REPO_MATURITY_AUDIT.md"
+  ],
+  "date": "2026-08-13",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "feat/derived-facet-lines",
+  "sha": "d601450",
+  "state": "ok",
+  "files": 50,
+  "counts": {
+   "on-neither": 15,
+   "moved-past": 21,
+   "identical": 14
+  },
+  "unique": [
+   ".a11y-matrix-p04c-report.json",
+   ".jev-p04a-report.json",
+   ".jev-p04b-report.json",
+   ".jev-p04c-report.json",
+   "scripts/check-a11y-matrix.mjs",
+   "scripts/check-byte-budgets.mjs",
+   "scripts/check-lighthouse.mjs",
+   "scripts/lib/byte-budgets.mjs",
+   "scripts/lib/lighthouse-budgets.mjs",
+   "scripts/lib/quality-matrix.mjs",
+   "tests/a11y-markup.test.mjs",
+   "tests/byte-budgets.test.mjs",
+   "tests/jev-derived-facets.test.mjs",
+   "tests/lighthouse-gate.test.mjs",
+   "tests/quality-matrix.test.mjs"
+  ],
+  "date": "2026-09-27",
+  "live": true,
+  "mine": false
+ },
+ {
+  "name": "feat/lighthouse-gate",
+  "sha": "b33e9ec",
+  "state": "ok",
+  "files": 49,
+  "counts": {
+   "on-neither": 14,
+   "moved-past": 20,
+   "identical": 15
+  },
+  "unique": [
+   ".a11y-matrix-p04c-report.json",
+   ".jev-p04a-report.json",
+   ".jev-p04b-report.json",
+   ".jev-p04c-report.json",
+   "scripts/check-a11y-matrix.mjs",
+   "scripts/check-byte-budgets.mjs",
+   "scripts/check-lighthouse.mjs",
+   "scripts/lib/byte-budgets.mjs",
+   "scripts/lib/lighthouse-budgets.mjs",
+   "scripts/lib/quality-matrix.mjs",
+   "tests/a11y-markup.test.mjs",
+   "tests/byte-budgets.test.mjs",
+   "tests/lighthouse-gate.test.mjs",
+   "tests/quality-matrix.test.mjs"
+  ],
+  "date": "2026-09-27",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "feat/location-share-hardening",
+  "sha": "dd3982e",
+  "state": "ok",
+  "files": 19,
+  "counts": {
+   "moved-past": 11,
+   "identical": 8
+  },
+  "unique": [],
+  "date": "2026-09-24",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "feat/performance-responsiveness",
+  "sha": "cd500e4",
+  "state": "ok",
+  "files": 8,
+  "counts": {
+   "moved-past": 8
+  },
+  "unique": [],
+  "date": "2026-09-16",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "feat/personas",
+  "sha": "42eec62",
+  "state": "ok",
+  "files": 20,
+  "counts": {
+   "on-neither": 1,
+   "moved-past": 13,
+   "identical": 6
+  },
+  "unique": [
+   "GOOGLE_QUALITY_PLAN.md"
+  ],
+  "date": "2026-09-14",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "feat/quote-tilt-satellite-map",
+  "sha": "dc8846e",
+  "state": "ok",
+  "files": 17,
+  "counts": {
+   "moved-past": 14,
+   "identical": 3
+  },
+  "unique": [],
+  "date": "2026-09-14",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "fix/a11y-keyboard-city-resolve",
+  "sha": "d440588",
+  "state": "ok",
+  "files": 6,
+  "counts": {
+   "moved-past": 4,
+   "identical": 2
+  },
+  "unique": [],
+  "date": "2026-09-22",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "fix/auto-empty-banner-routing",
+  "sha": "f95767a",
+  "state": "ok",
+  "files": 2,
+  "counts": {
+   "moved-past": 2
+  },
+  "unique": [],
+  "date": "2026-09-16",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "fix/battery-only-bill-cut-copy",
+  "sha": "5e020a5",
+  "state": "ok",
+  "files": 5,
+  "counts": {
+   "moved-past": 4,
+   "identical": 1
+  },
+  "unique": [],
+  "date": "2026-09-25",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "fix/ci-green-truthfulness",
+  "sha": "7c0b841",
+  "state": "ok",
+  "files": 45,
+  "counts": {
+   "on-neither": 11,
+   "moved-past": 19,
+   "identical": 15
+  },
+  "unique": [
+   ".a11y-matrix-p04c-report.json",
+   ".jev-p04a-report.json",
+   ".jev-p04b-report.json",
+   ".jev-p04c-report.json",
+   "scripts/check-a11y-matrix.mjs",
+   "scripts/check-byte-budgets.mjs",
+   "scripts/lib/byte-budgets.mjs",
+   "scripts/lib/quality-matrix.mjs",
+   "tests/a11y-markup.test.mjs",
+   "tests/byte-budgets.test.mjs",
+   "tests/quality-matrix.test.mjs"
+  ],
+  "date": "2026-09-27",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "fix/geolocation-permissions-policy",
+  "sha": "96f73be",
+  "state": "ok",
+  "files": 2,
+  "counts": {
+   "moved-past": 2
+  },
+  "unique": [],
+  "date": "2026-09-05",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "fix/heatmap-a11y-cell",
+  "sha": "2d3be8a",
+  "state": "ok",
+  "files": 46,
+  "counts": {
+   "on-neither": 11,
+   "moved-past": 20,
+   "identical": 15
+  },
+  "unique": [
+   ".a11y-matrix-p04c-report.json",
+   ".jev-p04a-report.json",
+   ".jev-p04b-report.json",
+   ".jev-p04c-report.json",
+   "scripts/check-a11y-matrix.mjs",
+   "scripts/check-byte-budgets.mjs",
+   "scripts/lib/byte-budgets.mjs",
+   "scripts/lib/quality-matrix.mjs",
+   "tests/a11y-markup.test.mjs",
+   "tests/byte-budgets.test.mjs",
+   "tests/quality-matrix.test.mjs"
+  ],
+  "date": "2026-09-27",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "fix/infeasible-combos",
+  "sha": "2d7df20",
+  "state": "ok",
+  "files": 8,
+  "counts": {
+   "moved-past": 6,
+   "identical": 2
+  },
+  "unique": [],
+  "date": "2026-09-05",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "fix/live-sanity-sitecss",
+  "sha": "c80dcfc",
+  "state": "ok",
+  "files": 1,
+  "counts": {
+   "moved-past": 1
+  },
+  "unique": [],
+  "date": "2026-09-06",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "fix/manual-mode-submit-and-i18n",
+  "sha": "60d0d39",
+  "state": "ok",
+  "files": 3,
+  "counts": {
+   "moved-past": 3
+  },
+  "unique": [],
+  "date": "2026-09-02",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "fix/oversize-default-recommendation",
+  "sha": "4bec73b",
+  "state": "ok",
+  "files": 2,
+  "counts": {
+   "moved-past": 2
+  },
+  "unique": [],
+  "date": "2026-09-05",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "fix/quote-multiplier-swap-ghi-unit",
+  "sha": "9112e3a",
+  "state": "ok",
+  "files": 14,
+  "counts": {
+   "moved-past": 13,
+   "identical": 1
+  },
+  "unique": [],
+  "date": "2026-09-15",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "fix/slider-coupling-roof-cap",
+  "sha": "9ca0af5",
+  "state": "ok",
+  "files": 5,
+  "counts": {
+   "identical": 1,
+   "moved-past": 4
+  },
+  "unique": [],
+  "date": "2026-09-16",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "fix/smoke-infeasible-gate",
+  "sha": "983f4e8",
+  "state": "ok",
+  "files": 1,
+  "counts": {
+   "moved-past": 1
+  },
+  "unique": [],
+  "date": "2026-09-05",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "gh-pages",
+  "sha": "22a26e4",
+  "state": "no-merge-base",
+  "files": 0,
+  "counts": {},
+  "unique": [],
+  "date": null,
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "main",
+  "sha": "ddeccbd",
+  "state": "ok",
+  "files": 0,
+  "counts": {},
+  "unique": [],
+  "date": "2026-09-27",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "mission/bigenergyco-completion",
+  "sha": "bc612d8",
+  "state": "ok",
+  "files": 1,
+  "counts": {
+   "on-neither": 1
+  },
+  "unique": [
+   "docs/bigenergyco-completion-mission.md"
+  ],
+  "date": "2026-09-27",
+  "live": true,
+  "mine": false
+ },
+ {
+  "name": "phase2/sizing-engine",
+  "sha": "bfb8389",
+  "state": "ok",
+  "files": 0,
+  "counts": {},
+  "unique": [],
+  "date": "2026-08-22",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "polish/google-quality-pass-1",
+  "sha": "6373a3e",
+  "state": "ok",
+  "files": 105,
+  "counts": {
+   "moved-past": 100,
+   "identical": 5
+  },
+  "unique": [],
+  "date": "2026-09-17",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "polish/google-quality-pass-2",
+  "sha": "55eafcd",
+  "state": "ok",
+  "files": 114,
+  "counts": {
+   "moved-past": 93,
+   "identical": 21
+  },
+  "unique": [],
+  "date": "2026-09-17",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "polish/jev-complete-9.9",
+  "sha": "1a16006",
+  "state": "ok",
+  "files": 43,
+  "counts": {
+   "identical": 22,
+   "on-neither": 2,
+   "moved-past": 19
+  },
+  "unique": [
+   "GROQ_AUDIT_AND_OPTIMIZATION.md",
+   "GROQ_IMPLEMENTATION_GUIDE.md"
+  ],
+  "date": "2026-09-24",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "staging/coalesce-fix",
+  "sha": "38070b9",
+  "state": "ok",
+  "files": 0,
+  "counts": {},
+  "unique": [],
+  "date": "2026-09-06",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "staging/fixed-charges",
+  "sha": "6253ae0",
+  "state": "ok",
+  "files": 0,
+  "counts": {},
+  "unique": [],
+  "date": "2026-09-07",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "staging/infographic-spectrum",
+  "sha": "0a893e4",
+  "state": "ok",
+  "files": 0,
+  "counts": {},
+  "unique": [],
+  "date": "2026-09-06",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "staging/perf-b",
+  "sha": "615d4f2",
+  "state": "ok",
+  "files": 0,
+  "counts": {},
+  "unique": [],
+  "date": "2026-09-07",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "staging/phase4-best-first-dollar",
+  "sha": "b1e77b2",
+  "state": "ok",
+  "files": 0,
+  "counts": {},
+  "unique": [],
+  "date": "2026-09-07",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "staging/polish-c",
+  "sha": "14ef330",
+  "state": "ok",
+  "files": 0,
+  "counts": {},
+  "unique": [],
+  "date": "2026-09-07",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "staging/round1-polish",
+  "sha": "87439af",
+  "state": "ok",
+  "files": 0,
+  "counts": {},
+  "unique": [],
+  "date": "2026-09-07",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "staging/unified-view",
+  "sha": "3d018fc",
+  "state": "ok",
+  "files": 0,
+  "counts": {},
+  "unique": [],
+  "date": "2026-09-06",
+  "live": false,
+  "mine": false
+ },
+ {
+  "name": "staging/value-range",
+  "sha": "00dfc93",
+  "state": "ok",
+  "files": 0,
+  "counts": {},
+  "unique": [],
+  "date": "2026-09-06",
+  "live": false,
+  "mine": false
+ }
+]

@@ -1,0 +1,8 @@
+{
+    "job":  "lighthouse",
+    "conclusion":  "failure",
+    "steps":  {
+                  "lighthouse_stage":  "success",
+                  "lighthouse":  "failure"
+              }
+}

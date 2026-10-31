@@ -1,0 +1,7 @@
+﻿{
+    "job":  "coverage",
+    "conclusion":  "failure",
+    "steps":  {
+                  "coverage":  "failure"
+              }
+}

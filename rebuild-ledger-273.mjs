@@ -1,0 +1,12 @@
+import { execFileSync } from "node:child_process";
+import { writeFileSync } from "node:fs";
+const base = execFileSync("git", ["show", "HEAD:docs/plan/LEDGER.jsonl"], { encoding: "utf8" });
+const old = execFileSync("git", ["show", "mission-backup/273-pre-0a532:docs/plan/LEDGER.jsonl"], { encoding: "utf8" });
+const eol = base.includes("\r\n") ? "\r\n" : "\n";
+const rows = old.trimEnd().split(/\r?\n/).filter(Boolean).map(JSON.parse);
+const row = rows.at(-1);
+if (row.evidence.pr !== 273) throw new Error("Expected PR #273 ledger row");
+row.evidence.sha = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
+const out = base.replace(/(?:\r?\n)*$/g, "") + eol + JSON.stringify(row) + eol;
+writeFileSync("docs/plan/LEDGER.jsonl", out);
+console.log(JSON.stringify({ ref: row.ref, summary: row.summary, sha: row.evidence.sha, full_test: row.evidence.full_test }));

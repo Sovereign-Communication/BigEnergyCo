@@ -1,0 +1,1116 @@
+{
+  "plan_item": "P0.4",
+  "plan_refs": [
+    "Q-02",
+    "Q-03"
+  ],
+  "metric": "lighthouse",
+  "generated_at": "2026-10-17T12:35:13.234Z",
+  "code_sha": "db5d9b8b3c5d84cbd130f09a84c8220a37fe4afe",
+  "facet_axes": [
+    "performance"
+  ],
+  "playtest_facet_axes": [
+    "performance"
+  ],
+  "playtest_regressions": [],
+  "playtest_holes": [],
+  "unit": "score 0-100, median of 3 runs, on the staged build",
+  "stage": "_pages_p04_perf_20261017",
+  "lighthouse_version": "13.5.0",
+  "chrome": "C:/Program Files/Google/Chrome/Application/chrome.exe",
+  "throttling": "simulate (Lighthouse default mobile/desktop)",
+  "categories": [
+    "performance",
+    "accessibility",
+    "best-practices",
+    "seo"
+  ],
+  "ratchet_categories": [
+    "accessibility",
+    "best-practices",
+    "seo"
+  ],
+  "reported_only": {
+    "performance": "measured and reported, not ratcheted: on an unchanged tree the score is bimodal over 21 runs (home/mobile 61-73, heatmap/desktop 40-76) because Lighthouse's performance composite is dominated by its SIMULATED throttling model. The bootstrapped median is still 18 points wide at k=21, so no affordable run count makes a floor reproducible and a floor that wide would not catch a real regression. The reading is reported with its spread so the trend is visible."
+  },
+  "variance_calibration": {
+    "method": "repeated Lighthouse runs of the same staged build with no change between them, then a 20000-trial bootstrap of the median-of-k over the observed runs",
+    "performance_not_ratcheted": {
+      "home/mobile": {
+        "n": 21,
+        "runs": [
+          61,
+          61,
+          61,
+          61,
+          61,
+          61,
+          69,
+          69,
+          69,
+          69,
+          69,
+          69,
+          70,
+          70,
+          70,
+          70,
+          71,
+          71,
+          71,
+          72,
+          73
+        ],
+        "min": 61,
+        "median": 69,
+        "max": 73,
+        "shape": "bimodal: six runs at 61, then nothing below 69",
+        "median_width_by_k": {
+          "3": 12,
+          "9": 12,
+          "15": 10,
+          "21": 10
+        }
+      },
+      "heatmap/desktop": {
+        "n": 21,
+        "runs": [
+          40,
+          53,
+          57,
+          61,
+          62,
+          64,
+          64,
+          64,
+          64,
+          65,
+          65,
+          66,
+          72,
+          72,
+          72,
+          73,
+          73,
+          74,
+          75,
+          75,
+          76
+        ],
+        "min": 40,
+        "median": 65,
+        "max": 76,
+        "shape": "bimodal: a 40-66 cluster and a 72-76 cluster with nothing between",
+        "median_width_by_k": {
+          "3": 36,
+          "9": 23,
+          "15": 18,
+          "21": 18
+        }
+      }
+    },
+    "ratcheted_categories_are_deterministic": {
+      "note": "over the same samples, accessibility / best-practices / seo read an identical value on every run, which is what makes a floor on them reproducible",
+      "home/mobile": "accessibility, best-practices, seo all 100 on 21/21 runs",
+      "heatmap/desktop": "accessibility, best-practices, seo all 100 on 21/21 runs"
+    },
+    "best_practices_targeted_checks": {
+      "note": "two targets read 96 on best-practices in the 3-run first measurement, so each was re-measured over 9 runs before a floor was declared on it",
+      "heatmap/mobile": {
+        "n": 9,
+        "runs": [
+          96,
+          96,
+          96,
+          96,
+          96,
+          96,
+          96,
+          96,
+          96
+        ],
+        "distinct": [
+          96
+        ],
+        "failing_audit": "image-size-responsive",
+        "reading": "stable at 96. The floor is 96 and the failing audit is named: an image is served larger than it is displayed. That is a finding for the page's own cluster, not a threshold this gate may move."
+      },
+      "404/mobile": {
+        "n": 9,
+        "runs": [
+          96,
+          100,
+          100,
+          100,
+          100,
+          100,
+          100,
+          100,
+          100
+        ],
+        "distinct": [
+          96,
+          100
+        ],
+        "failing_audit": "errors-in-console",
+        "reading": "NOT stable: 96 once, 100 eight times, from a console error that fires intermittently. The floor is 96 — the observed minimum — because a console error that starts firing on every load is a real regression this gate should catch."
+      },
+      "heatmap/desktop": {
+        "n": 9,
+        "runs": [
+          100,
+          100,
+          100,
+          100,
+          100,
+          100,
+          100,
+          100,
+          100
+        ],
+        "distinct": [
+          100
+        ],
+        "reading": "stable at 100"
+      }
+    }
+  },
+  "targets": [
+    {
+      "id": "home/mobile",
+      "page": "index.html",
+      "formFactor": "mobile",
+      "runs": 3
+    }
+  ],
+  "measured": [
+    {
+      "id": "home/mobile",
+      "page": "index.html",
+      "formFactor": "mobile",
+      "runs": 1,
+      "scores": {
+        "performance": 61,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "runScores": [
+        {
+          "performance": 61,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        }
+      ],
+      "speed": {
+        "lcp_s": 6.375363676019715,
+        "cls": 0.13634576491272626,
+        "tbt_ms": 25.5,
+        "fcp_s": 4.662125054527109
+      }
+    }
+  ],
+  "warm_interaction": {
+    "ok": true,
+    "page": "index.html",
+    "city": "Honolulu",
+    "worker_sessions": 2,
+    "cold_run": {
+      "ms": 5326,
+      "completed": true,
+      "started_run": true,
+      "status": "✅ 5 yr of hourly data (2021–2025) · 1,803 kWh/yr per kW of panel."
+    },
+    "cold_network": {
+      "total": 28,
+      "nasa": 3,
+      "urls": [
+        "http://127.0.0.1:50715/assets/js/sizing/sizing-worker.js?v=20261017a",
+        "http://127.0.0.1:50715/assets/js/sizing/sizing-worker.js?v=20261017a",
+        "http://127.0.0.1:50715/assets/js/sizing/run.js?v=20261017a",
+        "http://127.0.0.1:50715/assets/js/sizing/run.js?v=20261017a",
+        "http://127.0.0.1:50715/assets/js/sizing/engine.js?v=20261017a",
+        "http://127.0.0.1:50715/assets/js/sizing/engine.js?v=20261017a",
+        "http://127.0.0.1:50715/assets/js/sizing/usecases.js?v=20261017a",
+        "http://127.0.0.1:50715/assets/js/sizing/usecases.js?v=20261017a",
+        "http://127.0.0.1:50715/assets/js/sizing/nasa.js?v=20261017a",
+        "http://127.0.0.1:50715/assets/js/sizing/frontier.js?v=20261017a",
+        "http://127.0.0.1:50715/assets/js/sizing/rescale.js?v=20261017a",
+        "http://127.0.0.1:50715/assets/js/sizing/climate.js?v=20261017a",
+        "http://127.0.0.1:50715/assets/js/sizing/pricing.js?v=20261017a",
+        "http://127.0.0.1:50715/assets/js/sizing/money.js?v=20261017a",
+        "http://127.0.0.1:50715/assets/js/sizing/nasa.js?v=20261017a",
+        "http://127.0.0.1:50715/assets/js/sizing/frontier.js?v=20261017a",
+        "http://127.0.0.1:50715/assets/js/sizing/rescale.js?v=20261017a",
+        "http://127.0.0.1:50715/assets/js/sizing/climate.js?v=20261017a",
+        "http://127.0.0.1:50715/assets/js/sizing/pricing.js?v=20261017a",
+        "http://127.0.0.1:50715/assets/js/sizing/money.js?v=20261017a",
+        "http://127.0.0.1:50715/assets/js/shared/coords.js?v=20261017a",
+        "http://127.0.0.1:50715/assets/js/shared/coords.js?v=20261017a",
+        "https://power.larc.nasa.gov/api/temporal/hourly/point?parameters=ALLSKY_SFC_SW_DWN,T2M&community=RE&latitude=21.31&longitude=-157.86&start=20210101&end=20221231",
+        "https://power.larc.nasa.gov/api/temporal/hourly/point?parameters=ALLSKY_SFC_SW_DWN,T2M&community=RE&latitude=21.31&longitude=-157.86&start=20230101&end=20241231",
+        "https://power.larc.nasa.gov/api/temporal/hourly/point?parameters=ALLSKY_SFC_SW_DWN,T2M&community=RE&latitude=21.31&longitude=-157.86&start=20250101&end=20251231",
+        "http://127.0.0.1:50715/api/health",
+        "http://127.0.0.1:50715/assets/js/sizing/paths.js?v=20261017a",
+        "http://127.0.0.1:50715/assets/js/sizing/paths.js?v=20261017a"
+      ]
+    },
+    "first_result": {
+      "modules": 42,
+      "blocking_modules": 42,
+      "deferred_modules": 0,
+      "blocking_bytes_decoded": 1137176,
+      "deferred_bytes_decoded": 0,
+      "total_bytes_decoded": 1137176,
+      "card_at_ms": 9864,
+      "run_started_at": 4537,
+      "boot_issued_modules": 36,
+      "run_issued_modules": 6,
+      "paths_module": {
+        "url": "http://127.0.0.1:50715/assets/js/sizing/paths.js?v=20261017a",
+        "bytes": 37081,
+        "start": 9840,
+        "end": 9846,
+        "blocking": true,
+        "after_card_ms": -18
+      }
+    },
+    "paths_module": {
+      "url": "http://127.0.0.1:50715/assets/js/sizing/paths.js?v=20261017a",
+      "bytes": 37081,
+      "start": 9840,
+      "end": 9846,
+      "blocking": true,
+      "after_card_ms": -18
+    },
+    "priced_surfaces": {
+      "panel": true,
+      "eli5": true
+    },
+    "warm_rerun": {
+      "ms": 50,
+      "started": true,
+      "cardPresent": true,
+      "status": "✅ 5 yr of hourly data (2021–2025) · 1,803 kWh/yr per kW of panel."
+    },
+    "warm_adjustments": {
+      "taken": 3,
+      "samples": [
+        {
+          "preview_ms": 15,
+          "preview_rendered": true,
+          "confirm_ms": 2269,
+          "cut": 130,
+          "budget_followed": true
+        },
+        {
+          "preview_ms": 7,
+          "preview_rendered": true,
+          "confirm_ms": 2140,
+          "cut": 18,
+          "budget_followed": true
+        },
+        {
+          "preview_ms": 6,
+          "preview_rendered": true,
+          "confirm_ms": 1862,
+          "cut": 48,
+          "budget_followed": true
+        }
+      ],
+      "preview_median_ms": 7,
+      "preview_max_ms": 15,
+      "all_previews_rendered": true,
+      "confirm_median_ms": 2140,
+      "confirm_max_ms": 2269,
+      "all_followed_through": true
+    },
+    "warm_window_ms": 6351,
+    "warm_network": {
+      "total": 0,
+      "nasa": 0,
+      "urls": []
+    },
+    "skipped": [],
+    "warm_reload": {
+      "ok": true,
+      "ms": 4284,
+      "status": "✅ 5 yr of hourly data (2021–2025) · 1,803 kWh/yr per kW of panel.",
+      "error": null,
+      "boot_requests": 83,
+      "warm_network": {
+        "total": 107,
+        "nasa": 0,
+        "urls": [
+          "http://127.0.0.1:50715/assets/js/sizing/sizing-worker.js?v=20261017a",
+          "http://127.0.0.1:50715/assets/js/sizing/sizing-worker.js?v=20261017a",
+          "http://127.0.0.1:50715/assets/js/sizing/run.js?v=20261017a",
+          "http://127.0.0.1:50715/assets/js/sizing/run.js?v=20261017a",
+          "http://127.0.0.1:50715/assets/js/sizing/engine.js?v=20261017a",
+          "http://127.0.0.1:50715/assets/js/sizing/engine.js?v=20261017a",
+          "http://127.0.0.1:50715/assets/js/sizing/usecases.js?v=20261017a",
+          "http://127.0.0.1:50715/assets/js/sizing/nasa.js?v=20261017a",
+          "http://127.0.0.1:50715/assets/js/sizing/frontier.js?v=20261017a",
+          "http://127.0.0.1:50715/assets/js/sizing/rescale.js?v=20261017a",
+          "http://127.0.0.1:50715/assets/js/sizing/climate.js?v=20261017a",
+          "http://127.0.0.1:50715/assets/js/sizing/pricing.js?v=20261017a",
+          "http://127.0.0.1:50715/assets/js/sizing/money.js?v=20261017a",
+          "http://127.0.0.1:50715/assets/js/sizing/usecases.js?v=20261017a",
+          "http://127.0.0.1:50715/assets/js/sizing/nasa.js?v=20261017a",
+          "http://127.0.0.1:50715/assets/js/sizing/frontier.js?v=20261017a",
+          "http://127.0.0.1:50715/assets/js/sizing/rescale.js?v=20261017a",
+          "http://127.0.0.1:50715/assets/js/sizing/climate.js?v=20261017a",
+          "http://127.0.0.1:50715/assets/js/sizing/pricing.js?v=20261017a",
+          "http://127.0.0.1:50715/assets/js/sizing/money.js?v=20261017a",
+          "http://127.0.0.1:50715/assets/js/shared/coords.js?v=20261017a",
+          "http://127.0.0.1:50715/assets/js/shared/coords.js?v=20261017a",
+          "http://127.0.0.1:50715/api/health",
+          "http://127.0.0.1:50715/assets/js/sizing/paths.js?v=20261017a"
+        ]
+      },
+      "scripts": [
+        {
+          "url": "http://127.0.0.1:50715/assets/js/sizing/ui.js?v=20261017a",
+          "bytes": 310193,
+          "transferred": 0,
+          "start": 20,
+          "end": 27
+        },
+        {
+          "url": "http://127.0.0.1:50715/assets/js/turnstile-client.js?v=20261017a",
+          "bytes": 11860,
+          "transferred": 0,
+          "start": 30,
+          "end": 33
+        },
+        {
+          "url": "http://127.0.0.1:50715/assets/js/chat.js?v=20261017a",
+          "bytes": 34710,
+          "transferred": 0,
+          "start": 30,
+          "end": 33
+        },
+        {
+          "url": "http://127.0.0.1:50715/assets/js/sizing/appliances.js?v=20261017a",
+          "bytes": 3196,
+          "transferred": 0,
+          "start": 43,
+          "end": 55
+        },
+        {
+          "url": "http://127.0.0.1:50715/assets/js/sizing/usecases.js?v=20261017a",
+          "bytes": 18071,
+          "transferred": 0,
+          "start": 43,
+          "end": 60
+        },
+        {
+          "url": "http://127.0.0.1:50715/assets/js/sizing/run-coordinator.js?v=20261017a",
+          "bytes": 6193,
+          "transferred": 0,
+          "start": 43,
+          "end": 69
+        },
+        {
+          "url": "http://127.0.0.1:50715/assets/js/sizing/cities.js?v=20261017a",
+          "bytes": 18715,
+          "transferred": 0,
+          "start": 43,
+          "end": 70
+        },
+        {
+          "url": "http://127.0.0.1:50715/assets/js/sizing/charts.js?v=20261017a",
+          "bytes": 47672,
+          "transferred": 0,
+          "start": 43,
+          "end": 78
+        },
+        {
+          "url": "http://127.0.0.1:50715/assets/js/sizing/location-picker.js?v=20261017a",
+          "bytes": 13628,
+          "transferred": 0,
+          "start": 44,
+          "end": 70
+        },
+        {
+          "url": "http://127.0.0.1:50715/assets/js/sizing/pricing.js?v=20261017a",
+          "bytes": 30050,
+          "transferred": 0,
+          "start": 44,
+          "end": 72
+        },
+        {
+          "url": "http://127.0.0.1:50715/assets/js/sizing/country-currency.js?v=20261017a",
+          "bytes": 11517,
+          "transferred": 0,
+          "start": 44,
+          "end": 76
+        },
+        {
+          "url": "http://127.0.0.1:50715/assets/js/sizing/money.js?v=20261017a",
+          "bytes": 13252,
+          "transferred": 0,
+          "start": 44,
+          "end": 78
+        },
+        {
+          "url": "http://127.0.0.1:50715/assets/js/sizing/lead-acid.js?v=20261017a",
+          "bytes": 4327,
+          "transferred": 0,
+          "start": 44,
+          "end": 79
+        },
+        {
+          "url": "http://127.0.0.1:50715/assets/js/sizing/bom.js?v=20261017a",
+          "bytes": 15355,
+          "transferred": 0,
+          "start": 44,
+          "end": 79
+        },
+        {
+          "url": "http://127.0.0.1:50715/assets/js/shared/content.js?v=20261017a",
+          "bytes": 1673,
+          "transferred": 0,
+          "start": 44,
+          "end": 79
+        },
+        {
+          "url": "http://127.0.0.1:50715/assets/js/shared/i18n.js?v=20261017a",
+          "bytes": 6452,
+          "transferred": 0,
+          "start": 44,
+          "end": 80
+        },
+        {
+          "url": "http://127.0.0.1:50715/assets/js/shared/escape.js?v=20261017a",
+          "bytes": 658,
+          "transferred": 0,
+          "start": 45,
+          "end": 80
+        },
+        {
+          "url": "http://127.0.0.1:50715/assets/js/shared/jargon-dict.js?v=20261017a",
+          "bytes": 8142,
+          "transferred": 0,
+          "start": 45,
+          "end": 80
+        },
+        {
+          "url": "http://127.0.0.1:50715/assets/js/shared/simple-mode.js?v=20261017a",
+          "bytes": 2222,
+          "transferred": 0,
+          "start": 45,
+          "end": 80
+        },
+        {
+          "url": "http://127.0.0.1:50715/assets/js/shared/simple-view.js?v=20261017a",
+          "bytes": 2618,
+          "transferred": 0,
+          "start": 45,
+          "end": 81
+        },
+        {
+          "url": "http://127.0.0.1:50715/assets/js/sizing/validate.js?v=20261017a",
+          "bytes": 11374,
+          "transferred": 0,
+          "start": 45,
+          "end": 81
+        },
+        {
+          "url": "http://127.0.0.1:50715/assets/js/shared/cut-targets.js?v=20261017a",
+          "bytes": 934,
+          "transferred": 0,
+          "start": 45,
+          "end": 81
+        },
+        {
+          "url": "http://127.0.0.1:50715/assets/js/sizing/share-codec.js?v=20261017a",
+          "bytes": 1890,
+          "transferred": 0,
+          "start": 45,
+          "end": 81
+        },
+        {
+          "url": "http://127.0.0.1:50715/assets/js/sizing/infeasible-copy.js?v=20261017a",
+          "bytes": 2597,
+          "transferred": 0,
+          "start": 45,
+          "end": 82
+        },
+        {
+          "url": "http://127.0.0.1:50715/assets/js/sizing/parts-csv.js?v=20261017a",
+          "bytes": 5981,
+          "transferred": 0,
+          "start": 45,
+          "end": 82
+        },
+        {
+          "url": "http://127.0.0.1:50715/assets/js/sizing/fuel-units.js?v=20261017a",
+          "bytes": 4423,
+          "transferred": 0,
+          "start": 45,
+          "end": 82
+        },
+        {
+          "url": "http://127.0.0.1:50715/assets/js/sizing/frontier-chart.js?v=20261017a",
+          "bytes": 31296,
+          "transferred": 0,
+          "start": 46,
+          "end": 83
+        },
+        {
+          "url": "http://127.0.0.1:50715/assets/js/sizing/rescale.js?v=20261017a",
+          "bytes": 12014,
+          "transferred": 0,
+          "start": 46,
+          "end": 83
+        },
+        {
+          "url": "http://127.0.0.1:50715/assets/js/sizing/engine.js?v=20261017a",
+          "bytes": 59291,
+          "transferred": 0,
+          "start": 46,
+          "end": 83
+        },
+        {
+          "url": "http://127.0.0.1:50715/assets/js/sizing/map-provider.js?v=20261017a",
+          "bytes": 10981,
+          "transferred": 0,
+          "start": 46,
+          "end": 84
+        },
+        {
+          "url": "http://127.0.0.1:50715/assets/js/sizing/wizard.js?v=20261017a",
+          "bytes": 2933,
+          "transferred": 0,
+          "start": 46,
+          "end": 84
+        },
+        {
+          "url": "http://127.0.0.1:50715/assets/js/sizing/tilt-harvest.js?v=20261017a",
+          "bytes": 4641,
+          "transferred": 0,
+          "start": 46,
+          "end": 85
+        },
+        {
+          "url": "http://127.0.0.1:50715/assets/js/sizing/budget-span.js?v=20261017a",
+          "bytes": 3220,
+          "transferred": 0,
+          "start": 46,
+          "end": 85
+        },
+        {
+          "url": "http://127.0.0.1:50715/assets/js/shared/coords.js?v=20261017a",
+          "bytes": 1646,
+          "transferred": 0,
+          "start": 71,
+          "end": 90
+        },
+        {
+          "url": "http://127.0.0.1:50715/assets/js/shared/interpolate.js?v=20261017a",
+          "bytes": 1958,
+          "transferred": 0,
+          "start": 80,
+          "end": 90
+        },
+        {
+          "url": "http://127.0.0.1:50715/assets/js/shared/locales.js?v=20261017a",
+          "bytes": 218688,
+          "transferred": 0,
+          "start": 92,
+          "end": 96
+        },
+        {
+          "url": "http://127.0.0.1:50715/assets/js/sizing/sizing-worker.js?v=20261017a",
+          "bytes": 0,
+          "transferred": 0,
+          "start": 5179,
+          "end": 5175
+        },
+        {
+          "url": "http://127.0.0.1:50715/assets/js/sizing/run.js?v=20261017a",
+          "bytes": 113820,
+          "transferred": 0,
+          "start": 5179,
+          "end": 5182
+        },
+        {
+          "url": "http://127.0.0.1:50715/assets/js/sizing/nasa.js?v=20261017a",
+          "bytes": 24116,
+          "transferred": 0,
+          "start": 5184,
+          "end": 5189
+        },
+        {
+          "url": "http://127.0.0.1:50715/assets/js/sizing/frontier.js?v=20261017a",
+          "bytes": 23812,
+          "transferred": 0,
+          "start": 5184,
+          "end": 5190
+        },
+        {
+          "url": "http://127.0.0.1:50715/assets/js/sizing/climate.js?v=20261017a",
+          "bytes": 3976,
+          "transferred": 0,
+          "start": 5184,
+          "end": 5191
+        },
+        {
+          "url": "http://127.0.0.1:50715/assets/js/sizing/paths.js?v=20261017a",
+          "bytes": 37081,
+          "transferred": 0,
+          "start": 9451,
+          "end": 9451
+        }
+      ]
+    },
+    "paths_unavailable": {
+      "ok": true,
+      "blocked_pattern": "*paths.js*",
+      "blocked_attempts": 1,
+      "card_rendered": true,
+      "card_at_ms": 9210,
+      "ms": 4035,
+      "status": "⚠️ Not available",
+      "error": null,
+      "paths_panel_rendered": false,
+      "eli5_rendered": false,
+      "nasa_requests": 0
+    }
+  },
+  "first_measurement": {
+    "home/mobile": {
+      "performance": {
+        "min": 61,
+        "median": 64,
+        "max": 73
+      },
+      "accessibility": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "best-practices": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "seo": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      }
+    },
+    "home/desktop": {
+      "performance": {
+        "min": 56,
+        "median": 56,
+        "max": 56
+      },
+      "accessibility": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "best-practices": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "seo": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      }
+    },
+    "city/mobile": {
+      "performance": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "accessibility": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "best-practices": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "seo": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      }
+    },
+    "city/desktop": {
+      "performance": {
+        "min": 96,
+        "median": 97,
+        "max": 97
+      },
+      "accessibility": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "best-practices": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "seo": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      }
+    },
+    "heatmap/mobile": {
+      "performance": {
+        "min": 87,
+        "median": 91,
+        "max": 91
+      },
+      "accessibility": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "best-practices": {
+        "min": 96,
+        "median": 96,
+        "max": 96
+      },
+      "seo": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      }
+    },
+    "heatmap/desktop": {
+      "performance": {
+        "min": 73,
+        "median": 75,
+        "max": 76
+      },
+      "accessibility": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "best-practices": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "seo": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      }
+    },
+    "about/mobile": {
+      "performance": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "accessibility": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "best-practices": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "seo": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      }
+    },
+    "about/desktop": {
+      "performance": {
+        "min": 97,
+        "median": 97,
+        "max": 97
+      },
+      "accessibility": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "best-practices": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "seo": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      }
+    },
+    "blog-index/mobile": {
+      "performance": {
+        "min": 99,
+        "median": 100,
+        "max": 100
+      },
+      "accessibility": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "best-practices": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "seo": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      }
+    },
+    "blog-index/desktop": {
+      "performance": {
+        "min": 96,
+        "median": 97,
+        "max": 97
+      },
+      "accessibility": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "best-practices": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "seo": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      }
+    },
+    "blog-post/mobile": {
+      "performance": {
+        "min": 96,
+        "median": 96,
+        "max": 100
+      },
+      "accessibility": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "best-practices": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "seo": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      }
+    },
+    "blog-post/desktop": {
+      "performance": {
+        "min": 93,
+        "median": 93,
+        "max": 94
+      },
+      "accessibility": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "best-practices": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "seo": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      }
+    },
+    "404/mobile": {
+      "performance": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "accessibility": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "best-practices": {
+        "min": 96,
+        "median": 100,
+        "max": 100
+      },
+      "seo": {
+        "min": 63,
+        "median": 63,
+        "max": 63
+      }
+    },
+    "404/desktop": {
+      "performance": {
+        "min": 99,
+        "median": 100,
+        "max": 100
+      },
+      "accessibility": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "best-practices": {
+        "min": 100,
+        "median": 100,
+        "max": 100
+      },
+      "seo": {
+        "min": 63,
+        "median": 63,
+        "max": 63
+      }
+    }
+  },
+  "floors": {
+    "home/mobile": {
+      "accessibility": 100,
+      "best-practices": 100,
+      "seo": 100
+    },
+    "home/desktop": {
+      "accessibility": 100,
+      "best-practices": 100,
+      "seo": 100
+    },
+    "city/mobile": {
+      "accessibility": 100,
+      "best-practices": 100,
+      "seo": 100
+    },
+    "city/desktop": {
+      "accessibility": 100,
+      "best-practices": 100,
+      "seo": 100
+    },
+    "heatmap/mobile": {
+      "accessibility": 100,
+      "best-practices": 96,
+      "seo": 100
+    },
+    "heatmap/desktop": {
+      "accessibility": 100,
+      "best-practices": 100,
+      "seo": 100
+    },
+    "about/mobile": {
+      "accessibility": 100,
+      "best-practices": 100,
+      "seo": 100
+    },
+    "about/desktop": {
+      "accessibility": 100,
+      "best-practices": 100,
+      "seo": 100
+    },
+    "blog-index/mobile": {
+      "accessibility": 100,
+      "best-practices": 100,
+      "seo": 100
+    },
+    "blog-index/desktop": {
+      "accessibility": 100,
+      "best-practices": 100,
+      "seo": 100
+    },
+    "blog-post/mobile": {
+      "accessibility": 100,
+      "best-practices": 100,
+      "seo": 100
+    },
+    "blog-post/desktop": {
+      "accessibility": 100,
+      "best-practices": 100,
+      "seo": 100
+    },
+    "404/mobile": {
+      "accessibility": 100,
+      "best-practices": 96,
+      "seo": 63
+    },
+    "404/desktop": {
+      "accessibility": 100,
+      "best-practices": 100,
+      "seo": 63
+    }
+  },
+  "absolute_targets": {
+    "performance": 99,
+    "accessibility": 100,
+    "best-practices": 100,
+    "seo": 100
+  },
+  "speed_ceilings": {
+    "lcp_s": {
+      "mobile": 1.8,
+      "desktop": 1
+    },
+    "cls": 0.02,
+    "tbt_ms": 100
+  },
+  "regressions": [],
+  "improvements": [],
+  "breaches": [
+    {
+      "id": "home/mobile",
+      "category": "performance",
+      "score": 61,
+      "absolute": 99,
+      "blocking_from": "P5 (new shell) / P8 (everything), plan §3.2"
+    }
+  ],
+  "speed_over": [
+    {
+      "id": "home/mobile",
+      "metric": "lcp_s",
+      "value": 6.375363676019715,
+      "ceiling": 1.8
+    },
+    {
+      "id": "home/mobile",
+      "metric": "cls",
+      "value": 0.13634576491272626,
+      "ceiling": 0.02
+    }
+  ],
+  "holes": [],
+  "unmeasured": [],
+  "enforcement": "regression-blocking from P0 on accessibility, best-practices, seo; the other categories are measured and reported but not ratcheted, for the measured reason in `reported_only`. Absolute Q-02 thresholds become blocking at P5 (new shell) / P8 (everything) per plan §3.2, and are reported as breaches until then.",
+  "scope_limit": "this gate measures the first-paint claim with Lighthouse's SIMULATED throttling, and the interaction claims (cold sizing run, warm re-run, slider drag preview, confirm re-slice, the requests a warm path issues, the requests a warm RELOAD issues after the page's RAM is gone, and whether the first result renders with the pricing model blocked) with one unthrottled Chrome on one machine, one city and three adjustments. no device matrix, no CPU or network throttling, one city; a timing tripwire on this run shape, not a population claim. Every count is whatever the browser put on the wire, worker sessions included: a non-zero count is a finding about the product and is reported, never tuned away.",
+  "facet_line": "PLAYTEST, 1 Chrome, 1 city: cold 5.3s, repeat 50ms, drag 7ms, 2.1s confirm (median of 3), 0 NASA warm/reload, result renders without pricing model. Lighthouse, 1 target, median of 3. perf NOT ratcheted, 61 this run, 40-76 over 21 runs. 3 categories ratcheted (in report).",
+  "facet_line_omitted": [
+    {
+      "sentence": "ratcheted accessibility 100, best-practices 100, seo 100",
+      "replaced_with": "3 categories ratcheted (in report)"
+    }
+  ]
+}

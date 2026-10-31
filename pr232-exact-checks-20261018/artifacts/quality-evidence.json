@@ -1,0 +1,7 @@
+{
+    "job":  "quality-evidence",
+    "conclusion":  "success",
+    "steps":  {
+                  "quality_evidence":  "success"
+              }
+}

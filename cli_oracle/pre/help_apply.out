@@ -1,0 +1,50 @@
+usage: harness apply [-h] [--file FILE] [--instruction INSTRUCTION]
+                     [--task-id TASK_ID] [--model MODEL] [--verify VERIFY]
+                     [--edit-snippet EDIT_SNIPPET] [--max-rounds MAX_ROUNDS]
+                     [--require-consent] [--no-consent] [--renew-consent]
+                     [--no-renew-consent] [--max-tokens MAX_TOKENS]
+                     [--task-max-cost TASK_MAX_COST] [--allow-escalation]
+                     [--reasoning-effort {auto,off,none,low,medium,high,on}]
+                     [--max-rotations MAX_ROTATIONS]
+                     [--backend {harness,morph,diff}] [--verify-only]
+                     [--max-lines MAX_LINES] [--keep-going]
+                     [--continue-from CONTINUE_FROM] [--out OUT] [--quiet]
+                     [--events FILE] [--no-color]
+
+options:
+  -h, --help            show this help message and exit
+  --file FILE           target file; repeat the flag for a multi-file batch
+                        (one session, shared gate)
+  --instruction INSTRUCTION
+  --task-id TASK_ID
+  --model MODEL
+  --verify VERIFY       verification gate command (e.g. 'cargo check')
+  --edit-snippet EDIT_SNIPPET
+  --max-rounds MAX_ROUNDS
+  --require-consent
+  --no-consent
+  --renew-consent
+  --no-renew-consent
+  --max-tokens MAX_TOKENS
+  --task-max-cost TASK_MAX_COST
+  --allow-escalation
+  --reasoning-effort {auto,off,none,low,medium,high,on}
+  --max-rotations MAX_ROTATIONS
+  --backend {harness,morph,diff}
+                        transformation backend; on continue, saved
+                        continuation metadata takes precedence
+  --verify-only         return the proposed content without writing or running
+                        the verification gate
+  --max-lines MAX_LINES
+                        per-file line ceiling (1-500)
+  --keep-going          multi-file batch: continue past a failed file; per-
+                        file results are preserved and the batch still fails
+                        honestly (fail-fast remains the default)
+  --continue-from CONTINUE_FROM
+                        resume a deferred task from state.json
+  --out OUT
+  --quiet               suppress stderr progress notes; report only
+  --events FILE         append typed JSONL progress events to FILE (UI
+                        telemetry; the JSON result is unchanged)
+  --no-color            disable ANSI color in stderr rendering (NO_COLOR is
+                        honored too)

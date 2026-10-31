@@ -1,0 +1,15 @@
+{
+  "plan_item": "P0.4",
+  "plan_ref": "docs/plan/MASTER_PLAN.md §3.2, Q-07",
+  "metric": "a11y_controls",
+  "base": "http://127.0.0.1:62618/",
+  "generated_at": "2026-10-23T16:50:23.348Z",
+  "facet_axes": [
+    "accessibility"
+  ],
+  "facet_line": "the calculator's controls were NOT measured in a browser this run (the a11y flow did not complete in this run), so keyboard reach, control names, contrast and reduced motion rest on nothing from this run",
+  "measured": {
+    "ran": false,
+    "error": "the a11y flow did not complete in this run"
+  }
+}

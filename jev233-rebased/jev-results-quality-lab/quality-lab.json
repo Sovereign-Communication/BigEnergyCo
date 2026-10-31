@@ -1,0 +1,7 @@
+{
+  "job": "quality-lab",
+  "conclusion": "success",
+  "steps": {
+    "a11y-matrix": "success"
+  }
+}

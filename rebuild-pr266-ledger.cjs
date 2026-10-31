@@ -1,0 +1,10 @@
+﻿const cp = require('node:child_process');
+const fs = require('node:fs');
+const p = 'docs/plan/LEDGER.jsonl';
+const base = cp.execFileSync('git', ['show', 'origin/codex/p95-battery-faq-audit-20261022:' + p]);
+const old = fs.readFileSync(p, 'utf8').split(/\r?\n/).map(s => { try { return JSON.parse(s); } catch { return null; } }).find(x => x?.evidence?.pr === 266);
+if (!old) throw new Error('missing PR 266 ledger record');
+old.evidence.sha = cp.execFileSync('git', ['rev-parse', '62287d03'], { encoding: 'utf8' }).trim();
+old.evidence.test = 'tests/blog-battery-cycle-claims.test.mjs; full suite 1734/1734';
+const suffix = Buffer.from((base.length && base[base.length - 1] === 10 ? '' : '\n') + JSON.stringify(old) + '\n', 'utf8');
+fs.writeFileSync(p, Buffer.concat([base, suffix]));

@@ -1,0 +1,10 @@
+{
+  "attempts": 0,
+  "mission_id": "m-20261017-prod-rollout",
+  "pack_dir": "C:\\tmp\\beco-prod-rollout-missions\\m-20261017-prod-rollout",
+  "receipts_seq": 0,
+  "schema_version": 1,
+  "spent": 0.0,
+  "status": "in_progress",
+  "updated_at": "2026-10-17T04:39:58+00:00"
+}

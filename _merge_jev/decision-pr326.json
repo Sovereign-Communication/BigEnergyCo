@@ -1,0 +1,59 @@
+{
+  "at": "2026-10-29T03:45:49.811Z",
+  "pr": "326",
+  "head": "46ed21fa5260931226f306e28851fca8fa7a624b",
+  "provider": "typesafe",
+  "model": "jev-1.14.0",
+  "answers": {
+    "is_destructive": {
+      "type": "choice",
+      "choice": "no",
+      "confidence": 1,
+      "probabilities": {
+        "no": 1,
+        "yes": 0
+      }
+    },
+    "disposition": {
+      "type": "choice",
+      "choice": "proceed",
+      "confidence": 0.92,
+      "probabilities": {
+        "proceed": 0.95,
+        "needs_improvement": 0.02,
+        "escalate": 0.03
+      }
+    },
+    "advances_goal": {
+      "type": "score",
+      "score": 4.5,
+      "confidence": 0.69,
+      "legend": {
+        "0": "0 no advancement",
+        "1": "25 weak",
+        "2": "50 partial",
+        "3": "75 solid",
+        "4": "90 strong",
+        "5": "100 complete"
+      },
+      "probabilities": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0.03,
+        "4": 0.41,
+        "5": 0.56
+      }
+    },
+    "claims_verified": {
+      "type": "choice",
+      "choice": "yes",
+      "confidence": 0.2,
+      "probabilities": {
+        "yes": 0.6,
+        "no": 0.4
+      }
+    }
+  },
+  "notes": []
+}

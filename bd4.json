@@ -1,0 +1,1060 @@
+[
+ {
+  "name": "chore/bump-asset-stamp",
+  "sha": "5e97184",
+  "pr": null,
+  "date": "2026-09-24",
+  "files": 15,
+  "counts": {
+   "moved-past": 15
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unreachable, nothing unique"
+ },
+ {
+  "name": "chore/bump-asset-tokens-post-42",
+  "sha": "5768eb6",
+  "pr": null,
+  "date": "2026-09-14",
+  "files": 11,
+  "counts": {
+   "moved-past": 11
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unreachable, nothing unique"
+ },
+ {
+  "name": "chore/bump-tokens-responsiveness",
+  "sha": "59374f5",
+  "pr": null,
+  "date": "2026-09-16",
+  "files": 11,
+  "counts": {
+   "moved-past": 11
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unreachable, nothing unique"
+ },
+ {
+  "name": "chore/csp-fixes-2",
+  "sha": "44cafef",
+  "pr": null,
+  "date": "2026-09-05",
+  "files": 3,
+  "counts": {
+   "moved-past": 3
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unreachable, nothing unique"
+ },
+ {
+  "name": "chore/csp-smoke-coverage",
+  "sha": "bdb2a53",
+  "pr": null,
+  "date": "2026-09-05",
+  "files": 5,
+  "counts": {
+   "moved-past": 5
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unreachable, nothing unique"
+ },
+ {
+  "name": "chore/fix-live-sanity-markers",
+  "sha": "b816e76",
+  "pr": null,
+  "date": "2026-09-05",
+  "files": 1,
+  "counts": {
+   "moved-past": 1
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unreachable, nothing unique"
+ },
+ {
+  "name": "chore/gsc-doc-property-type",
+  "sha": "260ef14",
+  "pr": null,
+  "date": "2026-09-16",
+  "files": 4,
+  "counts": {
+   "moved-past": 3,
+   "identical": 1
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unreachable, nothing unique"
+ },
+ {
+  "name": "chore/gsc-new-domain-verification",
+  "sha": "efd2dca",
+  "pr": null,
+  "date": "2026-09-16",
+  "files": 4,
+  "counts": {
+   "moved-past": 4
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unreachable, nothing unique"
+ },
+ {
+  "name": "chore/oversize-primary-and-tokens",
+  "sha": "7e2c2d9",
+  "pr": null,
+  "date": "2026-09-05",
+  "files": 13,
+  "counts": {
+   "moved-past": 13
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unreachable, nothing unique"
+ },
+ {
+  "name": "chore/p0.3c-score-and-scope",
+  "sha": "cf79f45",
+  "pr": null,
+  "date": "2026-09-27",
+  "files": 0,
+  "counts": {},
+  "unique": [],
+  "cls": "empty-vs-main",
+  "in_main": true,
+  "in_open_pr": "#165",
+  "disp": "merged into main"
+ },
+ {
+  "name": "chore/p0.3d-new-pack-facets",
+  "sha": "1358bf5",
+  "pr": null,
+  "date": "2026-09-27",
+  "files": 0,
+  "counts": {},
+  "unique": [],
+  "cls": "empty-vs-main",
+  "in_main": true,
+  "in_open_pr": "#165",
+  "disp": "merged into main"
+ },
+ {
+  "name": "chore/p0.3e-ci-evidence",
+  "sha": "84632e1",
+  "pr": null,
+  "date": "2026-09-27",
+  "files": 0,
+  "counts": {},
+  "unique": [],
+  "cls": "empty-vs-main",
+  "in_main": true,
+  "in_open_pr": "#165",
+  "disp": "merged into main"
+ },
+ {
+  "name": "chore/p0.4a-byte-budgets",
+  "sha": "0f86a82",
+  "pr": 153,
+  "date": "2026-09-26",
+  "files": 31,
+  "counts": {
+   "moved-past": 6,
+   "identical": 21,
+   "in-flight": 4
+  },
+  "unique": [],
+  "cls": "live-open-pr",
+  "in_main": false,
+  "in_open_pr": "#164",
+  "disp": "ancestor of open #164"
+ },
+ {
+  "name": "chore/p0.4b-a11y-matrix",
+  "sha": "dd3bdd7",
+  "pr": 157,
+  "date": "2026-09-26",
+  "files": 37,
+  "counts": {
+   "moved-past": 8,
+   "identical": 21,
+   "in-flight": 8
+  },
+  "unique": [],
+  "cls": "live-open-pr",
+  "in_main": false,
+  "in_open_pr": "#164",
+  "disp": "ancestor of open #164"
+ },
+ {
+  "name": "chore/p0.4b-quality-lab",
+  "sha": "6f560b7",
+  "pr": null,
+  "date": "2026-09-28",
+  "files": 33,
+  "counts": {
+   "moved-past": 7,
+   "identical": 21,
+   "in-flight": 1,
+   "unique": 4
+  },
+  "unique": [
+   "scripts/lib/byte-budgets.mjs",
+   "scripts/quality-lab-base.mjs",
+   "tests/byte-budgets.test.mjs",
+   "tests/quality-lab.test.mjs"
+  ],
+  "cls": "unique-work",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "UNREACHABLE + unique content"
+ },
+ {
+  "name": "chore/p0.4c-a11y-fixes",
+  "sha": "f2cfc5b",
+  "pr": 160,
+  "date": "2026-09-27",
+  "files": 49,
+  "counts": {
+   "in-flight": 14,
+   "moved-past": 20,
+   "identical": 15
+  },
+  "unique": [],
+  "cls": "live-open-pr",
+  "in_main": false,
+  "in_open_pr": "#164",
+  "disp": "ancestor of open #164"
+ },
+ {
+  "name": "chore/phase-a-trust-security",
+  "sha": "6cb1d1c",
+  "pr": null,
+  "date": "2026-09-05",
+  "files": 7,
+  "counts": {
+   "moved-past": 7
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unreachable, nothing unique"
+ },
+ {
+  "name": "chore/phase-b-release-hygiene",
+  "sha": "988559f",
+  "pr": null,
+  "date": "2026-09-05",
+  "files": 20,
+  "counts": {
+   "moved-past": 19,
+   "identical": 1
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unreachable, nothing unique"
+ },
+ {
+  "name": "chore/phase-c-worker-hardening",
+  "sha": "10c6ef6",
+  "pr": null,
+  "date": "2026-09-05",
+  "files": 5,
+  "counts": {
+   "moved-past": 4,
+   "identical": 1
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unreachable, nothing unique"
+ },
+ {
+  "name": "chore/phase-de-ops-trust",
+  "sha": "5a803b9",
+  "pr": null,
+  "date": "2026-09-05",
+  "files": 8,
+  "counts": {
+   "moved-past": 8
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unreachable, nothing unique"
+ },
+ {
+  "name": "chore/phase-f-worker-trust",
+  "sha": "145c39d",
+  "pr": null,
+  "date": "2026-09-05",
+  "files": 4,
+  "counts": {
+   "moved-past": 4
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unreachable, nothing unique"
+ },
+ {
+  "name": "chore/phase-g-site-split",
+  "sha": "2886f86",
+  "pr": null,
+  "date": "2026-09-05",
+  "files": 91,
+  "counts": {
+   "moved-past": 58,
+   "identical": 20,
+   "archived": 11,
+   "unique": 2
+  },
+  "unique": [
+   "scripts/verify-chart-contract.mjs",
+   "scripts/verify-polish.mjs"
+  ],
+  "cls": "unique-work",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "UNREACHABLE + unique content"
+ },
+ {
+  "name": "chore/prettier-exempt-generated",
+  "sha": "a5b84be",
+  "pr": null,
+  "date": "2026-09-05",
+  "files": 2,
+  "counts": {
+   "moved-past": 1,
+   "identical": 1
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unreachable, nothing unique"
+ },
+ {
+  "name": "chore/re-audit-rounds",
+  "sha": "58990b3",
+  "pr": null,
+  "date": "2026-09-06",
+  "files": 16,
+  "counts": {
+   "moved-past": 11,
+   "archived": 2,
+   "identical": 3
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unreachable, nothing unique"
+ },
+ {
+  "name": "chore/record-current-state",
+  "sha": "d47eeca",
+  "pr": null,
+  "date": "2026-09-24",
+  "files": 1,
+  "counts": {
+   "moved-past": 1
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unreachable, nothing unique"
+ },
+ {
+  "name": "chore/record-invariant-release-line",
+  "sha": "efcfd5c",
+  "pr": null,
+  "date": "2026-09-24",
+  "files": 1,
+  "counts": {
+   "moved-past": 1
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unreachable, nothing unique"
+ },
+ {
+  "name": "chore/record-promote-ledger",
+  "sha": "5785ede",
+  "pr": null,
+  "date": "2026-09-24",
+  "files": 1,
+  "counts": {
+   "moved-past": 1
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unreachable, nothing unique"
+ },
+ {
+  "name": "chore/release-20260917a",
+  "sha": "e3d2827",
+  "pr": null,
+  "date": "2026-09-16",
+  "files": 11,
+  "counts": {
+   "moved-past": 11
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unreachable, nothing unique"
+ },
+ {
+  "name": "chore/repin-swap-strategy",
+  "sha": "88cac5e",
+  "pr": null,
+  "date": "2026-09-05",
+  "files": 1,
+  "counts": {
+   "moved-past": 1
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unreachable, nothing unique"
+ },
+ {
+  "name": "chore/smoke-visible-h1",
+  "sha": "25df361",
+  "pr": null,
+  "date": "2026-09-05",
+  "files": 1,
+  "counts": {
+   "moved-past": 1
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unreachable, nothing unique"
+ },
+ {
+  "name": "ci/concurrency-and-staging-drift",
+  "sha": "7f98e8f",
+  "pr": null,
+  "date": "2026-09-16",
+  "files": 4,
+  "counts": {
+   "moved-past": 3,
+   "identical": 1
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unreachable, nothing unique"
+ },
+ {
+  "name": "ci/quality-gates",
+  "sha": "6510c3c",
+  "pr": null,
+  "date": "2026-09-17",
+  "files": 21,
+  "counts": {
+   "identical": 6,
+   "moved-past": 15
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unreachable, nothing unique"
+ },
+ {
+  "name": "claude/jolly-goodall-414mjl",
+  "sha": "72ea08b",
+  "pr": null,
+  "date": "2026-09-26",
+  "files": 0,
+  "counts": {},
+  "unique": [],
+  "cls": "empty-vs-main",
+  "in_main": true,
+  "in_open_pr": "#165",
+  "disp": "merged into main"
+ },
+ {
+  "name": "claude/repo-maturity-audit-rtmi4q",
+  "sha": "16e1446",
+  "pr": null,
+  "date": "2026-08-13",
+  "files": 2,
+  "counts": {
+   "unique": 2
+  },
+  "unique": [
+   "MATURITY_SCORECARD.txt",
+   "REPO_MATURITY_AUDIT.md"
+  ],
+  "cls": "unique-work",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "UNREACHABLE + unique content"
+ },
+ {
+  "name": "feat/derived-facet-lines",
+  "sha": "d601450",
+  "pr": 164,
+  "date": "2026-09-27",
+  "files": 50,
+  "counts": {
+   "in-flight": 15,
+   "moved-past": 21,
+   "identical": 14
+  },
+  "unique": [],
+  "cls": "live-open-pr",
+  "in_main": false,
+  "in_open_pr": "#164",
+  "disp": "ancestor of open #164"
+ },
+ {
+  "name": "feat/lighthouse-gate",
+  "sha": "b33e9ec",
+  "pr": null,
+  "date": "2026-09-27",
+  "files": 49,
+  "counts": {
+   "in-flight": 14,
+   "moved-past": 20,
+   "identical": 15
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": "#164",
+  "disp": "ancestor of open #164"
+ },
+ {
+  "name": "feat/location-share-hardening",
+  "sha": "dd3982e",
+  "pr": null,
+  "date": "2026-09-24",
+  "files": 19,
+  "counts": {
+   "moved-past": 11,
+   "identical": 8
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unreachable, nothing unique"
+ },
+ {
+  "name": "feat/performance-responsiveness",
+  "sha": "cd500e4",
+  "pr": null,
+  "date": "2026-09-16",
+  "files": 8,
+  "counts": {
+   "moved-past": 8
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unreachable, nothing unique"
+ },
+ {
+  "name": "feat/personas",
+  "sha": "42eec62",
+  "pr": null,
+  "date": "2026-09-14",
+  "files": 20,
+  "counts": {
+   "archived": 1,
+   "moved-past": 13,
+   "identical": 6
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unreachable, nothing unique"
+ },
+ {
+  "name": "feat/quote-tilt-satellite-map",
+  "sha": "dc8846e",
+  "pr": null,
+  "date": "2026-09-14",
+  "files": 17,
+  "counts": {
+   "moved-past": 14,
+   "identical": 3
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unreachable, nothing unique"
+ },
+ {
+  "name": "fix/a11y-keyboard-city-resolve",
+  "sha": "d440588",
+  "pr": null,
+  "date": "2026-09-22",
+  "files": 6,
+  "counts": {
+   "moved-past": 4,
+   "identical": 2
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unreachable, nothing unique"
+ },
+ {
+  "name": "fix/auto-empty-banner-routing",
+  "sha": "f95767a",
+  "pr": null,
+  "date": "2026-09-16",
+  "files": 2,
+  "counts": {
+   "moved-past": 2
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unreachable, nothing unique"
+ },
+ {
+  "name": "fix/battery-only-bill-cut-copy",
+  "sha": "5e020a5",
+  "pr": null,
+  "date": "2026-09-25",
+  "files": 5,
+  "counts": {
+   "moved-past": 4,
+   "identical": 1
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unreachable, nothing unique"
+ },
+ {
+  "name": "fix/ci-green-truthfulness",
+  "sha": "7c0b841",
+  "pr": null,
+  "date": "2026-09-27",
+  "files": 45,
+  "counts": {
+   "in-flight": 10,
+   "moved-past": 19,
+   "identical": 15,
+   "unique": 1
+  },
+  "unique": [
+   "tests/a11y-markup.test.mjs"
+  ],
+  "cls": "unique-work",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "UNREACHABLE + unique content"
+ },
+ {
+  "name": "fix/geolocation-permissions-policy",
+  "sha": "96f73be",
+  "pr": null,
+  "date": "2026-09-05",
+  "files": 2,
+  "counts": {
+   "moved-past": 2
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unreachable, nothing unique"
+ },
+ {
+  "name": "fix/heatmap-a11y-cell",
+  "sha": "2d3be8a",
+  "pr": null,
+  "date": "2026-09-27",
+  "files": 46,
+  "counts": {
+   "in-flight": 11,
+   "moved-past": 20,
+   "identical": 15
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": "#164",
+  "disp": "ancestor of open #164"
+ },
+ {
+  "name": "fix/infeasible-combos",
+  "sha": "2d7df20",
+  "pr": null,
+  "date": "2026-09-05",
+  "files": 8,
+  "counts": {
+   "moved-past": 6,
+   "identical": 2
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unreachable, nothing unique"
+ },
+ {
+  "name": "fix/live-sanity-sitecss",
+  "sha": "c80dcfc",
+  "pr": null,
+  "date": "2026-09-06",
+  "files": 1,
+  "counts": {
+   "moved-past": 1
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unreachable, nothing unique"
+ },
+ {
+  "name": "fix/manual-mode-submit-and-i18n",
+  "sha": "60d0d39",
+  "pr": null,
+  "date": "2026-09-02",
+  "files": 3,
+  "counts": {
+   "moved-past": 3
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unreachable, nothing unique"
+ },
+ {
+  "name": "fix/oversize-default-recommendation",
+  "sha": "4bec73b",
+  "pr": null,
+  "date": "2026-09-05",
+  "files": 2,
+  "counts": {
+   "moved-past": 2
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unreachable, nothing unique"
+ },
+ {
+  "name": "fix/quote-multiplier-swap-ghi-unit",
+  "sha": "9112e3a",
+  "pr": null,
+  "date": "2026-09-15",
+  "files": 14,
+  "counts": {
+   "moved-past": 13,
+   "identical": 1
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unreachable, nothing unique"
+ },
+ {
+  "name": "fix/slider-coupling-roof-cap",
+  "sha": "9ca0af5",
+  "pr": null,
+  "date": "2026-09-16",
+  "files": 5,
+  "counts": {
+   "identical": 1,
+   "moved-past": 4
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unreachable, nothing unique"
+ },
+ {
+  "name": "fix/smoke-infeasible-gate",
+  "sha": "983f4e8",
+  "pr": null,
+  "date": "2026-09-05",
+  "files": 1,
+  "counts": {
+   "moved-past": 1
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unreachable, nothing unique"
+ },
+ {
+  "name": "gh-pages",
+  "sha": "22a26e4",
+  "pr": null,
+  "date": "2026-09-11",
+  "cls": "unrelated",
+  "files": 0,
+  "counts": {},
+  "unique": [],
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unrelated history"
+ },
+ {
+  "name": "main",
+  "sha": "ddeccbd",
+  "pr": null,
+  "date": "2026-09-27",
+  "files": 0,
+  "counts": {},
+  "unique": [],
+  "cls": "main",
+  "in_main": true,
+  "in_open_pr": "#165",
+  "disp": "the trunk"
+ },
+ {
+  "name": "mission/bigenergyco-completion",
+  "sha": "bc612d8",
+  "pr": 165,
+  "date": "2026-09-27",
+  "files": 1,
+  "counts": {
+   "in-flight": 1
+  },
+  "unique": [],
+  "cls": "live-open-pr",
+  "in_main": false,
+  "in_open_pr": "#165",
+  "disp": "ancestor of open #165"
+ },
+ {
+  "name": "phase2/sizing-engine",
+  "sha": "bfb8389",
+  "pr": null,
+  "date": "2026-08-22",
+  "files": 0,
+  "counts": {},
+  "unique": [],
+  "cls": "empty-vs-main",
+  "in_main": true,
+  "in_open_pr": "#165",
+  "disp": "merged into main"
+ },
+ {
+  "name": "polish/google-quality-pass-1",
+  "sha": "6373a3e",
+  "pr": null,
+  "date": "2026-09-17",
+  "files": 105,
+  "counts": {
+   "moved-past": 100,
+   "identical": 5
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unreachable, nothing unique"
+ },
+ {
+  "name": "polish/google-quality-pass-2",
+  "sha": "55eafcd",
+  "pr": null,
+  "date": "2026-09-17",
+  "files": 114,
+  "counts": {
+   "moved-past": 93,
+   "identical": 21
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unreachable, nothing unique"
+ },
+ {
+  "name": "polish/jev-complete-9.9",
+  "sha": "1a16006",
+  "pr": null,
+  "date": "2026-09-24",
+  "files": 43,
+  "counts": {
+   "identical": 22,
+   "archived": 2,
+   "moved-past": 19
+  },
+  "unique": [],
+  "cls": "moved-past",
+  "in_main": false,
+  "in_open_pr": null,
+  "disp": "unreachable, nothing unique"
+ },
+ {
+  "name": "staging/coalesce-fix",
+  "sha": "38070b9",
+  "pr": null,
+  "date": "2026-09-06",
+  "files": 0,
+  "counts": {},
+  "unique": [],
+  "cls": "empty-vs-main",
+  "in_main": true,
+  "in_open_pr": "#165",
+  "disp": "merged into main"
+ },
+ {
+  "name": "staging/fixed-charges",
+  "sha": "6253ae0",
+  "pr": null,
+  "date": "2026-09-07",
+  "files": 0,
+  "counts": {},
+  "unique": [],
+  "cls": "empty-vs-main",
+  "in_main": true,
+  "in_open_pr": "#165",
+  "disp": "merged into main"
+ },
+ {
+  "name": "staging/infographic-spectrum",
+  "sha": "0a893e4",
+  "pr": null,
+  "date": "2026-09-06",
+  "files": 0,
+  "counts": {},
+  "unique": [],
+  "cls": "empty-vs-main",
+  "in_main": true,
+  "in_open_pr": "#165",
+  "disp": "merged into main"
+ },
+ {
+  "name": "staging/perf-b",
+  "sha": "615d4f2",
+  "pr": null,
+  "date": "2026-09-07",
+  "files": 0,
+  "counts": {},
+  "unique": [],
+  "cls": "empty-vs-main",
+  "in_main": true,
+  "in_open_pr": "#165",
+  "disp": "merged into main"
+ },
+ {
+  "name": "staging/phase4-best-first-dollar",
+  "sha": "b1e77b2",
+  "pr": null,
+  "date": "2026-09-07",
+  "files": 0,
+  "counts": {},
+  "unique": [],
+  "cls": "empty-vs-main",
+  "in_main": true,
+  "in_open_pr": "#165",
+  "disp": "merged into main"
+ },
+ {
+  "name": "staging/polish-c",
+  "sha": "14ef330",
+  "pr": null,
+  "date": "2026-09-07",
+  "files": 0,
+  "counts": {},
+  "unique": [],
+  "cls": "empty-vs-main",
+  "in_main": true,
+  "in_open_pr": "#165",
+  "disp": "merged into main"
+ },
+ {
+  "name": "staging/round1-polish",
+  "sha": "87439af",
+  "pr": null,
+  "date": "2026-09-07",
+  "files": 0,
+  "counts": {},
+  "unique": [],
+  "cls": "empty-vs-main",
+  "in_main": true,
+  "in_open_pr": "#165",
+  "disp": "merged into main"
+ },
+ {
+  "name": "staging/unified-view",
+  "sha": "3d018fc",
+  "pr": null,
+  "date": "2026-09-06",
+  "files": 0,
+  "counts": {},
+  "unique": [],
+  "cls": "empty-vs-main",
+  "in_main": true,
+  "in_open_pr": "#165",
+  "disp": "merged into main"
+ },
+ {
+  "name": "staging/value-range",
+  "sha": "00dfc93",
+  "pr": null,
+  "date": "2026-09-06",
+  "files": 0,
+  "counts": {},
+  "unique": [],
+  "cls": "empty-vs-main",
+  "in_main": true,
+  "in_open_pr": "#165",
+  "disp": "merged into main"
+ }
+]

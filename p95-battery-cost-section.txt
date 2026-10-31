@@ -1,0 +1,19 @@
+        <h2>6. Build a cost comparison from stated inputs</h2>
+        <p>
+          Lifetime-cost comparisons depend on the exact products, their usable
+          energy, installed price, warranty, operating conditions, and
+          replacement assumptions. A cycle count alone does not establish a
+          replacement date or total cost.
+        </p>
+        <ul>
+          <li>State the battery model and its rated and usable capacity.</li>
+          <li>Show the installed-price source, date, shipping, and tax.</li>
+          <li>Describe the service conditions and manufacturer warranty.</li>
+          <li>Make replacement, labor, recycling, and discount assumptions visible.</li>
+          <li>Use the same cost boundary and analysis period for each option.</li>
+        </ul>
+        <p>
+          Mark unavailable prices or service-life inputs as assumptions. Do not
+          present a scenario as a guaranteed saving or a universal battery
+          replacement schedule.
+        </p>

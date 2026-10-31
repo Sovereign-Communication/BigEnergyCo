@@ -1,0 +1,9 @@
+node.exe : FAIL egress: driven but silent: advisor. The flow did not reach that journey, so its egress was not 
+measured.
+At C:\tmp\pr232-run-exact-checks-20261018.ps1:22 char:5
++     & $Executable @Arguments *> $log
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (FAIL egress: dr...s not measured.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+

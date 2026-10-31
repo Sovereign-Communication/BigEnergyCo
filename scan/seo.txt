@@ -1,0 +1,17 @@
+OK   83 pages: heading levels never skip
+OK   83 pages: element ids are unique
+OK   83 pages: every img has alt
+OK   83 pages: every input/select/textarea is labelled
+OK   83 pages: every button has an accessible name
+OK   83 pages: viewport meta present
+OK   83 pages: html lang present
+OK   83 pages: target=_blank links carry rel=noopener
+OK   83 pages: internal links resolve to deployed files
+OK   83 pages: skip-link target #main exists
+OK   83 pages: og:image points at a deployed asset
+OK   83 pages: canonical pages appear in the sitemap
+OK   83 pages: no executable inline script block (CSP script-src stays closed)
+OK   no inline event handler attribute (CSP script-src stays closed)
+OK   inline style attributes: 633 (budget 633)
+
+QUALITY OK (83 pages, 1 frozen ratchet(s))

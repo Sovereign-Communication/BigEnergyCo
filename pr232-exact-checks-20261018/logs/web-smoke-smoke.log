@@ -1,0 +1,8 @@
+npm.cmd : chat: GROQ_API_KEY is not configured; serving the degraded advisor reply (R-CF-10)
+At C:\tmp\pr232-run-exact-checks-20261018.ps1:22 char:5
++     & $Executable @Arguments *> $log
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (chat: GROQ_API_...reply (R-CF-10):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+

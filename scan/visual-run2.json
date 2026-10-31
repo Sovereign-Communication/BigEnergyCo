@@ -1,0 +1,704 @@
+{
+  "plan_item": "P0.4",
+  "plan_ref": "docs/plan/MASTER_PLAN.md §8 P0.4, Q-09",
+  "metric": "visual",
+  "stage": "_pages_visual",
+  "generated_at": "2026-10-14T08:58:17.009Z",
+  "code_sha": "219ccc1e679b7c4e6a6058d46782d9ee602a0747",
+  "enforcement": "absolute from P0 for diffs above the threshold (plan Q-09: > 0.1% of pixels); the FIRST run has no baseline to differ from, so every cell reads 'new' and the bar binds from the second run",
+  "engine": "chromium",
+  "engine_version": null,
+  "threshold": 0.001,
+  "widths": [
+    320,
+    390,
+    768,
+    1440
+  ],
+  "dimensions": [
+    {
+      "name": "template",
+      "values": [
+        "home",
+        "heatmap",
+        "about",
+        "blog-index",
+        "blog-post",
+        "404",
+        "city"
+      ]
+    },
+    {
+      "name": "width",
+      "values": [
+        320,
+        390,
+        768,
+        1440
+      ]
+    },
+    {
+      "name": "theme",
+      "values": [
+        "none"
+      ]
+    },
+    {
+      "name": "direction",
+      "values": [
+        "ltr",
+        "rtl"
+      ]
+    }
+  ],
+  "not_applicable": [
+    {
+      "template": "heatmap",
+      "width": 320,
+      "direction": "rtl",
+      "reason": "solar-heatmap/index.html never loads shared/i18n.js, so it never sets dir and has one text direction"
+    },
+    {
+      "template": "heatmap",
+      "width": 390,
+      "direction": "rtl",
+      "reason": "solar-heatmap/index.html never loads shared/i18n.js, so it never sets dir and has one text direction"
+    },
+    {
+      "template": "heatmap",
+      "width": 768,
+      "direction": "rtl",
+      "reason": "solar-heatmap/index.html never loads shared/i18n.js, so it never sets dir and has one text direction"
+    },
+    {
+      "template": "heatmap",
+      "width": 1440,
+      "direction": "rtl",
+      "reason": "solar-heatmap/index.html never loads shared/i18n.js, so it never sets dir and has one text direction"
+    },
+    {
+      "template": "about",
+      "width": 320,
+      "direction": "rtl",
+      "reason": "about/index.html never loads shared/i18n.js, so it never sets dir and has one text direction"
+    },
+    {
+      "template": "about",
+      "width": 390,
+      "direction": "rtl",
+      "reason": "about/index.html never loads shared/i18n.js, so it never sets dir and has one text direction"
+    },
+    {
+      "template": "about",
+      "width": 768,
+      "direction": "rtl",
+      "reason": "about/index.html never loads shared/i18n.js, so it never sets dir and has one text direction"
+    },
+    {
+      "template": "about",
+      "width": 1440,
+      "direction": "rtl",
+      "reason": "about/index.html never loads shared/i18n.js, so it never sets dir and has one text direction"
+    },
+    {
+      "template": "blog-index",
+      "width": 320,
+      "direction": "rtl",
+      "reason": "blog/index.html never loads shared/i18n.js, so it never sets dir and has one text direction"
+    },
+    {
+      "template": "blog-index",
+      "width": 390,
+      "direction": "rtl",
+      "reason": "blog/index.html never loads shared/i18n.js, so it never sets dir and has one text direction"
+    },
+    {
+      "template": "blog-index",
+      "width": 768,
+      "direction": "rtl",
+      "reason": "blog/index.html never loads shared/i18n.js, so it never sets dir and has one text direction"
+    },
+    {
+      "template": "blog-index",
+      "width": 1440,
+      "direction": "rtl",
+      "reason": "blog/index.html never loads shared/i18n.js, so it never sets dir and has one text direction"
+    },
+    {
+      "template": "blog-post",
+      "width": 320,
+      "direction": "rtl",
+      "reason": "blog/battery-longevity-and-dod-reference/index.html never loads shared/i18n.js, so it never sets dir and has one text direction"
+    },
+    {
+      "template": "blog-post",
+      "width": 390,
+      "direction": "rtl",
+      "reason": "blog/battery-longevity-and-dod-reference/index.html never loads shared/i18n.js, so it never sets dir and has one text direction"
+    },
+    {
+      "template": "blog-post",
+      "width": 768,
+      "direction": "rtl",
+      "reason": "blog/battery-longevity-and-dod-reference/index.html never loads shared/i18n.js, so it never sets dir and has one text direction"
+    },
+    {
+      "template": "blog-post",
+      "width": 1440,
+      "direction": "rtl",
+      "reason": "blog/battery-longevity-and-dod-reference/index.html never loads shared/i18n.js, so it never sets dir and has one text direction"
+    },
+    {
+      "template": "404",
+      "width": 320,
+      "direction": "rtl",
+      "reason": "404.html never loads shared/i18n.js, so it never sets dir and has one text direction"
+    },
+    {
+      "template": "404",
+      "width": 390,
+      "direction": "rtl",
+      "reason": "404.html never loads shared/i18n.js, so it never sets dir and has one text direction"
+    },
+    {
+      "template": "404",
+      "width": 768,
+      "direction": "rtl",
+      "reason": "404.html never loads shared/i18n.js, so it never sets dir and has one text direction"
+    },
+    {
+      "template": "404",
+      "width": 1440,
+      "direction": "rtl",
+      "reason": "404.html never loads shared/i18n.js, so it never sets dir and has one text direction"
+    },
+    {
+      "template": "city",
+      "width": 320,
+      "direction": "rtl",
+      "reason": "solar-calculator/accra/index.html never loads shared/i18n.js, so it never sets dir and has one text direction"
+    },
+    {
+      "template": "city",
+      "width": 390,
+      "direction": "rtl",
+      "reason": "solar-calculator/accra/index.html never loads shared/i18n.js, so it never sets dir and has one text direction"
+    },
+    {
+      "template": "city",
+      "width": 768,
+      "direction": "rtl",
+      "reason": "solar-calculator/accra/index.html never loads shared/i18n.js, so it never sets dir and has one text direction"
+    },
+    {
+      "template": "city",
+      "width": 1440,
+      "direction": "rtl",
+      "reason": "solar-calculator/accra/index.html never loads shared/i18n.js, so it never sets dir and has one text direction"
+    }
+  ],
+  "cells": [
+    {
+      "id": "home/320/none/ltr",
+      "template": "home",
+      "path": "index.html",
+      "width": 320,
+      "theme": "none",
+      "direction": "ltr",
+      "has_i18n": true,
+      "status": "ok",
+      "ratio": 0,
+      "detail": "0/3518080 px = 0.0000%",
+      "gated": true,
+      "baseline_sha256": "be6fabd849f24e8ea1460bc9d853ac9fe576d17bccd7239e6d5bde7fe0c7d35c"
+    },
+    {
+      "id": "home/320/none/rtl",
+      "template": "home",
+      "path": "index.html",
+      "width": 320,
+      "theme": "none",
+      "direction": "rtl",
+      "has_i18n": true,
+      "status": "ok",
+      "ratio": 0,
+      "detail": "0/3445120 px = 0.0000%",
+      "gated": true,
+      "baseline_sha256": "37e9d1aab0c6f0538046c0c4e5b0742b643fdbe422807bb367e8ffee62977494"
+    },
+    {
+      "id": "home/390/none/ltr",
+      "template": "home",
+      "path": "index.html",
+      "width": 390,
+      "theme": "none",
+      "direction": "ltr",
+      "has_i18n": true,
+      "status": "ok",
+      "ratio": 0,
+      "detail": "0/3802500 px = 0.0000%",
+      "gated": true,
+      "baseline_sha256": "5e649aed46ac5ab609967d432e8299df7801521a07c89347114f4268c8445547"
+    },
+    {
+      "id": "home/390/none/rtl",
+      "template": "home",
+      "path": "index.html",
+      "width": 390,
+      "theme": "none",
+      "direction": "rtl",
+      "has_i18n": true,
+      "status": "ok",
+      "ratio": 0,
+      "detail": "0/3725280 px = 0.0000%",
+      "gated": true,
+      "baseline_sha256": "ab7c99544ec2cc2621f18cc1c4014ceef019dd51783973fa047d16b350cfd5c1"
+    },
+    {
+      "id": "home/768/none/ltr",
+      "template": "home",
+      "path": "index.html",
+      "width": 768,
+      "theme": "none",
+      "direction": "ltr",
+      "has_i18n": true,
+      "status": "ok",
+      "ratio": 0,
+      "detail": "0/5214720 px = 0.0000%",
+      "gated": true,
+      "baseline_sha256": "aaf99094428470396c468d7b8c374a9f70699e0a9d43adb85b4d75b2fadfb7be"
+    },
+    {
+      "id": "home/768/none/rtl",
+      "template": "home",
+      "path": "index.html",
+      "width": 768,
+      "theme": "none",
+      "direction": "rtl",
+      "has_i18n": true,
+      "status": "ok",
+      "ratio": 0,
+      "detail": "0/5194752 px = 0.0000%",
+      "gated": true,
+      "baseline_sha256": "3ab02ce2ff2bb2c4f2e38734503f3be983188bb8748dad89c73638a0b7031bbd"
+    },
+    {
+      "id": "home/1440/none/ltr",
+      "template": "home",
+      "path": "index.html",
+      "width": 1440,
+      "theme": "none",
+      "direction": "ltr",
+      "has_i18n": true,
+      "status": "ok",
+      "ratio": 0,
+      "detail": "0/8046720 px = 0.0000%",
+      "gated": true,
+      "baseline_sha256": "6bc4b0330a64631fd5bb90e3239b31f01f3d3a98272942fdef6c23a4709c111f"
+    },
+    {
+      "id": "home/1440/none/rtl",
+      "template": "home",
+      "path": "index.html",
+      "width": 1440,
+      "theme": "none",
+      "direction": "rtl",
+      "has_i18n": true,
+      "status": "ok",
+      "ratio": 0,
+      "detail": "0/8046720 px = 0.0000%",
+      "gated": true,
+      "baseline_sha256": "db4fa51c0be5c539aceda79abbd0af2b85e80e4d52ed40927cac1e540a906eb9"
+    },
+    {
+      "id": "heatmap/320/none/ltr",
+      "template": "heatmap",
+      "path": "solar-heatmap/index.html",
+      "width": 320,
+      "theme": "none",
+      "direction": "ltr",
+      "has_i18n": false,
+      "status": "unstable",
+      "ratio": 0.051615160753880264,
+      "detail": "74491/1443200 px = 5.1615% — MEASURED, not gated: heatmap is declared unreproducible",
+      "gated": false,
+      "baseline_sha256": "fd75a51e46256b2cfa6a41916411337477cd2b651b1d4559b674b3a1bcdb694f"
+    },
+    {
+      "id": "heatmap/390/none/ltr",
+      "template": "heatmap",
+      "path": "solar-heatmap/index.html",
+      "width": 390,
+      "theme": "none",
+      "direction": "ltr",
+      "has_i18n": false,
+      "status": "unstable",
+      "ratio": 0,
+      "detail": "0/1509690 px = 0.0000% — MEASURED, not gated: heatmap is declared unreproducible",
+      "gated": false,
+      "baseline_sha256": "6f0c7e341cf1a57d7e26d40095e2f7dc2107f60ef550cd03520fd249f489a751"
+    },
+    {
+      "id": "heatmap/768/none/ltr",
+      "template": "heatmap",
+      "path": "solar-heatmap/index.html",
+      "width": 768,
+      "theme": "none",
+      "direction": "ltr",
+      "has_i18n": false,
+      "status": "unstable",
+      "ratio": 0,
+      "detail": "0/2134272 px = 0.0000% — MEASURED, not gated: heatmap is declared unreproducible",
+      "gated": false,
+      "baseline_sha256": "e5b753cd4a415865eb4ea8a2e3bc6d98955097bfa8dfb9272d72dd02eece5194"
+    },
+    {
+      "id": "heatmap/1440/none/ltr",
+      "template": "heatmap",
+      "path": "solar-heatmap/index.html",
+      "width": 1440,
+      "theme": "none",
+      "direction": "ltr",
+      "has_i18n": false,
+      "status": "unstable",
+      "ratio": 0,
+      "detail": "0/3339360 px = 0.0000% — MEASURED, not gated: heatmap is declared unreproducible",
+      "gated": false,
+      "baseline_sha256": "5974e109a5eca2dad32caa89240d98099f23ec6b39d884cd22dcc2f6ebd47671"
+    },
+    {
+      "id": "about/320/none/ltr",
+      "template": "about",
+      "path": "about/index.html",
+      "width": 320,
+      "theme": "none",
+      "direction": "ltr",
+      "has_i18n": false,
+      "status": "ok",
+      "ratio": 0,
+      "detail": "0/1478400 px = 0.0000%",
+      "gated": true,
+      "baseline_sha256": "5c79d48264a38977e9d4b3e67ba40f5f289cd42cf31758501d4e46cf7d7f71cf"
+    },
+    {
+      "id": "about/390/none/ltr",
+      "template": "about",
+      "path": "about/index.html",
+      "width": 390,
+      "theme": "none",
+      "direction": "ltr",
+      "has_i18n": false,
+      "status": "ok",
+      "ratio": 0,
+      "detail": "0/1558440 px = 0.0000%",
+      "gated": true,
+      "baseline_sha256": "db04f50f2932e880f964399fe617127421cac5d6856d4842ed907d3d91b08a84"
+    },
+    {
+      "id": "about/768/none/ltr",
+      "template": "about",
+      "path": "about/index.html",
+      "width": 768,
+      "theme": "none",
+      "direction": "ltr",
+      "has_i18n": false,
+      "status": "ok",
+      "ratio": 0,
+      "detail": "0/2007552 px = 0.0000%",
+      "gated": true,
+      "baseline_sha256": "bb624cb75df925dc28eef979c7789534c69592559c6c910a36b9dc82aa828204"
+    },
+    {
+      "id": "about/1440/none/ltr",
+      "template": "about",
+      "path": "about/index.html",
+      "width": 1440,
+      "theme": "none",
+      "direction": "ltr",
+      "has_i18n": false,
+      "status": "ok",
+      "ratio": 0,
+      "detail": "0/3612960 px = 0.0000%",
+      "gated": true,
+      "baseline_sha256": "ee314597aacbfc9c86c7a2a1a1656f8a979bea35b7e8457c58d3261517f34a34"
+    },
+    {
+      "id": "blog-index/320/none/ltr",
+      "template": "blog-index",
+      "path": "blog/index.html",
+      "width": 320,
+      "theme": "none",
+      "direction": "ltr",
+      "has_i18n": false,
+      "status": "ok",
+      "ratio": 0,
+      "detail": "0/2050560 px = 0.0000%",
+      "gated": true,
+      "baseline_sha256": "3e71e3a6e29e1f71d0872f500b5504ce8fc3c3d01833d9e16927e8f14ae735e0"
+    },
+    {
+      "id": "blog-index/390/none/ltr",
+      "template": "blog-index",
+      "path": "blog/index.html",
+      "width": 390,
+      "theme": "none",
+      "direction": "ltr",
+      "has_i18n": false,
+      "status": "ok",
+      "ratio": 0,
+      "detail": "0/2175030 px = 0.0000%",
+      "gated": true,
+      "baseline_sha256": "c3747c873339f516dc16e4edab576995da1e10efa263c47e8ce07800461722d8"
+    },
+    {
+      "id": "blog-index/768/none/ltr",
+      "template": "blog-index",
+      "path": "blog/index.html",
+      "width": 768,
+      "theme": "none",
+      "direction": "ltr",
+      "has_i18n": false,
+      "status": "ok",
+      "ratio": 0,
+      "detail": "0/2675712 px = 0.0000%",
+      "gated": true,
+      "baseline_sha256": "9e0222800388b073383563ee7f0b87bda04f085902a0d84941390781b3fab09b"
+    },
+    {
+      "id": "blog-index/1440/none/ltr",
+      "template": "blog-index",
+      "path": "blog/index.html",
+      "width": 1440,
+      "theme": "none",
+      "direction": "ltr",
+      "has_i18n": false,
+      "status": "ok",
+      "ratio": 0,
+      "detail": "0/4079520 px = 0.0000%",
+      "gated": true,
+      "baseline_sha256": "1c003b06b73f86a91281017d7099935113ad3c97d28818dcafb08dff5dc1af50"
+    },
+    {
+      "id": "blog-post/320/none/ltr",
+      "template": "blog-post",
+      "path": "blog/battery-longevity-and-dod-reference/index.html",
+      "width": 320,
+      "theme": "none",
+      "direction": "ltr",
+      "has_i18n": false,
+      "status": "ok",
+      "ratio": 0,
+      "detail": "0/7920640 px = 0.0000%",
+      "gated": true,
+      "baseline_sha256": "7c8ab886c7c2d7a380707307a10df6ac4ae30b38d2b8dc310ad394c57b9670b0"
+    },
+    {
+      "id": "blog-post/390/none/ltr",
+      "template": "blog-post",
+      "path": "blog/battery-longevity-and-dod-reference/index.html",
+      "width": 390,
+      "theme": "none",
+      "direction": "ltr",
+      "has_i18n": false,
+      "status": "ok",
+      "ratio": 0,
+      "detail": "0/7876830 px = 0.0000%",
+      "gated": true,
+      "baseline_sha256": "4bbd8985377d028a51a7b45bf54f66ef93896e4f9b68150e990c410449b5d0f7"
+    },
+    {
+      "id": "blog-post/768/none/ltr",
+      "template": "blog-post",
+      "path": "blog/battery-longevity-and-dod-reference/index.html",
+      "width": 768,
+      "theme": "none",
+      "direction": "ltr",
+      "has_i18n": false,
+      "status": "ok",
+      "ratio": 0,
+      "detail": "0/9399552 px = 0.0000%",
+      "gated": true,
+      "baseline_sha256": "4b38fd68d65af8fb7a7300edca9d4d0cd69335a6fda71c573a69d15c2721ce2f"
+    },
+    {
+      "id": "blog-post/1440/none/ltr",
+      "template": "blog-post",
+      "path": "blog/battery-longevity-and-dod-reference/index.html",
+      "width": 1440,
+      "theme": "none",
+      "direction": "ltr",
+      "has_i18n": false,
+      "status": "ok",
+      "ratio": 0,
+      "detail": "0/16195680 px = 0.0000%",
+      "gated": true,
+      "baseline_sha256": "37c32b7645e68e32d1eb5eb60652210b9726d4e8368d6c5a827f457d5aa90671"
+    },
+    {
+      "id": "404/320/none/ltr",
+      "template": "404",
+      "path": "404.html",
+      "width": 320,
+      "theme": "none",
+      "direction": "ltr",
+      "has_i18n": false,
+      "status": "ok",
+      "ratio": 0,
+      "detail": "0/298240 px = 0.0000%",
+      "gated": true,
+      "baseline_sha256": "953aa8ee1e02dccb5ae57d2c670d1d910fc9ca59648024bb9ed096f39027dd2f"
+    },
+    {
+      "id": "404/390/none/ltr",
+      "template": "404",
+      "path": "404.html",
+      "width": 390,
+      "theme": "none",
+      "direction": "ltr",
+      "has_i18n": false,
+      "status": "ok",
+      "ratio": 0,
+      "detail": "0/363480 px = 0.0000%",
+      "gated": true,
+      "baseline_sha256": "9bd7a3556cc08defa8fd0fb0631182f5a2281334fdb94f13ad7b69d5e5b2bc4e"
+    },
+    {
+      "id": "404/768/none/ltr",
+      "template": "404",
+      "path": "404.html",
+      "width": 768,
+      "theme": "none",
+      "direction": "ltr",
+      "has_i18n": false,
+      "status": "ok",
+      "ratio": 0,
+      "detail": "0/715776 px = 0.0000%",
+      "gated": true,
+      "baseline_sha256": "b8ddf8ab812e21bde61e84e2608c12ce5f6cb0936477ef623e7a3de9e8e7d68b"
+    },
+    {
+      "id": "404/1440/none/ltr",
+      "template": "404",
+      "path": "404.html",
+      "width": 1440,
+      "theme": "none",
+      "direction": "ltr",
+      "has_i18n": false,
+      "status": "ok",
+      "ratio": 0,
+      "detail": "0/1342080 px = 0.0000%",
+      "gated": true,
+      "baseline_sha256": "63e98d2f3873d0dada05d6d80ed15f3edaf699835b62437e4129fa5c38e5c078"
+    },
+    {
+      "id": "city/320/none/ltr",
+      "template": "city",
+      "path": "solar-calculator/accra/index.html",
+      "width": 320,
+      "theme": "none",
+      "direction": "ltr",
+      "has_i18n": false,
+      "status": "ok",
+      "ratio": 0,
+      "detail": "0/1578240 px = 0.0000%",
+      "gated": true,
+      "baseline_sha256": "bf19c5f2103d682999df9bd7601c27b05100282ecb4f837953d56d579af40be0"
+    },
+    {
+      "id": "city/390/none/ltr",
+      "template": "city",
+      "path": "solar-calculator/accra/index.html",
+      "width": 390,
+      "theme": "none",
+      "direction": "ltr",
+      "has_i18n": false,
+      "status": "ok",
+      "ratio": 0,
+      "detail": "0/1639170 px = 0.0000%",
+      "gated": true,
+      "baseline_sha256": "bcb134f75fd39703f785ab1919dbeca9d08e70d6e6bc1e2616954e249a1fb341"
+    },
+    {
+      "id": "city/768/none/ltr",
+      "template": "city",
+      "path": "solar-calculator/accra/index.html",
+      "width": 768,
+      "theme": "none",
+      "direction": "ltr",
+      "has_i18n": false,
+      "status": "ok",
+      "ratio": 0,
+      "detail": "0/2329344 px = 0.0000%",
+      "gated": true,
+      "baseline_sha256": "e1cabb23f21306c63e50c2668f43b6df937c7b2f24d9f752b86030f12dd5d80a"
+    },
+    {
+      "id": "city/1440/none/ltr",
+      "template": "city",
+      "path": "solar-calculator/accra/index.html",
+      "width": 1440,
+      "theme": "none",
+      "direction": "ltr",
+      "has_i18n": false,
+      "status": "ok",
+      "ratio": 0,
+      "detail": "0/4253760 px = 0.0000%",
+      "gated": true,
+      "baseline_sha256": "9a2c9014664ff09fb1a772b58a2cb01a7505d872ddc1dcddbb899cbbb2003730"
+    }
+  ],
+  "new_snapshots": 0,
+  "unstable_snapshots": 4,
+  "unapproved_diffs": 0,
+  "errored_cells": 0,
+  "worst_diffs": [
+    {
+      "id": "heatmap/320/none/ltr",
+      "ratio": 0.051615160753880264
+    },
+    {
+      "id": "home/320/none/ltr",
+      "ratio": 0
+    },
+    {
+      "id": "home/320/none/rtl",
+      "ratio": 0
+    },
+    {
+      "id": "home/390/none/ltr",
+      "ratio": 0
+    },
+    {
+      "id": "home/390/none/rtl",
+      "ratio": 0
+    }
+  ],
+  "regressions": [],
+  "breaches": [],
+  "unmeasured": [
+    {
+      "note": "4 snapshot(s) measured but NOT gated: heatmap — see measured_unstable in this report for the run numbers and the cause"
+    }
+  ],
+  "measured_unstable": [
+    {
+      "template": "heatmap",
+      "measured_runs": 3,
+      "measured_ratios": [
+        0.052141,
+        0.052141,
+        0.048546
+      ],
+      "stable_cells_for_comparison": 27,
+      "cause": "loads Leaflet from the external CDN https://unpkg.com/leaflet and holds a grid fetch open, so the painted map depends on third-party response timing",
+      "same_root_cause_as": "Q-07 heatmap/arrival/none/ltr",
+      "removable_when": "Leaflet is self-hosted (plan item P1.5), after which the snapshot is a function of the product and this exclusion is deleted",
+      "excluded_cells": [
+        "heatmap/320/none/ltr",
+        "heatmap/390/none/ltr",
+        "heatmap/768/none/ltr",
+        "heatmap/1440/none/ltr"
+      ]
+    }
+  ]
+}

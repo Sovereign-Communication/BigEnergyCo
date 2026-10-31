@@ -1,0 +1,32 @@
+{
+  "at": "2026-10-28T20:17:30.211Z",
+  "wire": {
+    "answers": {
+      "waive_vs_fix": {
+        "type": "choice",
+        "choice": "fix",
+        "confidence": 0.5,
+        "probabilities": {
+          "waive": 0.25,
+          "fix": 0.75
+        }
+      },
+      "gate_green": {
+        "type": "choice",
+        "choice": "green",
+        "confidence": 0.36,
+        "probabilities": {
+          "green": 0.68,
+          "not_green": 0.32
+        }
+      }
+    },
+    "usage": {
+      "input_tokens": 1454,
+      "output_tokens": 65
+    },
+    "provider": "typesafe",
+    "model": "jev-1.14.0",
+    "notes": []
+  }
+}

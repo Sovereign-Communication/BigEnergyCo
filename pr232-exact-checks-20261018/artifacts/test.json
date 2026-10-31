@@ -1,0 +1,20 @@
+{
+    "job":  "test",
+    "conclusion":  "failure",
+    "steps":  {
+                  "syntax":  "success",
+                  "plan":  "success",
+                  "seo":  "success",
+                  "prettier":  "failure",
+                  "secret_scan":  "success",
+                  "deploy_allowlist":  "success",
+                  "flow":  "success",
+                  "unit_tests":  "failure"
+              },
+    "measurements":  {
+                         "tests_total":  1701,
+                         "tests_passed":  1699,
+                         "tests_skipped":  0,
+                         "tests_failed":  2
+                     }
+}

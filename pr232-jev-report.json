@@ -1,0 +1,827 @@
+{
+  "gate": "jev-complete",
+  "pack_id": "bigenergyco-complete-gate-v2",
+  "min_score": 99,
+  "score": 40,
+  "pass": false,
+  "hard_gates_passed": false,
+  "facets_not_proven": [
+    "accessibility",
+    "advisor",
+    "comparison",
+    "correctness",
+    "design",
+    "docs",
+    "experience",
+    "i18n",
+    "performance",
+    "physics",
+    "privacy",
+    "provenance",
+    "quality",
+    "release",
+    "resilience",
+    "security",
+    "spec",
+    "testing",
+    "translation",
+    "usecases"
+  ],
+  "hard_gates": {
+    "tests_green": false,
+    "smoke_green": false,
+    "ci_green": false,
+    "prettier_clean": true,
+    "seo_green": true,
+    "secrets_clean": true,
+    "tree_clean": true
+  },
+  "mechanical_score": 40,
+  "semantic_score": 54.52,
+  "facets": {
+    "spec": {
+      "bucket": "spec_gap",
+      "authority": "jev",
+      "level": "mixed — partial or unverified evidence",
+      "index": 2,
+      "ordinal": 60,
+      "source": "live",
+      "confidence": 0.55
+    },
+    "design": {
+      "bucket": "design_gap",
+      "authority": "jev",
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
+      "source": "live",
+      "confidence": 0.61
+    },
+    "correctness": {
+      "bucket": "correctness_gap",
+      "authority": "jev",
+      "level": "mixed — partial or unverified evidence",
+      "index": 2,
+      "ordinal": 60,
+      "source": "live",
+      "confidence": 0.65
+    },
+    "quality": {
+      "bucket": "quality_gap",
+      "authority": "jev",
+      "level": "mixed — partial or unverified evidence",
+      "index": 2,
+      "ordinal": 60,
+      "source": "live",
+      "confidence": 0.43
+    },
+    "security": {
+      "bucket": "security_gap",
+      "authority": "jev",
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
+      "source": "live",
+      "confidence": 0.56
+    },
+    "performance": {
+      "bucket": "perf_gap",
+      "authority": "jev",
+      "level": "mixed — partial or unverified evidence",
+      "index": 2,
+      "ordinal": 60,
+      "source": "live",
+      "confidence": 0.78
+    },
+    "accessibility": {
+      "bucket": "a11y_gap",
+      "authority": "jev",
+      "level": "mixed — partial or unverified evidence",
+      "index": 2,
+      "ordinal": 60,
+      "source": "live",
+      "confidence": 0.89
+    },
+    "i18n": {
+      "bucket": "i18n_gap",
+      "authority": "jev",
+      "level": "mixed — partial or unverified evidence",
+      "index": 2,
+      "ordinal": 60,
+      "source": "live",
+      "confidence": 0.67
+    },
+    "seo": {
+      "bucket": "seo_gap",
+      "authority": "code",
+      "level": "proven — google-quality, evidenced end to end",
+      "index": 4,
+      "ordinal": 100,
+      "source": "code",
+      "confidence": 0.75
+    },
+    "resilience": {
+      "bucket": "resilience_gap",
+      "authority": "jev",
+      "level": "at risk — known gap likely to hurt users or review",
+      "index": 1,
+      "ordinal": 35,
+      "source": "live",
+      "confidence": 0.62
+    },
+    "experience": {
+      "bucket": "experience_gap",
+      "authority": "jev",
+      "level": "mixed — partial or unverified evidence",
+      "index": 2,
+      "ordinal": 60,
+      "source": "live",
+      "confidence": 0.52
+    },
+    "docs": {
+      "bucket": "docs_gap",
+      "authority": "jev",
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
+      "source": "live",
+      "confidence": 0.63
+    },
+    "testing": {
+      "bucket": "tests_gap",
+      "authority": "code",
+      "level": "failing — evidence contradicts quality",
+      "index": 0,
+      "ordinal": 0,
+      "source": "code",
+      "confidence": 0.27
+    },
+    "release": {
+      "bucket": "release_gap",
+      "authority": "code",
+      "level": "at risk — known gap likely to hurt users or review",
+      "index": 1,
+      "ordinal": 35,
+      "source": "code",
+      "confidence": 0.57
+    },
+    "advisor": {
+      "bucket": "advisor_gap",
+      "authority": "jev",
+      "level": "mixed — partial or unverified evidence",
+      "index": 2,
+      "ordinal": 60,
+      "source": "live",
+      "confidence": 0.74
+    },
+    "physics": {
+      "bucket": "physics_gap",
+      "authority": "jev",
+      "level": "mixed — partial or unverified evidence",
+      "index": 2,
+      "ordinal": 60,
+      "source": "live",
+      "confidence": 0.35
+    },
+    "provenance": {
+      "bucket": "provenance_gap",
+      "authority": "jev",
+      "level": "mixed — partial or unverified evidence",
+      "index": 2,
+      "ordinal": 60,
+      "source": "live",
+      "confidence": 0.44
+    },
+    "comparison": {
+      "bucket": "comparison_gap",
+      "authority": "jev",
+      "level": "failing — evidence contradicts quality",
+      "index": 0,
+      "ordinal": 0,
+      "source": "live",
+      "confidence": 0.13
+    },
+    "usecases": {
+      "bucket": "usecases_gap",
+      "authority": "jev",
+      "level": "failing — evidence contradicts quality",
+      "index": 0,
+      "ordinal": 0,
+      "source": "live",
+      "confidence": 0.52
+    },
+    "privacy": {
+      "bucket": "privacy_gap",
+      "authority": "jev",
+      "level": "mixed — partial or unverified evidence",
+      "index": 2,
+      "ordinal": 60,
+      "source": "live",
+      "confidence": 0.76
+    },
+    "translation": {
+      "bucket": "translation_gap",
+      "authority": "jev",
+      "level": "mixed — partial or unverified evidence",
+      "index": 2,
+      "ordinal": 60,
+      "source": "live",
+      "confidence": 0.67
+    }
+  },
+  "blocking_facets": [
+    "comparison",
+    "testing",
+    "usecases"
+  ],
+  "required_work": [
+    {
+      "bucket": "tests_gap",
+      "label": "Test suite gap",
+      "path_id": "complete/tests",
+      "work_type": "contract-tests",
+      "suggested_next_action": "Get the full unit suite green (npm test), add behavioral contracts for any behavior that changed without one, and never weaken a gate to get there.",
+      "axis": null,
+      "level": null,
+      "ordinal": -1,
+      "source": "hard_gate",
+      "confidence": null,
+      "primary": true
+    },
+    {
+      "bucket": "release_gap",
+      "label": "Release readiness gap",
+      "path_id": "complete/release",
+      "work_type": "release-verify",
+      "suggested_next_action": "Run the release-candidate pass: ship in-flight work through the protected path, get CI and browser smoke green on the merge, and re-run this gate on the clean tree.",
+      "axis": null,
+      "level": null,
+      "ordinal": -1,
+      "source": "hard_gate",
+      "confidence": null,
+      "primary": false
+    },
+    {
+      "bucket": "comparison_gap",
+      "label": "Path comparison gap",
+      "path_id": "complete/comparison",
+      "work_type": "architecture",
+      "suggested_next_action": "Model all four purchase paths for one sized system over 20 years from the same registry inputs — turnkey benchmark, lease or PPA terms, self-purchase plus electrician labour, DIY mounting plus inspection — with permits, incentives, replacements and end-of-term choice counted identically, then check the paths rank in an order the evidence explains.",
+      "axis": "comparison",
+      "level": "failing — evidence contradicts quality",
+      "ordinal": 0,
+      "source": "live",
+      "confidence": 0.13,
+      "primary": false
+    },
+    {
+      "bucket": "usecases_gap",
+      "label": "Use-case coverage gap",
+      "path_id": "complete/usecases",
+      "work_type": "playtest",
+      "suggested_next_action": "Walk each of the six use cases through the real flow: bill cut, time-of-use battery-only, essential-load backup, an emergency reserve, full off-grid and portable power. For each, record the input a visitor is asked for, the outcome metric returned, and the honest verdict when the numbers do not work; name the step where a use case is only named in copy.",
+      "axis": "usecases",
+      "level": "failing — evidence contradicts quality",
+      "ordinal": 0,
+      "source": "live",
+      "confidence": 0.52,
+      "primary": false
+    },
+    {
+      "bucket": "resilience_gap",
+      "label": "Delivery resilience gap",
+      "path_id": "complete/resilience",
+      "work_type": "adversarial-fix",
+      "suggested_next_action": "Run the adversarial pass over the delivery path: prove inner retry/timeout budgets fit every outer cap, classification covers transport failures end to end, and stuck runs recover. Exercise the page-side deadline with a silent worker, including share-restore, stale inputs, and an explicit retry; keep the error actionable and the worker/channel cleanup tested.",
+      "axis": "resilience",
+      "level": "at risk — known gap likely to hurt users or review",
+      "ordinal": 35,
+      "source": "live",
+      "confidence": 0.62,
+      "primary": false
+    },
+    {
+      "bucket": "a11y_gap",
+      "label": "Accessibility gap",
+      "path_id": "complete/a11y",
+      "work_type": "polish",
+      "suggested_next_action": "Run the experience-polish pass focused on accessibility: keyboard through every main flow, label the calculator controls, fix contrast, and verify reduced-motion behavior.",
+      "axis": "accessibility",
+      "level": "mixed — partial or unverified evidence",
+      "ordinal": 60,
+      "source": "live",
+      "confidence": 0.89,
+      "primary": false
+    },
+    {
+      "bucket": "advisor_gap",
+      "label": "AI advisor quality gap",
+      "path_id": "complete/advisor",
+      "work_type": "audit",
+      "suggested_next_action": "Run the advisor audit against the real chat and worker paths: verify the same selected deterministic state reaches Jev and prose, exercise prompt-injection, stale-response, provider-failure, locale, privacy, uncertainty, neutrality, and safety cases, then add or fix regression evidence for every observed gap.",
+      "axis": "advisor",
+      "level": "mixed — partial or unverified evidence",
+      "ordinal": 60,
+      "source": "live",
+      "confidence": 0.74,
+      "primary": false
+    },
+    {
+      "bucket": "correctness_gap",
+      "label": "Correctness gap",
+      "path_id": "complete/correctness",
+      "work_type": "adversarial-fix",
+      "suggested_next_action": "Run the adversarial exercise pass through real entry points: hunt boundary, ordering, async and state-sync failures, fix only substantiated defects, then re-run the failing flows.",
+      "axis": "correctness",
+      "level": "mixed — partial or unverified evidence",
+      "ordinal": 60,
+      "source": "live",
+      "confidence": 0.65,
+      "primary": false
+    },
+    {
+      "bucket": "experience_gap",
+      "label": "User experience gap",
+      "path_id": "complete/experience",
+      "work_type": "polish",
+      "suggested_next_action": "Run the experience-polish pass: walk the first-run flow, make actions acknowledge themselves, give errors a next step, and invite rather than confuse in empty states.",
+      "axis": "experience",
+      "level": "mixed — partial or unverified evidence",
+      "ordinal": 60,
+      "source": "live",
+      "confidence": 0.52,
+      "primary": false
+    },
+    {
+      "bucket": "i18n_gap",
+      "label": "Localization gap",
+      "path_id": "complete/i18n",
+      "work_type": "contract-tests",
+      "suggested_next_action": "Pin locale parity as a behavioral test (every locale carries every user-visible key), fix the drifting strings it exposes, and keep the parity check green.",
+      "axis": "i18n",
+      "level": "mixed — partial or unverified evidence",
+      "ordinal": 60,
+      "source": "live",
+      "confidence": 0.67,
+      "primary": false
+    },
+    {
+      "bucket": "perf_gap",
+      "label": "Performance gap",
+      "path_id": "complete/performance",
+      "work_type": "playtest",
+      "suggested_next_action": "Run the playtest pass on the real surface: measure the slow interaction, confirm warm-cache paths issue zero redundant network pulls, and make subsequent adjustments instant.",
+      "axis": "performance",
+      "level": "mixed — partial or unverified evidence",
+      "ordinal": 60,
+      "source": "live",
+      "confidence": 0.78,
+      "primary": false
+    },
+    {
+      "bucket": "physics_gap",
+      "label": "Physics / determinism gap",
+      "path_id": "complete/physics",
+      "work_type": "contract-tests",
+      "suggested_next_action": "Pin the physics contract with tests: deterministic derivations, thresholds intact, and a recorded verify:live run — fix any assertion the evidence shows weakened.",
+      "axis": "physics",
+      "level": "mixed — partial or unverified evidence",
+      "ordinal": 60,
+      "source": "live",
+      "confidence": 0.35,
+      "primary": false
+    },
+    {
+      "bucket": "privacy_gap",
+      "label": "Privacy gap",
+      "path_id": "complete/privacy",
+      "work_type": "adversarial-fix",
+      "suggested_next_action": "Adversarially audit data egress: list every request that leaves the device with its payload, prove coordinates are rounded before each one, prove no cookie or identifier is set or logged, remove any ad, tracker or affiliate path, and state each third-party disclosure on the page.",
+      "axis": "privacy",
+      "level": "mixed — partial or unverified evidence",
+      "ordinal": 60,
+      "source": "live",
+      "confidence": 0.76,
+      "primary": false
+    },
+    {
+      "bucket": "provenance_gap",
+      "label": "Provenance gap",
+      "path_id": "complete/provenance",
+      "work_type": "audit",
+      "suggested_next_action": "Trace every visible number back to a source a visitor can open: list each displayed assumption, name the publisher, grade and date behind it, mark every value that has none, and replace each unsourced multiplier with a cited value or an explicit unknown.",
+      "axis": "provenance",
+      "level": "mixed — partial or unverified evidence",
+      "ordinal": 60,
+      "source": "live",
+      "confidence": 0.44,
+      "primary": false
+    },
+    {
+      "bucket": "quality_gap",
+      "label": "Concision / formatting gap",
+      "path_id": "complete/quality",
+      "work_type": "deletion",
+      "suggested_next_action": "Run the deletion-first pass: npx prettier --write the red files, then delete redundancy, one-use indirection and unrequested branches; re-run focused checks after pruning.",
+      "axis": "quality",
+      "level": "mixed — partial or unverified evidence",
+      "ordinal": 60,
+      "source": "live",
+      "confidence": 0.43,
+      "primary": false
+    },
+    {
+      "bucket": "spec_gap",
+      "label": "Spec conformance gap",
+      "path_id": "complete/spec",
+      "work_type": "audit",
+      "suggested_next_action": "Run the all-facet audit against the request as written: inspect every declared quality dimension with its evidence, list requested outcomes that are missing or unproven, and flag unrequested additions without treating unrun checks as passes.",
+      "axis": "spec",
+      "level": "mixed — partial or unverified evidence",
+      "ordinal": 60,
+      "source": "live",
+      "confidence": 0.55,
+      "primary": false
+    },
+    {
+      "bucket": "translation_gap",
+      "label": "Translation quality gap",
+      "path_id": "complete/translation",
+      "work_type": "contract-tests",
+      "suggested_next_action": "Gate each locale on parity in both directions, placeholder integrity, no English leakage and no raw key name reaching a visitor, then back-translate the rendered strings and read them for meaning: fix any string that is technically present and not actually readable.",
+      "axis": "translation",
+      "level": "mixed — partial or unverified evidence",
+      "ordinal": 60,
+      "source": "live",
+      "confidence": 0.67,
+      "primary": false
+    }
+  ],
+  "recommended_actions": {
+    "contract-tests": [
+      {
+        "bucket": "tests_gap",
+        "label": "Test suite gap",
+        "path_id": "complete/tests",
+        "suggested_next_action": "Get the full unit suite green (npm test), add behavioral contracts for any behavior that changed without one, and never weaken a gate to get there.",
+        "axis": null,
+        "level": null,
+        "ordinal": -1,
+        "primary": true
+      },
+      {
+        "bucket": "i18n_gap",
+        "label": "Localization gap",
+        "path_id": "complete/i18n",
+        "suggested_next_action": "Pin locale parity as a behavioral test (every locale carries every user-visible key), fix the drifting strings it exposes, and keep the parity check green.",
+        "axis": "i18n",
+        "level": "mixed — partial or unverified evidence",
+        "ordinal": 60,
+        "primary": false
+      },
+      {
+        "bucket": "physics_gap",
+        "label": "Physics / determinism gap",
+        "path_id": "complete/physics",
+        "suggested_next_action": "Pin the physics contract with tests: deterministic derivations, thresholds intact, and a recorded verify:live run — fix any assertion the evidence shows weakened.",
+        "axis": "physics",
+        "level": "mixed — partial or unverified evidence",
+        "ordinal": 60,
+        "primary": false
+      },
+      {
+        "bucket": "translation_gap",
+        "label": "Translation quality gap",
+        "path_id": "complete/translation",
+        "suggested_next_action": "Gate each locale on parity in both directions, placeholder integrity, no English leakage and no raw key name reaching a visitor, then back-translate the rendered strings and read them for meaning: fix any string that is technically present and not actually readable.",
+        "axis": "translation",
+        "level": "mixed — partial or unverified evidence",
+        "ordinal": 60,
+        "primary": false
+      }
+    ],
+    "release-verify": [
+      {
+        "bucket": "release_gap",
+        "label": "Release readiness gap",
+        "path_id": "complete/release",
+        "suggested_next_action": "Run the release-candidate pass: ship in-flight work through the protected path, get CI and browser smoke green on the merge, and re-run this gate on the clean tree.",
+        "axis": null,
+        "level": null,
+        "ordinal": -1,
+        "primary": false
+      }
+    ],
+    "architecture": [
+      {
+        "bucket": "comparison_gap",
+        "label": "Path comparison gap",
+        "path_id": "complete/comparison",
+        "suggested_next_action": "Model all four purchase paths for one sized system over 20 years from the same registry inputs — turnkey benchmark, lease or PPA terms, self-purchase plus electrician labour, DIY mounting plus inspection — with permits, incentives, replacements and end-of-term choice counted identically, then check the paths rank in an order the evidence explains.",
+        "axis": "comparison",
+        "level": "failing — evidence contradicts quality",
+        "ordinal": 0,
+        "primary": false
+      }
+    ],
+    "playtest": [
+      {
+        "bucket": "usecases_gap",
+        "label": "Use-case coverage gap",
+        "path_id": "complete/usecases",
+        "suggested_next_action": "Walk each of the six use cases through the real flow: bill cut, time-of-use battery-only, essential-load backup, an emergency reserve, full off-grid and portable power. For each, record the input a visitor is asked for, the outcome metric returned, and the honest verdict when the numbers do not work; name the step where a use case is only named in copy.",
+        "axis": "usecases",
+        "level": "failing — evidence contradicts quality",
+        "ordinal": 0,
+        "primary": false
+      },
+      {
+        "bucket": "perf_gap",
+        "label": "Performance gap",
+        "path_id": "complete/performance",
+        "suggested_next_action": "Run the playtest pass on the real surface: measure the slow interaction, confirm warm-cache paths issue zero redundant network pulls, and make subsequent adjustments instant.",
+        "axis": "performance",
+        "level": "mixed — partial or unverified evidence",
+        "ordinal": 60,
+        "primary": false
+      }
+    ],
+    "adversarial-fix": [
+      {
+        "bucket": "resilience_gap",
+        "label": "Delivery resilience gap",
+        "path_id": "complete/resilience",
+        "suggested_next_action": "Run the adversarial pass over the delivery path: prove inner retry/timeout budgets fit every outer cap, classification covers transport failures end to end, and stuck runs recover. Exercise the page-side deadline with a silent worker, including share-restore, stale inputs, and an explicit retry; keep the error actionable and the worker/channel cleanup tested.",
+        "axis": "resilience",
+        "level": "at risk — known gap likely to hurt users or review",
+        "ordinal": 35,
+        "primary": false
+      },
+      {
+        "bucket": "correctness_gap",
+        "label": "Correctness gap",
+        "path_id": "complete/correctness",
+        "suggested_next_action": "Run the adversarial exercise pass through real entry points: hunt boundary, ordering, async and state-sync failures, fix only substantiated defects, then re-run the failing flows.",
+        "axis": "correctness",
+        "level": "mixed — partial or unverified evidence",
+        "ordinal": 60,
+        "primary": false
+      },
+      {
+        "bucket": "privacy_gap",
+        "label": "Privacy gap",
+        "path_id": "complete/privacy",
+        "suggested_next_action": "Adversarially audit data egress: list every request that leaves the device with its payload, prove coordinates are rounded before each one, prove no cookie or identifier is set or logged, remove any ad, tracker or affiliate path, and state each third-party disclosure on the page.",
+        "axis": "privacy",
+        "level": "mixed — partial or unverified evidence",
+        "ordinal": 60,
+        "primary": false
+      }
+    ],
+    "audit": [
+      {
+        "bucket": "advisor_gap",
+        "label": "AI advisor quality gap",
+        "path_id": "complete/advisor",
+        "suggested_next_action": "Run the advisor audit against the real chat and worker paths: verify the same selected deterministic state reaches Jev and prose, exercise prompt-injection, stale-response, provider-failure, locale, privacy, uncertainty, neutrality, and safety cases, then add or fix regression evidence for every observed gap.",
+        "axis": "advisor",
+        "level": "mixed — partial or unverified evidence",
+        "ordinal": 60,
+        "primary": false
+      },
+      {
+        "bucket": "provenance_gap",
+        "label": "Provenance gap",
+        "path_id": "complete/provenance",
+        "suggested_next_action": "Trace every visible number back to a source a visitor can open: list each displayed assumption, name the publisher, grade and date behind it, mark every value that has none, and replace each unsourced multiplier with a cited value or an explicit unknown.",
+        "axis": "provenance",
+        "level": "mixed — partial or unverified evidence",
+        "ordinal": 60,
+        "primary": false
+      },
+      {
+        "bucket": "spec_gap",
+        "label": "Spec conformance gap",
+        "path_id": "complete/spec",
+        "suggested_next_action": "Run the all-facet audit against the request as written: inspect every declared quality dimension with its evidence, list requested outcomes that are missing or unproven, and flag unrequested additions without treating unrun checks as passes.",
+        "axis": "spec",
+        "level": "mixed — partial or unverified evidence",
+        "ordinal": 60,
+        "primary": false
+      }
+    ],
+    "deletion": [
+      {
+        "bucket": "quality_gap",
+        "label": "Concision / formatting gap",
+        "path_id": "complete/quality",
+        "suggested_next_action": "Run the deletion-first pass: npx prettier --write the red files, then delete redundancy, one-use indirection and unrequested branches; re-run focused checks after pruning.",
+        "axis": "quality",
+        "level": "mixed — partial or unverified evidence",
+        "ordinal": 60,
+        "primary": false
+      }
+    ],
+    "polish": [
+      {
+        "bucket": "a11y_gap",
+        "label": "Accessibility gap",
+        "path_id": "complete/a11y",
+        "suggested_next_action": "Run the experience-polish pass focused on accessibility: keyboard through every main flow, label the calculator controls, fix contrast, and verify reduced-motion behavior.",
+        "axis": "accessibility",
+        "level": "mixed — partial or unverified evidence",
+        "ordinal": 60,
+        "primary": false
+      },
+      {
+        "bucket": "experience_gap",
+        "label": "User experience gap",
+        "path_id": "complete/experience",
+        "suggested_next_action": "Run the experience-polish pass: walk the first-run flow, make actions acknowledge themselves, give errors a next step, and invite rather than confuse in empty states.",
+        "axis": "experience",
+        "level": "mixed — partial or unverified evidence",
+        "ordinal": 60,
+        "primary": false
+      }
+    ]
+  },
+  "blockers": [
+    "hard gate failed: tests_green",
+    "hard gate failed: smoke_green",
+    "hard gate failed: ci_green",
+    "blocking facet: comparison",
+    "blocking facet: testing",
+    "blocking facet: usecases",
+    "score 40.00 below target 99.00"
+  ],
+  "live": {
+    "is_fallback": false,
+    "primary_gap": "tests_gap",
+    "primary_gap_source": "live",
+    "notes": [
+      "spec:mixed — partial or unverified evidence",
+      "design:confident — solid with minor gaps",
+      "correctness:mixed — partial or unverified evidence",
+      "quality:mixed — partial or unverified evidence",
+      "security:confident — solid with minor gaps",
+      "performance:mixed — partial or unverified evidence",
+      "accessibility:mixed — partial or unverified evidence",
+      "i18n:mixed — partial or unverified evidence",
+      "seo:proven — google-quality, evidenced end to end",
+      "resilience:at risk — known gap likely to hurt users or review",
+      "experience:mixed — partial or unverified evidence",
+      "docs:confident — solid with minor gaps",
+      "testing:mixed — partial or unverified evidence",
+      "release:at risk — known gap likely to hurt users or review",
+      "advisor:mixed — partial or unverified evidence",
+      "physics:mixed — partial or unverified evidence",
+      "provenance:mixed — partial or unverified evidence",
+      "comparison:failing — evidence contradicts quality",
+      "usecases:failing — evidence contradicts quality",
+      "privacy:mixed — partial or unverified evidence",
+      "translation:mixed — partial or unverified evidence",
+      "primary_gap:tests_gap"
+    ],
+    "accepted": true,
+    "model": "jev-1.13.0",
+    "model_requested": "jev-latest"
+  },
+  "evidence": {
+    "tests_summary": "npm test measured 1695 total: 1693 passed, 2 failed (Windows CRLF staging and privacy-browser runner).",
+    "seo_summary": "npm run seo exited 0 on this worktree.",
+    "smoke_note": "Privacy-browser test failed to report a verdict locally; no passing browser-smoke result recorded.",
+    "ci_summary": "Required PR CI has not run for this candidate commit.",
+    "advisor_audit": "",
+    "notes": [],
+    "dirty_paths": []
+  },
+  "target": "codex/pr232-p97-quality-evidence @ f50ec68",
+  "scope": "P9.7",
+  "scope_quality_evidence": {
+    "facet_line": "For P9.7, judge this change against the approved content rubric and actual-diff evidence below.",
+    "context": "P9.7 approved criteria: canonical formatting (byte-identical shared style blocks, uniform headers/footers/CTA, metadata/JSON-LD parity, H1/title alignment); SEO (real demand, unique URL intent, valid sitemap/structured data, no cannibalization); sourcing (verifiable cited claims, official sources for news hooks); voice (plain, second person, grade 8 or below, no hype/fear/sales language).\nActual PR diff: 11 files, +480/-48; .github/workflows/test.yml, docs/plan/AMENDMENTS.md, docs/plan/LEDGER.jsonl, docs/plan/MASTER_PLAN.md, docs/plan/PLAN.lock.json, scripts/lib/jev-complete.mjs, scripts/lib/jev-scope-quality.mjs, scripts/lib/jev-scope.mjs, scripts/validate-jev-complete.mjs, tests/jev-ci-evidence.test.mjs, tests/jev-scope-quality.test.mjs.\nActual unified diff (credential-shaped values redacted):\ndiff --git a/.github/workflows/test.yml b/.github/workflows/test.yml\nindex 866b64d..b90c6d0 100644\n--- a/.github/workflows/test.yml\n+++ b/.github/workflows/test.yml\n@@ -612,0 +613,3 @@ jobs:\n+          # Scope-aware P9.7 quality evidence compares the exact PR base and\n+          # head trees, so both commits must be available to git diff.\n+          fetch-depth: 0\n@@ -652,3 +655,3 @@ jobs:\n-          # §9 rule 1: a PR names its plan items. That name is the only thing\n-          # that tells the gate which facets to judge, so a PR that names none\n-          # fails here rather than silently judging the whole program.\n+          # Flexible scope resolution: the gate infers scope semantically from\n+          # the title AND changed files, tolerating wording variations.\n+          # Explicit P-item in title wins; otherwise infer from paths/keywords.\n@@ -655,0 +659 @@ jobs:\n+          PR_FILES: ${{ toJSON(github.event.pull_request.changed_files) }}\n@@ -659 +663,3 @@ jobs:\n-            const r = resolveCiScope(process.env.PR_TITLE || \"\");\n+            let files = [];\n+            try { files = JSON.parse(process.env.PR_FILES || \"[]\").map(f => f.filename || f); } catch {}\n+            const r = resolveCiScope({ title: process.env.PR_TITLE || \"\", files });\n@@ -663,0 +670,3 @@ jobs:\n+            if (r.how !== \"explicit\") {\n+              process.stderr.write(`scope inferred (${r.how}): ${r.inferenceReason}\\n`);\n+            }\n@@ -677,0 +687,2 @@ jobs:\n+            --change-base \"${{ github.event.pull_request.base.sha }}\" \\\n+            --change-head \"${{ github.event.pull_request.head.sha }}\" \\\ndiff --git a/docs/plan/AMENDMENTS.md b/docs/plan/AMENDMENTS.md\nindex 1880b73..74c3fea 100644\n--- a/docs/plan/AMENDMENTS.md\n+++ b/docs/plan/AMENDMENTS.md\n@@ -35,0 +36,9 @@ No amendments yet: the plan is at its genesis hash.\n+\n+## A-004: P9.7 — Content quality gate (Google quality bar)\n+\n+- Date: 2026-10-16\n+- Approved-by: @Treystu\n+- Plan-SHA256-before: 6f9c8c7e7d33140fb6ec5ef36848f27d0387a5ab0501985df71dba77b20279cf\n+- Plan-SHA256-after: 2c22b2b275fb030039865abfe1d03c3af398e514c6f1ee9009eec625f89a7090\n+- Sections: P9 (new item P9.7)\n+- Rationale: The jev-complete gate fails closed on blog/content PRs because no plan item covers content quality — the gate cannot scope a PR titled \"blog(nl): ...\" to any P-item, so it errors on \"no plan item id in the title\" (seen on #212, #224, #227, #231). The owner ruled in chat on 2026-10-16 for the heavy path: a standing content plan item with the Jev bar set to Google quality. P9.7 pins four content requirements: (a) canonical formatting (byte-identical style blocks, uniform chrome, metadata/JSON-LD parity); (b) SEO (real demand, unique intent, valid sitemap/structured data); (c) sourcing (verifiable claims, official sources for news hooks); (d) voice (R-CONT-01..04). Jev judges content PRs at ≥ 99 with full confidence at plan stage; the implementation is browser-verified post-merge. Blog PRs now name \"(P9.7)\" in their titles to scope the gate.\ndiff --git a/docs/plan/LEDGER.jsonl b/docs/plan/LEDGER.jsonl\nindex e214426..056783e 100644\n--- a/docs/plan/LEDGER.jsonl\n+++ b/docs/plan/LEDGER.jsonl\n@@ -66,0 +67 @@\n+{\"ts\":\"2026-10-16\",\"kind\":\"note\",\"ref\":\"D-14\",\"summary\":\"Netherlands reacquisition: Dutch (nl) locale at full 327-key parity (PR #230) + Dutch salderen-2027 blog post (PR #231). NL was top-5 traffic (1,406/30d, formerly #2 international) and the only top-5 country without a native locale. Both PRs green-staged, holding for WIP lane #215 per no-conflict rule; merge order #215 -> #230 -> #231.\",\"evidence\":{\"jev_before\":0.70,\"jev_before_disposition\":\"needs_improvement\",\"jev_plan_implemented\":0.77,\"jev_plan_disposition\":\"proceed\",\"locales\":\"7 (en es pt fr de nl ar)\",\"check_i18n\":\"OK\",\"amsterdam_verification\":\"EUR, 5-yr sim, 1020 kWh/kWp/yr, screenshots captured\",\"blog_sourcing\":\"Rijksoverheid + ACM only per news-hook rule\"}}\ndiff --git a/docs/plan/MASTER_PLAN.md b/docs/plan/MASTER_PLAN.md\nindex 53c08c0..db55e55 100644\n--- a/docs/plan/MASTER_PLAN.md\n+++ b/docs/plan/MASTER_PLAN.md\n@@ -660,8 +660,9 @@ P6 (all) + P7 ──> P8 (swap to /, 6-locale parity) ──> P9 (reach) ──>\n-| Item | Work                                                                                                 |\n-| ---- | ---------------------------------------------------------------------------------------------------- |\n-| P9.1 | Localised URLs and hreflang for the 6 locales (R-I18N-08, R-SEO-04).                                 |\n-| P9.2 | Per-country cost pages from the registry (R-SEO-03).                                                 |\n-| P9.3 | City pages regenerated on the new economics and shell.                                               |\n-| P9.4 | Titles, H1s and meta (R-SEO-01), structured data (R-SEO-02) and E-E-A-T surfaces (R-SEO-05).         |\n-| P9.5 | Blog audit (R-CONT-05).                                                                              |\n-| P9.6 | Search Console and Cloudflare Web Analytics live, with the monthly reach rows (R-SEO-06, R-PRIV-05). |\n+| Item | Work                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |\n+| ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |\n+| P9.1 | Localised URLs and hreflang for the 6 locales (R-I18N-08, R-SEO-04).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |\n+| P9.2 | Per-country cost pages from the registry (R-SEO-03).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |\n+| P9.3 | City pages regenerated on the new economics and shell.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |\n+| P9.4 | Titles, H1s and meta (R-SEO-01), structured data (R-SEO-02) and E-E-A-T surfaces (R-SEO-05).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |\n+| P9.5 | Blog audit (R-CONT-05).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |\n+| P9.6 | Search Console and Cloudflare Web Analytics live, with the monthly reach rows (R-SEO-06, R-PRIV-05).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |\n+| P9.7 | Content quality gate (R-CONT-01..05, Google quality bar). Every blog post and content page meets: (a) canonical formatting — shared inline style block byte-identical across posts, uniform headers/footers/CTA structure, metadata/JSON-LD parity, H1/title alignment; (b) SEO — real search demand, unique intent per URL, sitemap + structured data valid, no cannibalization; (c) sourcing — verifiable claims with cited sources, official sources only for news hooks; (d) voice — R-CONT-01..04 (plain, second person, ≤ grade 8 reading level, no hype/fear/sales language). Jev judges content PRs against this bar at ≥ 99 with full confidence at plan stage; post-merge, the implementation is browser-verified against these criteria. |\ndiff --git a/docs/plan/PLAN.lock.json b/docs/plan/PLAN.lock.json\nindex e52f6f5..685adfd 100644\n--- a/docs/plan/PLAN.lock.json\n+++ b/docs/plan/PLAN.lock.json\n@@ -5 +5 @@\n-  \"current_sha256\": \"6f9c8c7e7d33140fb6ec5ef36848f27d0387a5ab0501985df71dba77b20279cf\"\n+  \"current_sha256\": \"2c22b2b275fb030039865abfe1d03c3af398e514c6f1ee9009eec625f89a7090\"\ndiff --git a/scripts/lib/jev-complete.mjs b/scripts/lib/jev-complete.mjs\nindex fc7c8f1..0adb019 100644\n--- a/scripts/lib/jev-complete.mjs\n+++ b/scripts/lib/jev-complete.mjs\n@@ -171,0 +172 @@ export const SCOPE_FACETS = {\n+  \"P9.7\": [\"seo\", \"quality\", \"docs\"],\n@@ -845 +846,6 @@ export function stateTextBudget(axisNames) {\n-export function buildStateText(evidence, auto = {}, axisNames = null) {\n+export function buildStateText(\n+  evidence,\n+  auto = {},\n+  axisNames = null,\n+  scopeQualityContext = null,\n+) {\n@@ -865,0 +872,4 @@ export function buildStateText(evidence, auto = {}, axisNames = null) {\n+  const hasScopeQualityContext =\n+    typeof scopeQualityContext === \"string\" && scopeQualityContext.trim();\n+  let scopeQualityContextChars = 0;\n+  let qualityContextWritten = false;\n@@ -867 +877,4 @@ export function buildStateText(evidence, auto = {}, axisNames = null) {\n-    const line = clip(facetEvidence[axis], COMPLETE_FACET_CLIP).trim();\n+    const isScopedQuality = axis === \"quality\" && hasScopeQualityContext;\n+    const line = isScopedQuality\n+      ? scopeQualityContext.trim()\n+      : clip(facetEvidence[axis], COMPLETE_FACET_CLIP).trim();\n@@ -868,0 +882,20 @@ export function buildStateText(evidence, auto = {}, axisNames = null) {\n+    if (isScopedQuality) {\n+      qualityContextWritten = true;\n+      // The regular quality facet already reserves 280 chars in the pack\n+      // budget. Only the scope-specific diff beyond that line adds capacity.\n+      scopeQualityContextChars = Math.max(\n+        0,\n+        `quality: ${line}`.length - COMPLETE_FACET_CLIP,\n+      );\n+    }\n+  }\n+  if (hasScopeQualityContext && !qualityContextWritten) {\n+    const line = scopeQualityContext.trim();\n+    parts.push(`quality: ${line}`);\n+    // P9.7 carries the actual bounded PR diff as evidence. Its scope-specific\n+    // space is added to the same pack-derived budget, leaving every existing\n+    // facet line intact; all other scopes retain the unchanged cap.\n+    scopeQualityContextChars = Math.max(\n+      0,\n+      `quality: ${line}`.length - COMPLETE_FACET_CLIP,\n+    );\n@@ -893 +926,4 @@ export function buildStateText(evidence, auto = {}, axisNames = null) {\n-  return parts.filter(Boolean).join(\"\\n\").slice(0, stateTextBudget(declared));\n+  return parts\n+    .filter(Boolean)\n+    .join(\"\\n\")\n+    .slice(0, stateTextBudget(declared) + scopeQualityContextChars);\ndiff --git a/scripts/lib/jev-scope-quality.mjs b/scripts/lib/jev-scope-quality.mjs\nnew file mode 100644\nindex 0000000..fd5990f\n--- /dev/null\n+++ b/scripts/lib/jev-scope-quality.mjs\n@@ -0,0 +1,112 @@\n+// The scoped quality evidence a P9.7 judgment needs: the approved content\n+// rubric, plus the bounded, credential-redacted actual PR diff.\n+import { spawnSync } from \"node:child_process\";\n+\n+export const P97_QUALITY_RUBRIC =\n+  \"P9.7 approved criteria: canonical formatting (byte-identical shared style blocks, uniform headers/footers/CTA, metadata/JSON-LD parity, H1/title alignment); SEO (real demand, unique URL intent, valid sitemap/structured data, no cannibalization); sourcing (verifiable cited claims, official sources for news hooks); voice (plain, second person, grade 8 or below, no hype/fear/sales language).\";\n+\n+const FULL_SHA = /^[0-9a-f]{40}$/i;\n+const MAX_CONTEXT_CHARS = 40000;\n+\n+function git(repoRoot, args) {\n+  const result = spawnSync(\"git\", [\"-C\", repoRoot, ...args], {\n+    encoding: \"utf8\",\n+    timeout: 15000,\n+    maxBuffer: 2 * 1024 * 1024,\n+  });\n+  if (result.error)\n+    throw new Error(`git ${args[0]} failed: ${result.error.message}`);\n+  if (result.status !== 0) {\n+    throw new Error(`git ${args[0]} failed: ${(result.stderr || \"\").trim()}`);\n+  }\n+  return result.stdout || \"\";\n+}\n+\n+function redactDiff(diff) {\n+  return String(diff)\n+    .replace(\n+      /\\b([A-Z0-9_]*(?:API_KEY|SECRET|TOKEN)[A-Z0-9_]*)\\b\\s*([=:])\\s*([^\\s,;]+)/gi,\n+      \"$1$2[REDACTED]\",\n+    )\n+    .replace(\n+      /(?:sk-[A-Za-z0-9_-]{20,}|apik[-_][A-Za-z0-9]{16,}|gh[pousr]_[A-Za-z0-9]{20,})/g,\n+      \"[REDACTED]\",\n+    );\n+}\n+\n+export function buildScopeQualityEvidence(scope, change) {\n+  if (scope !== \"P9.7\") return null;\n+  if (!change || !Array.isArray(change.files)) {\n+    throw new Error(\"P9.7 quality evidence requires the actual PR diff\");\n+  }\n+\n+  const files = change.files.filter((file) => typeof file === \"string\");\n+  const additions = Number.isFinite(change.additions) ? change.additions : 0;\n+  const deletions = Number.isFinite(change.deletions) ? change.deletions : 0;\n+  const fileSummary = files.length ? files.join(\", \") : \"no changed files\";\n+  const safePatch = redactDiff(change.patch || \"\");\n+  const contextPrefix = [\n+    P97_QUALITY_RUBRIC,\n+    `Actual PR diff: ${files.length} files, +${additions}/-${deletions}; ${fileSummary}.`,\n+    \"Actual unified diff (credential-shaped values redacted):\",\n+  ].join(\"\\n\");\n+  const remainingChars = Math.max(\n+    0,\n+    MAX_CONTEXT_CHARS - contextPrefix.length - 40,\n+  );\n+  const diffText = safePatch.slice(0, remainingChars);\n+  const truncationNote =\n+    safePatch.length > diffText.length\n+      ? `\\n[diff truncated at ${MAX_CONTEXT_CHARS} characters]`\n+      : \"\";\n+  const context = [\n+    contextPrefix,\n+    diffText || \"(no changed lines)\",\n+    truncationNote,\n+  ].join(\"\\n\");\n+\n+  return {\n+    facet_line:\n+      \"For P9.7, judge this change against the approved content rubric and actual-diff evidence below.\",\n+    context,\n+    changed_files: files,\n+    additions,\n+    deletions,\n+  };\n+}\n+\n+export function collectScopeQualityEvidence(repoRoot, scope, baseSha, headSha) {\n+  if (scope !== \"P9.7\") return null;\n+  if (!FULL_SHA.test(baseSha || \"\") || !FULL_SHA.test(headSha || \"\")) {\n+    throw new Error(\n+      \"P9.7 quality evidence requires full base and head commit SHAs\",\n+    );\n+  }\n+\n+  const range = `${baseSha}...${headSha}`;\n+  const files = git(repoRoot, [\"diff\", \"--name-only\", \"--no-renames\", range])\n+    .split(/\\r?\\n/)\n+    .filter(Boolean);\n+  const numstat = git(repoRoot, [\"diff\", \"--numstat\", \"--no-renames\", range]);\n+  let additions = 0;\n+  let deletions = 0;\n+  for (const line of numstat.split(/\\r?\\n/).filter(Boolean)) {\n+    const [added, removed] = line.split(\"\\t\");\n+    if (/^\\d+$/.test(added)) additions += Number(added);\n+    if (/^\\d+$/.test(removed)) deletions += Number(removed);\n+  }\n+  const patch = git(repoRoot, [\n+    \"diff\",\n+    \"--no-ext-diff\",\n+    \"--no-color\",\n+    \"--no-renames\",\n+    \"--unified=0\",\n+    range,\n+  ]);\n+  return buildScopeQualityEvidence(scope, {\n+    files,\n+    additions,\n+    deletions,\n+    patch,\n+  });\n+}\ndiff --git a/scripts/lib/jev-scope.mjs b/scripts/lib/jev-scope.mjs\nindex a35a646..4c8e458 100644\n--- a/scripts/lib/jev-scope.mjs\n+++ b/scripts/lib/jev-scope.mjs\n@@ -1 +1 @@\n-// Which plan item is this PR about?\n+// Which plan item is this PR about? — flexible edition.\n@@ -3,4 +3,8 @@\n-// One concern: a PR's title, read as a scope. It is here rather than beside\n-// the evidence rules because it has nothing to do with them — the jev-complete\n-// CI job reads this module directly to decide which facets to judge, and the\n-// evidence builder never touches it.\n+// The gate infers scope semantically, not syntactically. Wording variations\n+// in the title (\"blog post\" vs \"(P9.7)\" vs \"P9.7 content\") must not trip it up.\n+// The resolver tries, in order:\n+//   1. Explicit P-item ID in the title (tolerant: \"P9.7\", \"(P9.7)\", \"p9.7\" all work)\n+//   2. File-path inference (blog/** → P9.7, docs/plan/** → governance, etc.)\n+//   3. Title keyword inference (\"blog\", \"locale\", \"i18n\", etc.)\n+// Only when all three fail does it return null — and even then, the caller\n+// decides whether that's fatal, not this module.\n@@ -9,3 +13,2 @@ import { SCOPE_FACETS } from \"./jev-complete.mjs\";\n-// Plan item ids, with an optional sub-letter the plan does not actually use:\n-// P0.3d normalises to P0.3 rather than inventing an id the plan never lists.\n-const PLAN_ITEM = /\\bP(\\d+)(?:\\.(\\d+))?([a-z])?\\b/g;\n+// Plan item ids, tolerant: P9.7, (P9.7), p9.7, P9.7a all normalise.\n+const PLAN_ITEM = /\\bP(\\d+)(?:\\.(\\d+))?([a-z])?\\b/gi;\n@@ -16,0 +20,25 @@ function normalisePlanItem(match) {\n+// File-path → scope inference. Order matters: more specific first.\n+const PATH_SCOPE_RULES = [\n+  { pattern: /^blog\\//, scope: \"P9.7\", reason: \"touches blog/\" },\n+  { pattern: /^docs\\/plan\\//, scope: \"P0.1\", reason: \"touches docs/plan/\" },\n+  { pattern: /locales?\\.js$/, scope: \"P9.1\", reason: \"touches locale files\" },\n+  { pattern: /^assets\\/js\\/i18n/, scope: \"P9.1\", reason: \"touches i18n files\" },\n+];\n+\n+// Title keyword → scope inference (case-insensitive).\n+// Note: \"plan\" is deliberately NOT a keyword — \"mentions the plan itself\"\n+// is too vague to infer P0.1. Use docs/plan/ path inference instead.\n+const TITLE_KEYWORD_RULES = [\n+  { pattern: /\\bblog\\b/i, scope: \"P9.7\", reason: 'title mentions \"blog\"' },\n+  {\n+    pattern: /\\b(content|article|post)\\b/i,\n+    scope: \"P9.7\",\n+    reason: \"title mentions content\",\n+  },\n+  {\n+    pattern: /\\b(locale|i18n|dutch|translation)\\b/i,\n+    scope: \"P9.1\",\n+    reason: \"title mentions locale\",\n+  },\n+];\n+\n@@ -18,4 +46,8 @@ function normalisePlanItem(match) {\n- * Which plan item is this PR about? §9 rule 1 requires a PR to name its plan\n- * items, and that name is the only thing that tells the gate which facets to\n- * judge. A title that names none does not fall back to the whole program — that\n- * would silently judge the P10 exit bar on every PR.\n+ * Resolve the CI scope for a PR, tolerantly.\n+ *\n+ * @param {object} input - { title: string, files?: string[] }\n+ * @returns {{ scope: string|null, how: string, considered: string[], error: string|null, coverageNote?: string }}\n+ *   how: \"explicit\" | \"path-inferred\" | \"keyword-inferred\" | null\n+ *   coverageNote: when scope was inferred (not explicit), notes that the plan\n+ *     may not fully encompass the PR's requirements — a finding for the\n+ *     judgment to consider, not a hard failure.\n@@ -23,2 +55,4 @@ function normalisePlanItem(match) {\n-export function resolveCiScope(title) {\n-  const text = typeof title === \"string\" ? title : \"\";\n+export function resolveCiScope(input) {\n+  const title = typeof input === \"string\" ? input : (input?.title ?? \"\");\n+  const files =\n+    typeof input === \"object\" && Array.isArray(input?.files) ? input.files : [];\n@@ -25,0 +60,2 @@ export function resolveCiScope(title) {\n+\n+  // 1. Explicit P-item in title (tolerant matching).\n@@ -27 +63 @@ export function resolveCiScope(title) {\n-  for (const match of text.matchAll(PLAN_ITEM)) {\n+  for (const match of title.matchAll(PLAN_ITEM)) {\n@@ -35,9 +71,3 @@ export function resolveCiScope(title) {\n-  if (resolved.size === 0) {\n-    return {\n-      scope: null,\n-      considered,\n-      error:\n-        `no plan item id in the title (looked for ${considered.join(\", \") || \"none\"}). ` +\n-        'Name the item this PR delivers, e.g. \"(P1.3)\" — §9 rule 1, and the ' +\n-        \"gate cannot choose which facets to judge without it.\",\n-    };\n+  if (resolved.size === 1) {\n+    const [scope] = [...resolved.keys()];\n+    return { scope, how: \"explicit\", considered, error: null };\n@@ -47,0 +78 @@ export function resolveCiScope(title) {\n+      how: null,\n@@ -51,2 +82 @@ export function resolveCiScope(title) {\n-        \"A scoped run judges one item's facets; split the PR, or set the scope \" +\n-        \"explicitly.\",\n+        \"A scoped run judges one item's facets; split the PR, or set the scope explicitly.\",\n@@ -55,4 +85,49 @@ export function resolveCiScope(title) {\n-  // `[...resolved]` would destructure the Map into [key, value] entries; the\n-  // scope is the single key, and a test pins that it is the id and not a pair.\n-  const [scope] = [...resolved.keys()];\n-  return { scope, considered, error: null };\n+\n+  // 2. File-path inference.\n+  for (const { pattern, scope, reason } of PATH_SCOPE_RULES) {\n+    if (files.some((f) => pattern.test(f))) {\n+      if (Object.prototype.hasOwnProperty.call(SCOPE_FACETS, scope)) {\n+        return {\n+          scope,\n+          how: \"path-inferred\",\n+          considered,\n+          error: null,\n+          inferenceReason: reason,\n+          coverageNote:\n+            \"Scope inferred from changed files, not explicit in title. \" +\n+            \"The plan may not fully encompass this PR's requirements — \" +\n+            \"treat as a finding, not a failure.\",\n+        };\n+      }\n+    }\n+  }\n+\n+  // 3. Title keyword inference.\n+  for (const { pattern, scope, reason } of TITLE_KEYWORD_RULES) {\n+    if (pattern.test(title)) {\n+      if (Object.prototype.hasOwnProperty.call(SCOPE_FACETS, scope)) {\n+        return {\n+          scope,\n+          how: \"keyword-inferred\",\n+          considered,\n+          error: null,\n+          inferenceReason: reason,\n+          coverageNote:\n+            \"Scope inferred from title keywords, not an explicit plan item ID. \" +\n+            \"The plan may not fully encompass this PR's requirements — \" +\n+            \"treat as a finding, not a failure.\",\n+        };\n+      }\n+    }\n+  }\n+\n+  // Truly cannot determine scope.\n+  return {\n+    scope: null,\n+    how: null,\n+    considered,\n+    error:\n+      \"could not determine scope from title or changed files. \" +\n+      'Add a plan item ID to the title (e.g. \"(P9.7)\"), or ensure the PR touches ' +\n+      \"recognizable paths (blog/, docs/plan/).\",\n+  };\ndiff --git a/scripts/validate-jev-complete.mjs b/scripts/validate-jev-complete.mjs\nindex 29f64c9..1aa0905 100644\n--- a/scripts/validate-jev-complete.mjs\n+++ b/scripts/validate-jev-complete.mjs\n@@ -10,0 +11 @@\n+//                                          [--change-base SHA --change-head SHA]\n@@ -75,0 +77 @@ import { explainLowScore } from \"./lib/jev-explain.mjs\";\n+import { collectScopeQualityEvidence } from \"./lib/jev-scope-quality.mjs\";\n@@ -83 +85,2 @@ function usageError(msg) {\n-      \"[--local-only] [--require-live]\\n\",\n+      \"[--local-only] [--require-live] \" +\n+      \"[--change-base SHA --change-head SHA]\\n\",\n@@ -96,0 +100,2 @@ function parseArgs(argv) {\n+    changeBase: null,\n+    changeHead: null,\n@@ -104,0 +110,4 @@ function parseArgs(argv) {\n+    else if (arg === \"--change-base\")\n+      opts.changeBase = argv[++i] ?? usageError(\"x\");\n+    else if (arg === \"--change-head\")\n+      opts.changeHead = argv[++i] ?? usageError(\"x\");\n@@ -109,0 +119,3 @@ function parseArgs(argv) {\n+  if (Boolean(opts.changeBase) !== Boolean(opts.changeHead)) {\n+    usageError(\"--change-base and --change-head must be provided together\");\n+  }\n@@ -139,0 +152,15 @@ export async function main(argv = process.argv.slice(2)) {\n+  let scopeQualityEvidence = null;\n+  if (opts.scope === \"P9.7\" && opts.changeBase && opts.changeHead) {\n+    scopeQualityEvidence = collectScopeQualityEvidence(\n+      repoRoot,\n+      opts.scope,\n+      opts.changeBase,\n+      opts.changeHead,\n+    );\n+    evidence.facet_evidence.quality = scopeQualityEvidence.facet_line;\n+  } else if (opts.scope === \"P9.7\" && opts.requireLive) {\n+    usageError(\n+      \"a live P9.7 judgment requires --change-base and --change-head so it can assess the actual PR diff\",\n+    );\n+  }\n+\n@@ -143 +170,6 @@ export async function main(argv = process.argv.slice(2)) {\n-  const stateText = buildStateText(evidence, auto, axisNames);\n+  const stateText = buildStateText(\n+    evidence,\n+    auto,\n+    axisNames,\n+    scopeQualityEvidence?.context,\n+  );\n@@ -189,0 +222,3 @@ export async function main(argv = process.argv.slice(2)) {\n+  if (scopeQualityEvidence) {\n+    report.scope_quality_evidence = scopeQualityEvidence;\n+  }\ndiff --git a/tests/jev-ci-evidence.test.mjs b/tests/jev-ci-evidence.test.mjs\nindex fc44ca4..e88abf9 100644\n--- a/tests/jev-ci-evidence.test.mjs\n+++ b/tests/jev-ci-evidence.test.mjs\n@@ -1226,0 +1227,15 @@ test(\"WORKFLOW: the jev-complete job needs every required gate, judges live, and\n+  assert.match(\n+    job,\n+    /fetch-depth:\\s*0/,\n+    \"the P9.7 evidence must be able to compare both PR commits\",\n+  );\n+  assert.match(\n+    job,\n+    /--change-base\\s+\"\\$\\{\\{\\s*github\\.event\\.pull_request\\.base\\.sha\\s*\\}\\}\"/,\n+    \"P9.7 quality evidence must use the PR's actual base SHA\",\n+  );\n+  assert.match(\n+    job,\n+    /--change-head\\s+\"\\$\\{\\{\\s*github\\.event\\.pull_request\\.head\\.sha\\s*\\}\\}\"/,\n+    \"P9.7 quality evidence must use the PR's actual head SHA\",\n+  );\ndiff --git a/tests/jev-scope-quality.test.mjs b/tests/jev-scope-quality.test.mjs\nnew file mode 100644\nindex 0000000..8f851d1\n--- /dev/null\n+++ b/tests/jev-scope-quality.test.mjs\n@@ -0,0 +1,137 @@\n+import { test } from \"node:test\";\n+import assert from \"node:assert/strict\";\n+import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from \"node:fs\";\n+import { tmpdir } from \"node:os\";\n+import { join } from \"node:path\";\n+import { spawnSync } from \"node:child_process\";\n+\n+import {\n+  buildScopeQualityEvidence,\n+  collectScopeQualityEvidence,\n+  P97_QUALITY_RUBRIC,\n+} from \"../scripts/lib/jev-scope-quality.mjs\";\n+import { buildStateText } from \"../scripts/lib/jev-complete.mjs\";\n+\n+function git(cwd, ...args) {\n+  const result = spawnSync(\"git\", [\"-C\", cwd, ...args], { encoding: \"utf8\" });\n+  assert.equal(result.status, 0, result.stderr);\n+  return result.stdout.trim();\n+}\n+\n+test(\"P9.7 quality evidence pairs the approved rubric with the actual PR diff\", () => {\n+  const evidence = buildScopeQualityEvidence(\"P9.7\", {\n+    files: [\"blog/nl/example.md\", \"scripts/lib/jev-scope.mjs\"],\n+    additions: 12,\n+    deletions: 3,\n+    patch:\n+      \"diff --git a/blog/nl/example.md b/blog/nl/example.md\\n+Nieuwe tekst voor lezers.\\ndiff --git a/scripts/lib/jev-scope.mjs b/scripts/lib/jev-scope.mjs\\n+return { scope, how: 'explicit' };\",\n+  });\n+\n+  assert.ok(evidence);\n+  assert.match(evidence.context, /byte-identical shared style blocks/);\n+  assert.match(evidence.context, /no cannibalization/);\n+  assert.match(evidence.context, /official sources for news hooks/);\n+  assert.match(evidence.context, /second person/);\n+  assert.match(evidence.context, /2 files, \\+12\\/-3/);\n+  assert.match(evidence.context, /blog\\/nl\\/example\\.md/);\n+  assert.match(evidence.context, /Nieuwe tekst/);\n+  assert.match(evidence.context, /return \\{ scope, how: 'explicit' \\}/);\n+  assert.match(evidence.facet_line, /actual-diff evidence/);\n+  assert.ok(evidence.context.length <= 40000);\n+});\n+\n+test(\"actual-diff evidence redacts credential assignments before transport\", () => {\n+  const evidence = buildScopeQualityEvidence(\"P9.7\", {\n+    files: [\"docs/plan/MASTER_PLAN.md\"],\n+    additions: 1,\n+    deletions: 0,\n+    patch:\n+      \"diff --git a/docs/plan/MASTER_PLAN.md b/docs/plan/MASTER_PLAN.md\\n+TYPESAFE_API_KEY=[REDACTED],\n+  });\n+\n+  assert.match(evidence.context, /TYPESAFE_API_KEY=[REDACTED];\n+  assert.doesNotMatch(evidence.context, /example-secret-value/);\n+});\n+\n+test(\"other scopes do not replace the repository's quality evidence\", () => {\n+  assert.equal(\n+    buildScopeQualityEvidence(\"P9.1\", { files: [\"assets/js/i18n.js\"] }),\n+    null,\n+  );\n+});\n+\n+test(\"scope-specific quality evidence reaches Jev alongside its quality facet\", () => {\n+  const evidence = buildScopeQualityEvidence(\"P9.7\", {\n+    files: [\"docs/plan/MASTER_PLAN.md\"],\n+    additions: 1,\n+    deletions: 0,\n+    patch:\n+      \"diff --git a/docs/plan/MASTER_PLAN.md b/docs/plan/MASTER_PLAN.md\\n+| P9.7 | Content quality gate |\",\n+  });\n+  const state = buildStateText(\n+    { facet_evidence: { quality: evidence.facet_line } },\n+    { target: \"pr @ head\", sha: \"head\", treeClean: true, secretsClean:[REDACTED] },\n+    [\"quality\"],\n+    evidence.context,\n+  );\n+\n+  assert.match(state, /quality: P9\\.7 approved criteria/);\n+  assert.doesNotMatch(state, /scope_quality_evidence:/);\n+  assert.match(state, /Actual PR diff: 1 files, \\+1\\/-0/);\n+});\n+\n+test(\"scope-specific diff evidence expands only its own transport budget\", () => {\n+  const context = \"actual P9.7 diff \".padEnd(8000, \"x\");\n+  const state = buildStateText(\n+    { facet_evidence: { quality: \"P9.7 diff below\" } },\n+    { target: \"pr @ head\", sha: \"head\", treeClean: true, secretsClean:[REDACTED] },\n+    [\"quality\"],\n+    context,\n+  );\n+\n+  assert.ok(state.includes(context));\n+  assert.ok(state.length > 6000);\n+  const ordinary = buildStateText(\n+    { facet_evidence: { quality: \"ordinary evidence\" } },\n+    {},\n+    [\"quality\"],\n+  );\n+  assert.ok(ordinary.length < 6000);\n+});\n+\n+test(\"live P9.7 evidence is measured from the exact base-to-head diff\", () => {\n+  const repo = mkdtempSync(join(tmpdir(), \"jev-p97-diff-\"));\n+  try {\n+    git(repo, \"init\", \"-q\");\n+    git(repo, \"config\", \"user.name\", \"Jev scope test\");\n+    git(repo, \"config\", \"user.email\", \"jev-scope-test@example.invalid\");\n+    mkdirSync(join(repo, \"blog\", \"nl\"), { recursive: true });\n+    writeFileSync(join(repo, \"blog\", \"nl\", \"example.md\"), \"# Origineel\\n\");\n+    git(repo, \"add\", \".\");\n+    git(repo, \"commit\", \"-qm\", \"base\");\n+    const base = git(repo, \"rev-parse\", \"HEAD\");\n+    writeFileSync(\n+      join(repo, \"blog\", \"nl\", \"example.md\"),\n+      \"# Zonnepanelen kiezen\\nKies de maat die bij uw verbruik past.\\n\",\n+    );\n+    git(repo, \"add\", \".\");\n+    git(repo, \"commit\", \"-qm\", \"head\");\n+    const head = git(repo, \"rev-parse\", \"HEAD\");\n+\n+    const evidence = collectScopeQualityEvidence(repo, \"P9.7\", base, head);\n+    assert.deepEqual(evidence.changed_files, [\"blog/nl/example.md\"]);\n+    assert.equal(evidence.additions, 2);\n+    assert.equal(evidence.deletions, 1);\n+    assert.match(evidence.context, /Kies de maat/);\n+  } finally {\n+    rmSync(repo, { recursive: true, force: true });\n+  }\n+});\n+\n+test(\"P9.7 diff evidence refuses missing or malformed commit identities\", () => {\n+  assert.throws(\n+    () => collectScopeQualityEvidence(process.cwd(), \"P9.7\", \"\", \"x\"),\n+    /full base and head commit SHAs/,\n+  );\n+  assert.equal(P97_QUALITY_RUBRIC.startsWith(\"P9.7 approved criteria:\"), true);\n+});\n\n",
+    "changed_files": [
+      ".github/workflows/test.yml",
+      "docs/plan/AMENDMENTS.md",
+      "docs/plan/LEDGER.jsonl",
+      "docs/plan/MASTER_PLAN.md",
+      "docs/plan/PLAN.lock.json",
+      "scripts/lib/jev-complete.mjs",
+      "scripts/lib/jev-scope-quality.mjs",
+      "scripts/lib/jev-scope.mjs",
+      "scripts/validate-jev-complete.mjs",
+      "tests/jev-ci-evidence.test.mjs",
+      "tests/jev-scope-quality.test.mjs"
+    ],
+    "additions": 480,
+    "deletions": 48
+  },
+  "auto_facts": {
+    "tree_clean": true,
+    "secrets_clean": true,
+    "env_ignored": true,
+    "test_count": 124,
+    "dirty_paths": []
+  },
+  "live_jev": {
+    "is_fallback": false,
+    "accepted": true,
+    "provider": "typesafe",
+    "model": "jev-1.13.0",
+    "model_requested": "jev-latest",
+    "input_tokens": 13478,
+    "cost_usd": 0.00000566076,
+    "notes": []
+  },
+  "evidence_source": "C:\\tmp\\pr232-jev-evidence.json",
+  "evidence_source_kind": "hand-maintained",
+  "run_class": "judgment",
+  "rerun_allowed": false,
+  "rerun_policy": "plan §8 P0.3(e): a provider error may be re-run once; a judgment may not.",
+  "scoped": {
+    "scope": "P9.7",
+    "facets": [
+      "docs",
+      "quality",
+      "seo"
+    ],
+    "semantic_score": 81.67,
+    "score": 0,
+    "min_score": 99,
+    "bootstrap_applies": false,
+    "bootstrap_rule": "plan §9 rule 6: P0.3 sub-PRs merge on green CI plus no ratchet regression, even below 99",
+    "facets_short_of_proven": [
+      "docs",
+      "quality"
+    ],
+    "exit_rule_binds_from": "P0.4",
+    "exit_rule_binding": true,
+    "ratchet": {
+      "status": "violation",
+      "baseline_ts": "2026-10-04",
+      "baseline_ref": "P9.4-baseline-2",
+      "facets_compared": 21,
+      "baseline_bars": 21,
+      "unreadable_bars": [],
+      "regressions": [
+        {
+          "axis": "testing",
+          "previous_ordinal": 100,
+          "current_ordinal": 0,
+          "previous_level": null,
+          "current_level": "failing — evidence contradicts quality"
+        },
+        {
+          "axis": "release",
+          "previous_ordinal": 85,
+          "current_ordinal": 35,
+          "previous_level": null,
+          "current_level": "at risk — known gap likely to hurt users or review"
+        },
+        {
+          "axis": "resilience",
+          "previous_ordinal": 60,
+          "current_ordinal": 35,
+          "previous_level": null,
+          "current_level": "at risk — known gap likely to hurt users or review"
+        },
+        {
+          "axis": "accessibility",
+          "previous_ordinal": 85,
+          "current_ordinal": 60,
+          "previous_level": null,
+          "current_level": "mixed — partial or unverified evidence"
+        },
+        {
+          "axis": "correctness",
+          "previous_ordinal": 85,
+          "current_ordinal": 60,
+          "previous_level": null,
+          "current_level": "mixed — partial or unverified evidence"
+        },
+        {
+          "axis": "experience",
+          "previous_ordinal": 85,
+          "current_ordinal": 60,
+          "previous_level": null,
+          "current_level": "mixed — partial or unverified evidence"
+        },
+        {
+          "axis": "physics",
+          "previous_ordinal": 85,
+          "current_ordinal": 60,
+          "previous_level": null,
+          "current_level": "mixed — partial or unverified evidence"
+        },
+        {
+          "axis": "quality",
+          "previous_ordinal": 85,
+          "current_ordinal": 60,
+          "previous_level": null,
+          "current_level": "mixed — partial or unverified evidence"
+        }
+      ]
+    },
+    "pass": false
+  }
+}

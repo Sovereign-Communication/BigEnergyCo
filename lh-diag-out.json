@@ -1,0 +1,120 @@
+{
+  "mobile": {
+    "score": 83,
+    "fcp": "3.1 s",
+    "lcp": "3.1 s",
+    "cls": "0.121",
+    "tbt": "70 ms",
+    "speedIndex": "3.1 s",
+    "lcpBreakdown": {
+      "type": "table",
+      "headings": [
+        {
+          "key": "label",
+          "valueType": "text",
+          "label": "Subpart"
+        },
+        {
+          "key": "duration",
+          "valueType": "ms",
+          "label": "Duration"
+        }
+      ],
+      "items": [
+        {
+          "subpart": "timeToFirstByte",
+          "label": "Time to first byte",
+          "duration": 11.567000122070313
+        },
+        {
+          "subpart": "elementRenderDelay",
+          "label": "Element render delay",
+          "duration": 287.3089998779297
+        }
+      ]
+    },
+    "insights": {},
+    "wastedMs": 1050,
+    "bootup": [
+      {
+        "url": "http://127.0.0.1:8123/",
+        "total": 1177.552,
+        "scripting": 4.300000000000001,
+        "scriptParseCompile": 0.544
+      },
+      {
+        "url": "Unattributable",
+        "total": 331.8680000000005,
+        "scripting": 5.32,
+        "scriptParseCompile": 0
+      },
+      {
+        "url": "http://127.0.0.1:8123/assets/js/sizing/ui.js?v=20260930b",
+        "total": 137.84000000000006,
+        "scripting": 124.13600000000005,
+        "scriptParseCompile": 5.224
+      }
+    ],
+    "networkRtt": null,
+    "mainThread": "1.8 s"
+  },
+  "desktop": {
+    "score": 56,
+    "fcp": "4.7 s",
+    "lcp": "6.6 s",
+    "cls": "0.004",
+    "tbt": "30 ms",
+    "speedIndex": "4.7 s",
+    "lcpBreakdown": {
+      "type": "table",
+      "headings": [
+        {
+          "key": "label",
+          "valueType": "text",
+          "label": "Subpart"
+        },
+        {
+          "key": "duration",
+          "valueType": "ms",
+          "label": "Duration"
+        }
+      ],
+      "items": [
+        {
+          "subpart": "timeToFirstByte",
+          "label": "Time to first byte",
+          "duration": 6.397
+        },
+        {
+          "subpart": "elementRenderDelay",
+          "label": "Element render delay",
+          "duration": 437.617
+        }
+      ]
+    },
+    "insights": {},
+    "wastedMs": 1360,
+    "bootup": [
+      {
+        "url": "http://127.0.0.1:8123/",
+        "total": 1041.6000000000001,
+        "scripting": 5.448,
+        "scriptParseCompile": 0.756
+      },
+      {
+        "url": "Unattributable",
+        "total": 306.65600000000023,
+        "scripting": 9.172,
+        "scriptParseCompile": 0
+      },
+      {
+        "url": "http://127.0.0.1:8123/assets/js/sizing/ui.js?v=20260930b",
+        "total": 123.78800000000003,
+        "scripting": 114.46800000000002,
+        "scriptParseCompile": 2.916
+      }
+    ],
+    "networkRtt": null,
+    "mainThread": "1.5 s"
+  }
+}

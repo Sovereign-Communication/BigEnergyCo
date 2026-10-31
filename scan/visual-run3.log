@@ -1,0 +1,41 @@
+visual (plan Q-09) — 32 of 32 snapshots, engine chromium, threshold 0.10% of pixels
+baseline .quality-evidence\visual-baseline
+
+cell                          status    detail
+home/320/none/ltr             ok        0/3518080 px = 0.0000%  (1967ms)
+home/320/none/rtl             ok        0/3445120 px = 0.0000%  (1891ms)
+home/390/none/ltr             ok        0/3802500 px = 0.0000%  (1886ms)
+home/390/none/rtl             ok        0/3725280 px = 0.0000%  (1927ms)
+home/768/none/ltr             ok        0/5214720 px = 0.0000%  (2039ms)
+home/768/none/rtl             ok        0/5194752 px = 0.0000%  (2020ms)
+home/1440/none/ltr            ok        0/8046720 px = 0.0000%  (2337ms)
+home/1440/none/rtl            ok        0/8046720 px = 0.0000%  (2276ms)
+heatmap/320/none/ltr          unstable  74491/1443200 px = 5.1615% — MEASURED, not gated: heatmap is declared unreproducible  (1862ms)
+heatmap/390/none/ltr          unstable  0/1509690 px = 0.0000% — MEASURED, not gated: heatmap is declared unreproducible  (1825ms)
+heatmap/768/none/ltr          unstable  0/2134272 px = 0.0000% — MEASURED, not gated: heatmap is declared unreproducible  (1872ms)
+heatmap/1440/none/ltr         unstable  0/3339360 px = 0.0000% — MEASURED, not gated: heatmap is declared unreproducible  (2053ms)
+about/320/none/ltr            ok        0/1478400 px = 0.0000%  (1590ms)
+about/390/none/ltr            ok        0/1558440 px = 0.0000%  (1537ms)
+about/768/none/ltr            ok        0/2007552 px = 0.0000%  (1539ms)
+about/1440/none/ltr           ok        0/3612960 px = 0.0000%  (1661ms)
+blog-index/320/none/ltr       ok        0/2050560 px = 0.0000%  (1741ms)
+blog-index/390/none/ltr       ok        0/2175030 px = 0.0000%  (1703ms)
+blog-index/768/none/ltr       ok        0/2675712 px = 0.0000%  (1694ms)
+blog-index/1440/none/ltr      ok        0/4079520 px = 0.0000%  (1810ms)
+blog-post/320/none/ltr        ok        0/7920640 px = 0.0000%  (2134ms)
+blog-post/390/none/ltr        ok        0/7876830 px = 0.0000%  (2154ms)
+blog-post/768/none/ltr        ok        0/9399552 px = 0.0000%  (2157ms)
+blog-post/1440/none/ltr       ok        0/16195680 px = 0.0000%  (2567ms)
+404/320/none/ltr              ok        0/298240 px = 0.0000%  (1423ms)
+404/390/none/ltr              ok        0/363480 px = 0.0000%  (1399ms)
+404/768/none/ltr              ok        0/715776 px = 0.0000%  (1414ms)
+404/1440/none/ltr             ok        0/1342080 px = 0.0000%  (1470ms)
+city/320/none/ltr             ok        0/1578240 px = 0.0000%  (1508ms)
+city/390/none/ltr             ok        0/1639170 px = 0.0000%  (1530ms)
+city/768/none/ltr             ok        0/2329344 px = 0.0000%  (1538ms)
+city/1440/none/ltr            ok        0/4253760 px = 0.0000%  (1630ms)
+
+wrote C:/tmp/scan/visual-run3.json
+
+VISUAL OK: 32 snapshots, 0 new, 4 measured-not-gated, 0 unapproved diffs (> 0.10%)
+run3 exit=0

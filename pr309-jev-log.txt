@@ -1,0 +1,316 @@
+﻿jev-complete	Set up job	﻿2026-10-24T04:22:55.7868804Z Current runner version: '2.338.0'
+jev-complete	Set up job	2026-10-24T04:22:55.7894099Z ##[group]Runner Image Provisioner
+jev-complete	Set up job	2026-10-24T04:22:55.7895046Z Hosted Compute Agent
+jev-complete	Set up job	2026-10-24T04:22:55.7896028Z Version: 20261012.601
+jev-complete	Set up job	2026-10-24T04:22:55.7896779Z Commit: f3dc54e1fb89da6852db922499a0233137369e1d
+jev-complete	Set up job	2026-10-24T04:22:55.7897511Z Build Date: 2026-10-12T17:48:21Z
+jev-complete	Set up job	2026-10-24T04:22:55.7898277Z Worker ID: {09f88c00-e192-432e-ab85-4e793309e328}
+jev-complete	Set up job	2026-10-24T04:22:55.7899025Z Region: westus3
+jev-complete	Set up job	2026-10-24T04:22:55.7899671Z Cloud: Azure
+jev-complete	Set up job	2026-10-24T04:22:55.7900235Z ##[endgroup]
+jev-complete	Set up job	2026-10-24T04:22:55.7902045Z ##[group]Operating System
+jev-complete	Set up job	2026-10-24T04:22:55.7902818Z Ubuntu
+jev-complete	Set up job	2026-10-24T04:22:55.7903386Z 24.04.5
+jev-complete	Set up job	2026-10-24T04:22:55.7903949Z LTS
+jev-complete	Set up job	2026-10-24T04:22:55.7904525Z ##[endgroup]
+jev-complete	Set up job	2026-10-24T04:22:55.7905065Z ##[group]Runner Image
+jev-complete	Set up job	2026-10-24T04:22:55.7906014Z Image: ubuntu-24.04
+jev-complete	Set up job	2026-10-24T04:22:55.7906628Z Version: 20261012.334.1
+jev-complete	Set up job	2026-10-24T04:22:55.7907742Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261012.334/images/ubuntu/Ubuntu2404-Readme.md
+jev-complete	Set up job	2026-10-24T04:22:55.7909510Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261012.334
+jev-complete	Set up job	2026-10-24T04:22:55.7910581Z ##[endgroup]
+jev-complete	Set up job	2026-10-24T04:22:55.7911687Z ##[group]GITHUB_TOKEN Permissions
+jev-complete	Set up job	2026-10-24T04:22:55.7913598Z Contents: read
+jev-complete	Set up job	2026-10-24T04:22:55.7914314Z Metadata: read
+jev-complete	Set up job	2026-10-24T04:22:55.7915001Z ##[endgroup]
+jev-complete	Set up job	2026-10-24T04:22:55.7917482Z Secret source: Actions
+jev-complete	Set up job	2026-10-24T04:22:55.7918550Z Cache mode: write
+jev-complete	Set up job	2026-10-24T04:22:55.7919251Z Prepare workflow directory
+jev-complete	Set up job	2026-10-24T04:22:55.8296140Z Prepare all required actions
+jev-complete	Set up job	2026-10-24T04:22:55.8344192Z Getting action download info
+jev-complete	Set up job	2026-10-24T04:22:56.1791570Z Download action repository 'actions/checkout@v7' (SHA:3d3c42e5aac5ba805825da76410c181273ba90b1)
+jev-complete	Set up job	2026-10-24T04:22:56.2925395Z Download action repository 'actions/setup-node@v7' (SHA:949feb2413d6458794dcd2491c4babbbce0c15c1)
+jev-complete	Set up job	2026-10-24T04:22:57.1344147Z Download action repository 'actions/download-artifact@v8' (SHA:9000827ccba6bdab643e8b6fd33ac0654aef8333)
+jev-complete	Set up job	2026-10-24T04:22:57.8100631Z Download action repository 'actions/upload-artifact@v7' (SHA:cf430e030ddbb5b0abf93d22962f4752f3646cd9)
+jev-complete	Set up job	2026-10-24T04:22:58.6722155Z Complete job name: jev-complete
+jev-complete	Run actions/checkout@v7	﻿2026-10-24T04:22:58.7609625Z ##[group]Run actions/checkout@v7
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:58.7610427Z with:
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:58.7610910Z   ref: refs/pull/309/merge
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:58.7611373Z   repository: Sovereign-Communication/BigEnergyCo
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:58.7614017Z   token: ***
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:58.7614342Z   ssh-strict: true
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:58.7614716Z   ssh-user: git
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:58.7615090Z   persist-credentials: true
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:58.7615427Z   clean: true
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:58.7615981Z   sparse-checkout-cone-mode: true
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:58.7616404Z   fetch-depth: 1
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:58.7616750Z   fetch-tags: false
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:58.7617156Z   show-progress: true
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:58.7617462Z   lfs: false
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:58.7617781Z   submodules: false
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:58.7618138Z   set-safe-directory: true
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:58.7618508Z   allow-unsafe-pr-checkout: false
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:58.7619228Z ##[endgroup]
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:58.8723352Z Syncing repository: Sovereign-Communication/BigEnergyCo
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:58.8726838Z ##[group]Getting Git version info
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:58.8728022Z Working directory is '/home/runner/work/BigEnergyCo/BigEnergyCo'
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:58.8729653Z [command]/usr/bin/git version
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:58.8779238Z git version 2.55.0
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:58.8811950Z ##[endgroup]
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:58.8930871Z Temporarily overriding HOME='/home/runner/work/_temp/f19c8760-f8ff-4f7b-9623-429ff14da4d5' before making global git config changes
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:58.8932974Z Adding repository directory to the temporary git global config as a safe directory
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:58.8934819Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/BigEnergyCo/BigEnergyCo
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:58.8938328Z Deleting the contents of '/home/runner/work/BigEnergyCo/BigEnergyCo'
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:58.8940476Z ##[group]Determining repository object format
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:59.2927190Z ##[endgroup]
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:59.2928143Z ##[group]Initializing the repository
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:59.2938311Z [command]/usr/bin/git init /home/runner/work/BigEnergyCo/BigEnergyCo
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:59.3063667Z hint: Using 'master' as the name for the initial branch. This default branch name
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:59.3064703Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:59.3065607Z hint: to use in all of your new repositories, which will suppress this warning,
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:59.3066975Z hint: call:
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:59.3067310Z hint:
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:59.3067648Z hint: 	git config --global init.defaultBranch <name>
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:59.3067993Z hint:
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:59.3068316Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:59.3068854Z hint: 'development'. The just-created branch can be renamed via this command:
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:59.3069265Z hint:
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:59.3069506Z hint: 	git branch -m <name>
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:59.3069763Z hint:
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:59.3070111Z hint: Disable this message with "git config set advice.defaultBranchName false"
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:59.3075111Z Initialized empty Git repository in /home/runner/work/BigEnergyCo/BigEnergyCo/.git/
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:59.3086542Z [command]/usr/bin/git remote add origin https://github.com/Sovereign-Communication/BigEnergyCo
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:59.3149484Z ##[endgroup]
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:59.3150288Z ##[group]Disabling automatic garbage collection
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:59.3154751Z [command]/usr/bin/git config --local gc.auto 0
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:59.3195507Z ##[endgroup]
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:59.3196414Z ##[group]Setting up auth
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:59.3196912Z Removing SSH command configuration
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:59.3203929Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:59.3258971Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:59.3607530Z Removing HTTP extra header
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:59.3612985Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:59.3651753Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:59.3878624Z Removing includeIf entries pointing to credentials config files
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:59.3883997Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:59.3923445Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:59.4167069Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-1cc006e6-87b4-4459-8eb9-0e6f72d2e894.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:59.4218863Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/BigEnergyCo/BigEnergyCo/.git.path /home/runner/work/_temp/git-credentials-1cc006e6-87b4-4459-8eb9-0e6f72d2e894.config
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:59.4257777Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/BigEnergyCo/BigEnergyCo/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-1cc006e6-87b4-4459-8eb9-0e6f72d2e894.config
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:59.4300284Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-1cc006e6-87b4-4459-8eb9-0e6f72d2e894.config
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:59.4339470Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-1cc006e6-87b4-4459-8eb9-0e6f72d2e894.config
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:59.4374448Z ##[endgroup]
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:59.4375060Z ##[group]Fetching the repository
+jev-complete	Run actions/checkout@v7	2026-10-24T04:22:59.4382555Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +refs/pull/309/merge:refs/remotes/pull/309/merge
+jev-complete	Run actions/checkout@v7	2026-10-24T04:23:00.9053020Z From https://github.com/Sovereign-Communication/BigEnergyCo
+jev-complete	Run actions/checkout@v7	2026-10-24T04:23:00.9053741Z  * [new ref]         refs/pull/309/merge -> pull/309/merge
+jev-complete	Run actions/checkout@v7	2026-10-24T04:23:00.9058208Z ##[endgroup]
+jev-complete	Run actions/checkout@v7	2026-10-24T04:23:00.9058678Z ##[group]Determining the checkout info
+jev-complete	Run actions/checkout@v7	2026-10-24T04:23:00.9059744Z ##[endgroup]
+jev-complete	Run actions/checkout@v7	2026-10-24T04:23:00.9067507Z [command]/usr/bin/git sparse-checkout disable
+jev-complete	Run actions/checkout@v7	2026-10-24T04:23:00.9127231Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+jev-complete	Run actions/checkout@v7	2026-10-24T04:23:00.9167452Z ##[group]Checking out the ref
+jev-complete	Run actions/checkout@v7	2026-10-24T04:23:00.9173184Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/309/merge
+jev-complete	Run actions/checkout@v7	2026-10-24T04:23:01.0223224Z Note: switching to 'refs/remotes/pull/309/merge'.
+jev-complete	Run actions/checkout@v7	2026-10-24T04:23:01.0226834Z 
+jev-complete	Run actions/checkout@v7	2026-10-24T04:23:01.0227344Z You are in 'detached HEAD' state. You can look around, make experimental
+jev-complete	Run actions/checkout@v7	2026-10-24T04:23:01.0228242Z changes and commit them, and you can discard any commits you make in this
+jev-complete	Run actions/checkout@v7	2026-10-24T04:23:01.0229419Z state without impacting any branches by switching back to a branch.
+jev-complete	Run actions/checkout@v7	2026-10-24T04:23:01.0230244Z 
+jev-complete	Run actions/checkout@v7	2026-10-24T04:23:01.0231220Z If you want to create a new branch to retain commits you create, you may
+jev-complete	Run actions/checkout@v7	2026-10-24T04:23:01.0232100Z do so (now or later) by using -c with the switch command. Example:
+jev-complete	Run actions/checkout@v7	2026-10-24T04:23:01.0232547Z 
+jev-complete	Run actions/checkout@v7	2026-10-24T04:23:01.0232767Z   git switch -c <new-branch-name>
+jev-complete	Run actions/checkout@v7	2026-10-24T04:23:01.0233008Z 
+jev-complete	Run actions/checkout@v7	2026-10-24T04:23:01.0233132Z Or undo this operation with:
+jev-complete	Run actions/checkout@v7	2026-10-24T04:23:01.0233324Z 
+jev-complete	Run actions/checkout@v7	2026-10-24T04:23:01.0233417Z   git switch -
+jev-complete	Run actions/checkout@v7	2026-10-24T04:23:01.0233870Z 
+jev-complete	Run actions/checkout@v7	2026-10-24T04:23:01.0234231Z Turn off this advice by setting config variable advice.detachedHead to false
+jev-complete	Run actions/checkout@v7	2026-10-24T04:23:01.0234848Z 
+jev-complete	Run actions/checkout@v7	2026-10-24T04:23:01.0235958Z HEAD is now at 0f208a1 Merge a8041a6fb59998c632774b7bc808804f978930bc into 3b3888de274800325469e88e1cd3d4e724c532ba
+jev-complete	Run actions/checkout@v7	2026-10-24T04:23:01.0238762Z ##[endgroup]
+jev-complete	Run actions/checkout@v7	2026-10-24T04:23:01.0298957Z [command]/usr/bin/git log -1 --format=%H
+jev-complete	Run actions/checkout@v7	2026-10-24T04:23:01.0333086Z 0f208a132a9000fede5c83df918a2b4446357788
+jev-complete	Setup Node	﻿2026-10-24T04:23:01.0617740Z ##[group]Run actions/setup-node@v7
+jev-complete	Setup Node	2026-10-24T04:23:01.0618100Z with:
+jev-complete	Setup Node	2026-10-24T04:23:01.0618327Z   node-version: 22
+jev-complete	Setup Node	2026-10-24T04:23:01.0618554Z   check-latest: false
+jev-complete	Setup Node	2026-10-24T04:23:01.0620955Z   token: ***
+jev-complete	Setup Node	2026-10-24T04:23:01.0621192Z   package-manager-cache: true
+jev-complete	Setup Node	2026-10-24T04:23:01.0621456Z ##[endgroup]
+jev-complete	Setup Node	2026-10-24T04:23:01.1940426Z Found in cache @ /opt/hostedtoolcache/node/22.23.3/x64
+jev-complete	Setup Node	2026-10-24T04:23:01.2889954Z ##[group]Environment details
+jev-complete	Setup Node	2026-10-24T04:23:01.6157506Z node: v22.23.3
+jev-complete	Setup Node	2026-10-24T04:23:01.6157978Z npm: 10.9.9
+jev-complete	Setup Node	2026-10-24T04:23:01.6158326Z yarn: 1.22.22
+jev-complete	Setup Node	2026-10-24T04:23:01.6159118Z ##[endgroup]
+jev-complete	Download the jobs' real results	﻿2026-10-24T04:23:01.6328995Z ##[group]Run actions/download-artifact@v8
+jev-complete	Download the jobs' real results	2026-10-24T04:23:01.6329314Z with:
+jev-complete	Download the jobs' real results	2026-10-24T04:23:01.6329524Z   pattern: jev-results-*
+jev-complete	Download the jobs' real results	2026-10-24T04:23:01.6329809Z   path: /home/runner/work/_temp/jev-artifacts
+jev-complete	Download the jobs' real results	2026-10-24T04:23:01.6330104Z   merge-multiple: true
+jev-complete	Download the jobs' real results	2026-10-24T04:23:01.6330376Z   repository: Sovereign-Communication/BigEnergyCo
+jev-complete	Download the jobs' real results	2026-10-24T04:23:01.6330684Z   run-id: 40061526663
+jev-complete	Download the jobs' real results	2026-10-24T04:23:01.6330901Z   skip-decompress: false
+jev-complete	Download the jobs' real results	2026-10-24T04:23:01.6331130Z   digest-mismatch: error
+jev-complete	Download the jobs' real results	2026-10-24T04:23:01.6331359Z ##[endgroup]
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.0202337Z Found 14 artifact(s)
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.0203532Z Filtering artifacts by pattern 'jev-results-*'
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.0221519Z Preparing to download the following artifacts:
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.0223211Z - jev-results-web-smoke (ID: 12548375122, Size: 294, Expected Digest: sha256:597e7faf0c2cca9e9e3365398a0490bfdcc87018899bfc34f0d00dfe48238ac3)
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.0225638Z - jev-results-usecases-smoke-report (ID: 12548131206, Size: 2058, Expected Digest: sha256:cb5461c75b3c72fb495f97df68882b79aad6cfbeae5f8450ad6301e8ffbe2ce6)
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.0228373Z - jev-results-lighthouse-report (ID: 12548125745, Size: 6197, Expected Digest: sha256:645151382b15e0affe12d747297450acdb4619642fe7fa6b63234c8222160844)
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.0231416Z - jev-results-byte-budgets (ID: 12548051274, Size: 3446, Expected Digest: sha256:7ae83d70c04d84fa79ab7b08fc60e3f38b2b8cdd21b249e9d4b30518d5ded96a)
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.0234017Z - jev-results-a11y-controls (ID: 12547966458, Size: 1311, Expected Digest: sha256:c122f9bb3ff2b97ee9f014ca2912f08bd84d575b070a99d5b693345e78d6c1c0)
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.0236850Z - jev-results-a11y-matrix (ID: 12547870933, Size: 1698, Expected Digest: sha256:69eaa6971a79b6e6742190f05d7ff892a59c8d4e3680b12bbccefe8b2587ae5a)
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.0239192Z - jev-results-test (ID: 12547866254, Size: 285, Expected Digest: sha256:409fc9e7895afdd0547592b7103d968f69b421d4d92bd225b02240d1732ca2f2)
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.0241404Z - jev-results-privacy-browser (ID: 12547836988, Size: 788, Expected Digest: sha256:ee0ae3c74fbf8baec5923a86017e83ec0787e5cfcef63378e32844d9b46a53cf)
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.0243779Z - jev-results-resilience-report (ID: 12547727363, Size: 2853, Expected Digest: sha256:b3544186cab3a6ca53090e0b878f4cabf63f469ae0c98e8b18f43c2bf829cc2b)
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.0246457Z - jev-results-coverage (ID: 12547652071, Size: 210, Expected Digest: sha256:1cc62ccd04cc983f9d267428e754a00c52811fb0c4da5936c75584f2c55a3800)
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.0248847Z - jev-results-quality-lab (ID: 12547597141, Size: 228, Expected Digest: sha256:039efd897dda99dc04ab096ff6be671e47e082b38e51eccc6a19bb42927d8a32)
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.0251347Z - jev-results-experience-report (ID: 12547464255, Size: 183902, Expected Digest: sha256:83fbd5ef1af4fd9104a72ab7e56589c84bb13e5de303d5f43090fbf158195557)
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.0253866Z - jev-results-quality-evidence (ID: 12547284158, Size: 235, Expected Digest: sha256:e64f6b829798bc7fb6adafe0357cfc396a0e195e60a53a96cd398e4905a06d67)
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.0256500Z - jev-results-lighthouse (ID: 12547244866, Size: 215, Expected Digest: sha256:a387bb8862570ab0842ab191c3a71820ddea5618f835b9f706d2f6d7918f1756)
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.4902571Z Redirecting to blob download url: https://productionresultssa10.blob.core.windows.net/actions-results/b29e4e76-7190-8de0-b946-ae15f02b0e00/workflow-job-run-2edc5085-28ac-530d-98e1-cf8e49eb178a/artifacts/be463a882f10652b64809e40f54dd9022d3808c1cf4cee97a0be07da45b1ff5f.zip
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.4904415Z Starting download of artifact to: /home/runner/work/_temp/jev-artifacts
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.4920836Z Redirecting to blob download url: https://productionresultssa10.blob.core.windows.net/actions-results/b29e4e76-7190-8de0-b946-ae15f02b0e00/workflow-job-run-509c76e4-bba2-5439-b7ea-38ff0984e104/artifacts/da05e2d1a9196749b155ff0cc55b92a46db7bbfe1ce38c6f405a854199b840f2.zip
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.4922518Z Starting download of artifact to: /home/runner/work/_temp/jev-artifacts
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.4934844Z Redirecting to blob download url: https://productionresultssa10.blob.core.windows.net/actions-results/b29e4e76-7190-8de0-b946-ae15f02b0e00/workflow-job-run-2edc5085-28ac-530d-98e1-cf8e49eb178a/artifacts/38470edb3869623c8c61fb89a88809bf0a97a3c9315788246c296dcdfc8655d7.zip
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.4937060Z Starting download of artifact to: /home/runner/work/_temp/jev-artifacts
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.4946631Z Redirecting to blob download url: https://productionresultssa10.blob.core.windows.net/actions-results/b29e4e76-7190-8de0-b946-ae15f02b0e00/workflow-job-run-2edc5085-28ac-530d-98e1-cf8e49eb178a/artifacts/644a89e432459920077e09ec6c7489bedf3fb6ca596731a1405f88a0ffc9b2fc.zip
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.4948932Z Starting download of artifact to: /home/runner/work/_temp/jev-artifacts
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.4965891Z Redirecting to blob download url: https://productionresultssa10.blob.core.windows.net/actions-results/b29e4e76-7190-8de0-b946-ae15f02b0e00/workflow-job-run-02632819-2d47-5ff5-80b0-39af4083d08f/artifacts/6c469ab4bc807bfae6ff2caab5db0e6d03f69e507c17061091cd77599b8b857a.zip
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.4968717Z Starting download of artifact to: /home/runner/work/_temp/jev-artifacts
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.4974309Z Redirecting to blob download url: https://productionresultssa10.blob.core.windows.net/actions-results/b29e4e76-7190-8de0-b946-ae15f02b0e00/workflow-job-run-2edc5085-28ac-530d-98e1-cf8e49eb178a/artifacts/23b8224e301f64ff3459fa01f2f4b3fcf9ab8b8228f1fc635b81022585c584a0.zip
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.4977874Z Starting download of artifact to: /home/runner/work/_temp/jev-artifacts
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.4990687Z Redirecting to blob download url: https://productionresultssa10.blob.core.windows.net/actions-results/b29e4e76-7190-8de0-b946-ae15f02b0e00/workflow-job-run-2edc5085-28ac-530d-98e1-cf8e49eb178a/artifacts/b854953c7bedd7a70ced9456e3f437800d81fdc37ee3fce984298fbae37fc12a.zip
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.4992929Z Starting download of artifact to: /home/runner/work/_temp/jev-artifacts
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.5004197Z Redirecting to blob download url: https://productionresultssa10.blob.core.windows.net/actions-results/b29e4e76-7190-8de0-b946-ae15f02b0e00/workflow-job-run-2edc5085-28ac-530d-98e1-cf8e49eb178a/artifacts/b2e8b18259fa7e10e3db02cd7b5ef0b8aa9f79180f99f0b99b5fe60ccd626bd2.zip
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.5006589Z Starting download of artifact to: /home/runner/work/_temp/jev-artifacts
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.5018311Z Redirecting to blob download url: https://productionresultssa10.blob.core.windows.net/actions-results/b29e4e76-7190-8de0-b946-ae15f02b0e00/workflow-job-run-af2907ef-09d9-54b3-9f8d-d1b7aad69200/artifacts/323cdc2586e375e4739af959f6dd1a9a42f944c0471a4c7252f5e5007d50fa7c.zip
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.5021272Z Starting download of artifact to: /home/runner/work/_temp/jev-artifacts
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.5035356Z Redirecting to blob download url: https://productionresultssa10.blob.core.windows.net/actions-results/b29e4e76-7190-8de0-b946-ae15f02b0e00/workflow-job-run-4565dd47-241d-56ab-baab-9413566378d6/artifacts/37361026aca3a52e31ada0ff7e754db4a33c753f699ae885b0b3db0fbd35f4d8.zip
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.5038525Z Starting download of artifact to: /home/runner/work/_temp/jev-artifacts
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.5052832Z Redirecting to blob download url: https://productionresultssa10.blob.core.windows.net/actions-results/b29e4e76-7190-8de0-b946-ae15f02b0e00/workflow-job-run-4565dd47-241d-56ab-baab-9413566378d6/artifacts/10f124856e049339df818e4f9aa8aadd39544de141e4b7f3a28281749a9676f9.zip
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.5055662Z Starting download of artifact to: /home/runner/work/_temp/jev-artifacts
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.5062200Z Redirecting to blob download url: https://productionresultssa10.blob.core.windows.net/actions-results/b29e4e76-7190-8de0-b946-ae15f02b0e00/workflow-job-run-57152fae-0a36-591c-a562-a00af8fb1c26/artifacts/35a011663dd60d43cb5fcd7fa8f7c69a94fe410ed3949c8c0644f2f21326d9ba.zip
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.5064515Z Starting download of artifact to: /home/runner/work/_temp/jev-artifacts
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.5081190Z Redirecting to blob download url: https://productionresultssa10.blob.core.windows.net/actions-results/b29e4e76-7190-8de0-b946-ae15f02b0e00/workflow-job-run-509c76e4-bba2-5439-b7ea-38ff0984e104/artifacts/20894254180d7670770093fdd4461118e8b46736acdac84e8c11aa98fa4f60dd.zip
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.5084351Z Starting download of artifact to: /home/runner/work/_temp/jev-artifacts
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.5092000Z Redirecting to blob download url: https://productionresultssa10.blob.core.windows.net/actions-results/b29e4e76-7190-8de0-b946-ae15f02b0e00/workflow-job-run-2edc5085-28ac-530d-98e1-cf8e49eb178a/artifacts/62c32c719382451d5fbda729e4972479f65da514941cf0eefa764ca1b30d32ce.zip
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.5093606Z Starting download of artifact to: /home/runner/work/_temp/jev-artifacts
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.7187435Z (node:2366) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.7190212Z (Use `node --trace-deprecation ...` to show where the warning was created)
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.7343827Z SHA256 digest of downloaded artifact is ee0ae3c74fbf8baec5923a86017e83ec0787e5cfcef63378e32844d9b46a53cf
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.7375597Z Artifact download completed successfully.
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.7377757Z SHA256 digest of downloaded artifact is 7ae83d70c04d84fa79ab7b08fc60e3f38b2b8cdd21b249e9d4b30518d5ded96a
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.7378938Z Artifact download completed successfully.
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.7380248Z SHA256 digest of downloaded artifact is 597e7faf0c2cca9e9e3365398a0490bfdcc87018899bfc34f0d00dfe48238ac3
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.7381469Z Artifact download completed successfully.
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.7382847Z SHA256 digest of downloaded artifact is 039efd897dda99dc04ab096ff6be671e47e082b38e51eccc6a19bb42927d8a32
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.7384077Z Artifact download completed successfully.
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.7385425Z SHA256 digest of downloaded artifact is b3544186cab3a6ca53090e0b878f4cabf63f469ae0c98e8b18f43c2bf829cc2b
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.7386982Z Artifact download completed successfully.
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.7388301Z SHA256 digest of downloaded artifact is 409fc9e7895afdd0547592b7103d968f69b421d4d92bd225b02240d1732ca2f2
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.7389549Z Artifact download completed successfully.
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.7390892Z SHA256 digest of downloaded artifact is 69eaa6971a79b6e6742190f05d7ff892a59c8d4e3680b12bbccefe8b2587ae5a
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.7392129Z Artifact download completed successfully.
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.7393528Z SHA256 digest of downloaded artifact is 645151382b15e0affe12d747297450acdb4619642fe7fa6b63234c8222160844
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.7394823Z Artifact download completed successfully.
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.7419313Z SHA256 digest of downloaded artifact is cb5461c75b3c72fb495f97df68882b79aad6cfbeae5f8450ad6301e8ffbe2ce6
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.7422349Z Artifact download completed successfully.
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.7436082Z SHA256 digest of downloaded artifact is c122f9bb3ff2b97ee9f014ca2912f08bd84d575b070a99d5b693345e78d6c1c0
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.7436888Z Artifact download completed successfully.
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.7438237Z SHA256 digest of downloaded artifact is 1cc62ccd04cc983f9d267428e754a00c52811fb0c4da5936c75584f2c55a3800
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.7438990Z Artifact download completed successfully.
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.7456839Z SHA256 digest of downloaded artifact is e64f6b829798bc7fb6adafe0357cfc396a0e195e60a53a96cd398e4905a06d67
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.7457621Z Artifact download completed successfully.
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.7490016Z SHA256 digest of downloaded artifact is a387bb8862570ab0842ab191c3a71820ddea5618f835b9f706d2f6d7918f1756
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.7490886Z Artifact download completed successfully.
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.8779029Z SHA256 digest of downloaded artifact is 83fbd5ef1af4fd9104a72ab7e56589c84bb13e5de303d5f43090fbf158195557
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.8780426Z Artifact download completed successfully.
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.8781249Z Total of 14 artifact(s) downloaded
+jev-complete	Download the jobs' real results	2026-10-24T04:23:02.8785388Z Download artifact has finished successfully
+jev-complete	Build the evidence from those results (fails closed)	﻿2026-10-24T04:23:02.8924938Z ##[group]Run node scripts/build-jev-evidence.mjs \
+jev-complete	Build the evidence from those results (fails closed)	2026-10-24T04:23:02.8925511Z ^[[36;1mnode scripts/build-jev-evidence.mjs \^[[0m
+jev-complete	Build the evidence from those results (fails closed)	2026-10-24T04:23:02.8926376Z ^[[36;1m  --artifacts "$RUNNER_TEMP/jev-artifacts" \^[[0m
+jev-complete	Build the evidence from those results (fails closed)	2026-10-24T04:23:02.8926896Z ^[[36;1m  --prose evidence/advisor-and-release.json \^[[0m
+jev-complete	Build the evidence from those results (fails closed)	2026-10-24T04:23:02.8927363Z ^[[36;1m  --out "$RUNNER_TEMP/jev-evidence.json" \^[[0m
+jev-complete	Build the evidence from those results (fails closed)	2026-10-24T04:23:02.8927825Z ^[[36;1m  --sha "a8041a6fb59998c632774b7bc808804f978930bc" \^[[0m
+jev-complete	Build the evidence from those results (fails closed)	2026-10-24T04:23:02.8928254Z ^[[36;1m  --run-id "40061526663" \^[[0m
+jev-complete	Build the evidence from those results (fails closed)	2026-10-24T04:23:02.8928611Z ^[[36;1m  --run-attempt "1" \^[[0m
+jev-complete	Build the evidence from those results (fails closed)	2026-10-24T04:23:02.8928966Z ^[[36;1m  --ref "refs/pull/309/merge" \^[[0m
+jev-complete	Build the evidence from those results (fails closed)	2026-10-24T04:23:02.8929340Z ^[[36;1m  --event "pull_request" \^[[0m
+jev-complete	Build the evidence from those results (fails closed)	2026-10-24T04:23:02.8929773Z ^[[36;1m  --repository "Sovereign-Communication/BigEnergyCo"^[[0m
+jev-complete	Build the evidence from those results (fails closed)	2026-10-24T04:23:02.9179419Z shell: /usr/bin/bash -e {0}
+jev-complete	Build the evidence from those results (fails closed)	2026-10-24T04:23:02.9179908Z ##[endgroup]
+jev-complete	Build the evidence from those results (fails closed)	2026-10-24T04:23:02.9808999Z evidence: /home/runner/work/_temp/jev-evidence.json (ci-generated)
+jev-complete	Build the evidence from those results (fails closed)	2026-10-24T04:23:02.9810870Z build-jev-evidence: 4 problem(s); the evidence is written but the run cannot be trusted:
+jev-complete	Build the evidence from those results (fails closed)	2026-10-24T04:23:02.9812056Z   - step "unit_tests" of job "test" concluded failure, so the run is cut short and tests_green is unproven
+jev-complete	Build the evidence from those results (fails closed)	2026-10-24T04:23:02.9813465Z   - step "hygiene" of job "test" concluded skipped, so the run is cut short and hygiene_clean is unproven
+jev-complete	Build the evidence from those results (fails closed)	2026-10-24T04:23:02.9814322Z   - job "test" concluded failure, so the run is cut short
+jev-complete	Build the evidence from those results (fails closed)	2026-10-24T04:23:02.9814995Z   - job "web-smoke" concluded failure, so the run is cut short
+jev-complete	Build the evidence from those results (fails closed)	2026-10-24T04:23:02.9816147Z required jobs: test web-smoke quality-lab lighthouse quality-evidence coverage
+jev-complete	Build the evidence from those results (fails closed)	2026-10-24T04:23:02.9817425Z records: tests_green=false prettier_clean=true seo_green=true hygiene_clean=false smoke_green=true ci_green=false legacy_gates_green=false
+jev-complete	Build the evidence from those results (fails closed)	2026-10-24T04:23:02.9877785Z ##[error]Process completed with exit code 1.
+jev-complete	Upload the Jev report and its evidence	﻿2026-10-24T04:23:02.9986147Z ##[group]Run actions/upload-artifact@v7
+jev-complete	Upload the Jev report and its evidence	2026-10-24T04:23:02.9986581Z with:
+jev-complete	Upload the Jev report and its evidence	2026-10-24T04:23:02.9986884Z   name: jev-complete-report
+jev-complete	Upload the Jev report and its evidence	2026-10-24T04:23:02.9987416Z   path: /home/runner/work/_temp/jev-report.json
+jev-complete	Upload the Jev report and its evidence	/home/runner/work/_temp/jev-evidence.json
+jev-complete	Upload the Jev report and its evidence	
+jev-complete	Upload the Jev report and its evidence	2026-10-24T04:23:02.9987975Z   if-no-files-found: warn
+jev-complete	Upload the Jev report and its evidence	2026-10-24T04:23:02.9988315Z   retention-days: 30
+jev-complete	Upload the Jev report and its evidence	2026-10-24T04:23:02.9988615Z   compression-level: 6
+jev-complete	Upload the Jev report and its evidence	2026-10-24T04:23:02.9989001Z   overwrite: false
+jev-complete	Upload the Jev report and its evidence	2026-10-24T04:23:02.9989336Z   include-hidden-files: false
+jev-complete	Upload the Jev report and its evidence	2026-10-24T04:23:02.9989662Z   archive: true
+jev-complete	Upload the Jev report and its evidence	2026-10-24T04:23:02.9989939Z ##[endgroup]
+jev-complete	Upload the Jev report and its evidence	2026-10-24T04:23:03.1410076Z Multiple search paths detected. Calculating the least common ancestor of all paths
+jev-complete	Upload the Jev report and its evidence	2026-10-24T04:23:03.1425610Z The least common ancestor is /home/runner/work/_temp. This will be the root directory of the artifact
+jev-complete	Upload the Jev report and its evidence	2026-10-24T04:23:03.1427776Z With the provided path, there will be 1 file uploaded
+jev-complete	Upload the Jev report and its evidence	2026-10-24T04:23:03.1429710Z Artifact name is valid!
+jev-complete	Upload the Jev report and its evidence	2026-10-24T04:23:03.1430591Z Root directory input is valid!
+jev-complete	Upload the Jev report and its evidence	2026-10-24T04:23:03.5007493Z Uploading artifact: jev-complete-report.zip
+jev-complete	Upload the Jev report and its evidence	2026-10-24T04:23:03.5049566Z Beginning upload of artifact content to blob storage
+jev-complete	Upload the Jev report and its evidence	2026-10-24T04:23:03.7713142Z Uploaded bytes 8393
+jev-complete	Upload the Jev report and its evidence	2026-10-24T04:23:03.8377159Z Finished uploading artifact content to blob storage!
+jev-complete	Upload the Jev report and its evidence	2026-10-24T04:23:03.8379016Z SHA256 digest of uploaded artifact is edb2d48176fa575344d7d6cfc1e19f0dd0215e6fd06916d7b850c73930ca9fb7
+jev-complete	Upload the Jev report and its evidence	2026-10-24T04:23:03.8380065Z Finalizing artifact upload
+jev-complete	Upload the Jev report and its evidence	2026-10-24T04:23:04.4190211Z Artifact jev-complete-report successfully finalized. Artifact ID 12547832064
+jev-complete	Upload the Jev report and its evidence	2026-10-24T04:23:04.4191532Z Artifact jev-complete-report has been successfully uploaded! Final size is 8393 bytes. Artifact ID is 12547832064
+jev-complete	Upload the Jev report and its evidence	2026-10-24T04:23:04.4194713Z Artifact download URL: https://github.com/Sovereign-Communication/BigEnergyCo/actions/runs/40061526663/artifacts/12547832064
+jev-complete	Post Run actions/checkout@v7	﻿2026-10-24T04:23:04.4403896Z Post job cleanup.
+jev-complete	Post Run actions/checkout@v7	2026-10-24T04:23:04.5262948Z [command]/usr/bin/git version
+jev-complete	Post Run actions/checkout@v7	2026-10-24T04:23:04.5307959Z git version 2.55.0
+jev-complete	Post Run actions/checkout@v7	2026-10-24T04:23:04.5384910Z Temporarily overriding HOME='/home/runner/work/_temp/d671cf8a-ec08-4b76-969b-faa21cd2f69d' before making global git config changes
+jev-complete	Post Run actions/checkout@v7	2026-10-24T04:23:04.5386910Z Adding repository directory to the temporary git global config as a safe directory
+jev-complete	Post Run actions/checkout@v7	2026-10-24T04:23:04.5388449Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/BigEnergyCo/BigEnergyCo
+jev-complete	Post Run actions/checkout@v7	2026-10-24T04:23:04.5425126Z Removing SSH command configuration
+jev-complete	Post Run actions/checkout@v7	2026-10-24T04:23:04.5433049Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+jev-complete	Post Run actions/checkout@v7	2026-10-24T04:23:04.5477288Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+jev-complete	Post Run actions/checkout@v7	2026-10-24T04:23:04.5747968Z Removing HTTP extra header
+jev-complete	Post Run actions/checkout@v7	2026-10-24T04:23:04.5749224Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+jev-complete	Post Run actions/checkout@v7	2026-10-24T04:23:04.5786892Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+jev-complete	Post Run actions/checkout@v7	2026-10-24T04:23:04.6044659Z Removing includeIf entries pointing to credentials config files
+jev-complete	Post Run actions/checkout@v7	2026-10-24T04:23:04.6052753Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+jev-complete	Post Run actions/checkout@v7	2026-10-24T04:23:04.6087549Z includeif.gitdir:/home/runner/work/BigEnergyCo/BigEnergyCo/.git.path
+jev-complete	Post Run actions/checkout@v7	2026-10-24T04:23:04.6089031Z includeif.gitdir:/home/runner/work/BigEnergyCo/BigEnergyCo/.git/worktrees/*.path
+jev-complete	Post Run actions/checkout@v7	2026-10-24T04:23:04.6090375Z includeif.gitdir:/github/workspace/.git.path
+jev-complete	Post Run actions/checkout@v7	2026-10-24T04:23:04.6091552Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+jev-complete	Post Run actions/checkout@v7	2026-10-24T04:23:04.6099265Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/BigEnergyCo/BigEnergyCo/.git.path
+jev-complete	Post Run actions/checkout@v7	2026-10-24T04:23:04.6135531Z /home/runner/work/_temp/git-credentials-1cc006e6-87b4-4459-8eb9-0e6f72d2e894.config
+jev-complete	Post Run actions/checkout@v7	2026-10-24T04:23:04.6147955Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/BigEnergyCo/BigEnergyCo/.git.path \/home\/runner\/work\/_temp\/git\-credentials\-1cc006e6\-87b4\-4459\-8eb9\-0e6f72d2e894\.config
+jev-complete	Post Run actions/checkout@v7	2026-10-24T04:23:04.6193424Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/BigEnergyCo/BigEnergyCo/.git/worktrees/*.path
+jev-complete	Post Run actions/checkout@v7	2026-10-24T04:23:04.6226831Z /home/runner/work/_temp/git-credentials-1cc006e6-87b4-4459-8eb9-0e6f72d2e894.config
+jev-complete	Post Run actions/checkout@v7	2026-10-24T04:23:04.6236999Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/BigEnergyCo/BigEnergyCo/.git/worktrees/*.path \/home\/runner\/work\/_temp\/git\-credentials\-1cc006e6\-87b4\-4459\-8eb9\-0e6f72d2e894\.config
+jev-complete	Post Run actions/checkout@v7	2026-10-24T04:23:04.6279574Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+jev-complete	Post Run actions/checkout@v7	2026-10-24T04:23:04.6312499Z /github/runner_temp/git-credentials-1cc006e6-87b4-4459-8eb9-0e6f72d2e894.config
+jev-complete	Post Run actions/checkout@v7	2026-10-24T04:23:04.6324241Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path \/github\/runner_temp\/git\-credentials\-1cc006e6\-87b4\-4459\-8eb9\-0e6f72d2e894\.config
+jev-complete	Post Run actions/checkout@v7	2026-10-24T04:23:04.6366843Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+jev-complete	Post Run actions/checkout@v7	2026-10-24T04:23:04.6396960Z /github/runner_temp/git-credentials-1cc006e6-87b4-4459-8eb9-0e6f72d2e894.config
+jev-complete	Post Run actions/checkout@v7	2026-10-24T04:23:04.6406258Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-1cc006e6\-87b4\-4459\-8eb9\-0e6f72d2e894\.config
+jev-complete	Post Run actions/checkout@v7	2026-10-24T04:23:04.6450536Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+jev-complete	Post Run actions/checkout@v7	2026-10-24T04:23:04.6695169Z Removing credentials config '/home/runner/work/_temp/git-credentials-1cc006e6-87b4-4459-8eb9-0e6f72d2e894.config'
+jev-complete	Complete job	﻿2026-10-24T04:23:04.6841222Z Cleaning up orphan processes

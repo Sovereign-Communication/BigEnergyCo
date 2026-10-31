@@ -1,0 +1,25 @@
+truthful tree first: exit 0 (evidence freshness: OK — every stated claim matches the tree)
+
+PLANTED the record's original production sentence, verbatim
+  exit 1 (red as required)
+  named  : yes /states asset stamp 20260925c/
+  first  : FAIL smoke_note states asset stamp 20260925c, but the shipped pages reference 20261005h. A record that names a build other than the one being shipped is wrong however it is worded, and a visitor's cached copy is keyed on this string. A PAST release's stamp belongs in docs/release-ledger.jsonl, where it is dated and no judge reads it as current.
+
+PLANTED a production block that retypes the served stamp
+  exit 1 (red as required)
+  named  : yes /production\.served_stamp is "20260925c", but the probe measured/
+  first  : FAIL production.served_stamp is "20260925c", but the probe measured "20261005h" on pages. The numbers may not be retyped — they come from the measurement.
+
+PLANTED a probe of a tree that is not this one
+  exit 1 (red as required)
+  named  : yes /was measured against tree stamp 20260925c, but this tree ships/
+  first  : FAIL evidence/production-probe.json was measured against tree stamp 20260925c, but this tree ships 20261005h. A probe of another tree backs nothing here — re-run `node scripts/probe-production.mjs`.
+
+PLANTED a production block dated before the probe that measured it
+  exit 1 (red as required)
+  named  : yes /production\.measured_at is 2026-10-01T00:00:00\.000Z, but evidence/
+  first  : FAIL production.measured_at is 2026-10-01T00:00:00.000Z, but evidence/production-probe.json was measured at 2026-10-14T10:08:43.889Z. The block is a view of the measurement, so it may not carry a date of its own.
+
+after revert: exit 0, artifacts byte-identical to before: true
+
+PLANT/RECOVER OK

@@ -1,0 +1,10 @@
+
+> bigenergyco@1.0.0 format:check
+> node scripts/check-format.mjs
+
+npm warn allow-scripts .npmrc allow-scripts setting is being ignored because --allow-scripts was passed on the command line
+Checking formatting...
+[[33mwarn[39m] scripts/build-city-pages.mjs
+[[33mwarn[39m] Code style issues found in the above file. Run Prettier with --write to fix.
+format: FAILED (prettier exited 1) on the tracked tree as the runner sees it.
+        Fix with `npm run format`, then re-run `npm run format:check`.

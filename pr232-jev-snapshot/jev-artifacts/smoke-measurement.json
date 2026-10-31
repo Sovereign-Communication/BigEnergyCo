@@ -1,0 +1,6 @@
+{
+  "measured_by": "scripts/smoke/runtime.mjs gate()",
+  "gates_total": 169,
+  "gates_failed": 0,
+  "gates_passed": 169
+}

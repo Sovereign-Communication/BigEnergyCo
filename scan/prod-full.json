@@ -1,0 +1,17 @@
+{
+  "base": "https://bigenergyco.pages.dev/",
+  "surface": "cloudflare",
+  "budgetMs": 900000,
+  "expectedStamp": "20261005h",
+  "servedStamp": "20261005h",
+  "filesChecked": 366,
+  "matched": 366,
+  "platformRewrites": {
+    "files": 0,
+    "kinds": []
+  },
+  "transientRetries": [],
+  "failures": [],
+  "notes": [],
+  "verified": true
+}

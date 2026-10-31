@@ -1,0 +1,5 @@
+## Plan items
+
+**P0.6 — completion-program evidence**, the plan item that exists for exactly this: audit evidence and its verdicts. P0.6 states that audit evidence PRs name it so the `jev-complete` gate scopes them (facets: `docs`). No other item is delivered here and no threshold moves.
+
+No `LEDGER.jsonl` row: P0.6 is delivered as a program, and its own definition of done is "the evidence PR merged; tracker and queue issues open with verdicts recorded" — this PR plus the #196 and #194 comments are that record, not an `item-done` row.

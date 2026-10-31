@@ -1,0 +1,27 @@
+{
+  "model": "jev-1.13.0",
+  "answers": {
+    "disposition": {
+      "type": "choice",
+      "choice": "kill_as_bounty",
+      "confidence": 1.0,
+      "probabilities": {
+        "kill_as_bounty": 1.0,
+        "graduate": 0.0,
+        "needs_dynamic_test": 0.0
+      }
+    },
+    "product_path_exists": {
+      "type": "noul",
+      "noul": 0.04
+    },
+    "kill_documented": {
+      "type": "noul",
+      "noul": 0.85
+    }
+  },
+  "usage": {
+    "input_tokens": 812,
+    "output_tokens": 87
+  }
+}

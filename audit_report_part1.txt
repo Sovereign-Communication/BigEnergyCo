@@ -1,0 +1,563 @@
+========================================================================================================================
+COMPREHENSIVE BRANCH AUDIT - LAST 7 DAYS (2026-07-25 to 2026-08-01)
+========================================================================================================================
+
+
+A. DETAILED BRANCH ANALYSIS (sorted by date, newest first)
+------------------------------------------------------------------------------------------------------------------------
+
+Branch: audit_system
+  SHA: 9b1d0d68 | Date: 2026-08-01 19:11:49 | Author: Treystu
+  Commits not on main: 9
+    9b1d0d68 audit cont.
+    3926ff27 audit cont.
+    d9599225 audit updates continued
+    5752cd35 audit update + handoff for Freenet Lessons Learned.
+    7425f5d0 audit update
+    5d92d16d audit state update
+    dd2e145d audit system final running
+    a020e79a audit system V2 (dual-pass)
+    ... (1 more)
+  Summary: audit cont.
+  Files changed: 21
+  Verdict: NEEDS-DECISION
+
+Branch: fix/seeding-security-remediation-v040
+  SHA: b268d1df | Date: 2026-07-30 19:42:45 | Author: Treystu
+  Commits not on main: 23
+    b268d1df style: remove leftover merge conflict markers from ledger_entry.rs
+    e1f79737 fix(security): resolve F2, F3, F6, F12 seeding review findings
+    2cacd5ac merge: sync main (Phase 0, 1, 3 fixes) into seeding remediation branch
+    2c18da7f native: GPT primary-driver handoff + Fusion ceiling 0.10
+    a6b7abdb fix: CI clippy + test fixes for remediation chain (Wave 1b gate)
+    51eda87f style: cargo fmt across remediation packets (Wave 1b)
+    31837b68 native: terminal seeding review request (040-S2) + F7 closure
+    b1261fbf swarm: anchor semantics + canonical determinism + threshold completion (Wave 1b/v2b)
+    ... (15 more)
+  Summary: style: remove leftover merge conflict markers from ledger_entry.rs
+  Files changed: 6
+  Verdict: MERGE
+
+Branch: dependabot/github_actions/actions/checkout-7
+  SHA: 63573695 | Date: 2026-07-30 19:34:16 | Author: dependabot[bot]
+  Commits not on main: 1
+    63573695 build(deps): bump actions/checkout from 3 to 7
+  Summary: build(deps): bump actions/checkout from 3 to 7
+  Files changed: 15
+  Verdict: MERGE
+
+Branch: feature/v040-v050-completion-sprint
+  SHA: 93cb43ab | Date: 2026-07-30 08:36:05 | Author: Treystu
+  Commits not on main: 23
+    487589d8 ci(release): add cargo-ndk install step and dynamic Xcode selection
+    55564b4b feat(v0.4.0): sprint branch -- compile fixes, module wiring, release alignment
+    d87d2132 fix(security): update vulnerable log-visualizer npm dependencies
+    9105cc8b fix(security): remove log visualizer DOM injection sinks
+    cb3a2ddc fix(security): replace broad emoji regex ranges with explicit allowlists
+    977e2ec0 ci: restrict workflow token permissions to contents:read
+    93cb43ab style(core): format proptest block in onion.rs for cargo fmt
+    c0c53b4b fix(core): resolve warnings in onion, ratchet, invite, and dial_policy tests
+    ... (15 more)
+  Summary: style(core): format proptest block in onion.rs for cargo fmt
+  Files changed: 25
+  Verdict: MERGE
+
+Branch: gpt/v050-ios-device-install
+  SHA: 2033baf9 | Date: 2026-07-29 12:31:35 | Author: pixiegirlchristy
+  Commits not on main: 25
+    487589d8 ci(release): add cargo-ndk install step and dynamic Xcode selection
+    55564b4b feat(v0.4.0): sprint branch -- compile fixes, module wiring, release alignment
+    d87d2132 fix(security): update vulnerable log-visualizer npm dependencies
+    9105cc8b fix(security): remove log visualizer DOM injection sinks
+    cb3a2ddc fix(security): replace broad emoji regex ranges with explicit allowlists
+    977e2ec0 ci: restrict workflow token permissions to contents:read
+    26e31d31 docs(pqc): PQC-14 protocol spec, residual risk register, and CI workflow hardening (#126)
+    2033baf9 Merge branch 'gpt/v050-ios-release-ready' into gpt/v050-ios-device-install
+    ... (17 more)
+  Summary: Merge branch 'gpt/v050-ios-release-ready' into gpt/v050-ios-device-install
+  Files changed: 31
+  Verdict: MERGE
+
+Branch: gpt/v050-ios-release-ready
+  SHA: 19daff0a | Date: 2026-07-29 12:16:50 | Author: pixiegirlchristy
+  Commits not on main: 21
+    487589d8 ci(release): add cargo-ndk install step and dynamic Xcode selection
+    55564b4b feat(v0.4.0): sprint branch -- compile fixes, module wiring, release alignment
+    d87d2132 fix(security): update vulnerable log-visualizer npm dependencies
+    9105cc8b fix(security): remove log visualizer DOM injection sinks
+    cb3a2ddc fix(security): replace broad emoji regex ranges with explicit allowlists
+    977e2ec0 ci: restrict workflow token permissions to contents:read
+    26e31d31 docs(pqc): PQC-14 protocol spec, residual risk register, and CI workflow hardening (#126)
+    19daff0a Merge branch 'gpt/ios-test-truth' into gpt/v050-ios-release-ready
+    ... (13 more)
+  Summary: Merge branch 'gpt/ios-test-truth' into gpt/v050-ios-release-ready
+  Files changed: 24
+  Verdict: MERGE
+
+Branch: gpt/ios-test-truth
+  SHA: f739dd86 | Date: 2026-07-29 12:16:06 | Author: pixiegirlchristy
+  Commits not on main: 15
+    487589d8 ci(release): add cargo-ndk install step and dynamic Xcode selection
+    55564b4b feat(v0.4.0): sprint branch -- compile fixes, module wiring, release alignment
+    d87d2132 fix(security): update vulnerable log-visualizer npm dependencies
+    9105cc8b fix(security): remove log visualizer DOM injection sinks
+    cb3a2ddc fix(security): replace broad emoji regex ranges with explicit allowlists
+    977e2ec0 ci: restrict workflow token permissions to contents:read
+    26e31d31 docs(pqc): PQC-14 protocol spec, residual risk register, and CI workflow hardening (#126)
+    f739dd86 fix(ios): isolate outbox retry tests
+    ... (7 more)
+  Summary: fix(ios): isolate outbox retry tests
+  Files changed: 13
+  Verdict: MERGE
+
+Branch: gpt/seeding-f10-remediation
+  SHA: 124ef9c0 | Date: 2026-07-29 12:10:33 | Author: pixiegirlchristy
+  Commits not on main: 36
+    487589d8 ci(release): add cargo-ndk install step and dynamic Xcode selection
+    55564b4b feat(v0.4.0): sprint branch -- compile fixes, module wiring, release alignment
+    d87d2132 fix(security): update vulnerable log-visualizer npm dependencies
+    9105cc8b fix(security): remove log visualizer DOM injection sinks
+    cb3a2ddc fix(security): replace broad emoji regex ranges with explicit allowlists
+    977e2ec0 ci: restrict workflow token permissions to contents:read
+    26e31d31 docs(pqc): PQC-14 protocol spec, residual risk register, and CI workflow hardening (#126)
+    124ef9c0 fix: harden ledger persistence convergence
+    ... (28 more)
+  Summary: fix: harden ledger persistence convergence
+  Files changed: 13
+  Verdict: MERGE
+
+Branch: gpt/npm-security-remediation
+  SHA: 73a2166d | Date: 2026-07-29 12:09:58 | Author: pixiegirlchristy
+  Commits not on main: 9
+    487589d8 ci(release): add cargo-ndk install step and dynamic Xcode selection
+    55564b4b feat(v0.4.0): sprint branch -- compile fixes, module wiring, release alignment
+    d87d2132 fix(security): update vulnerable log-visualizer npm dependencies
+    9105cc8b fix(security): remove log visualizer DOM injection sinks
+    cb3a2ddc fix(security): replace broad emoji regex ranges with explicit allowlists
+    977e2ec0 ci: restrict workflow token permissions to contents:read
+    26e31d31 docs(pqc): PQC-14 protocol spec, residual risk register, and CI workflow hardening (#126)
+    73a2166d fix(repo): recognize log visualizer CRLF endings
+    ... (1 more)
+  Summary: fix(repo): recognize log visualizer CRLF endings
+  Files changed: 3
+  Verdict: MERGE
+
+Branch: gpt/codeql-regex-remediation
+  SHA: a08f729d | Date: 2026-07-29 12:08:20 | Author: pixiegirlchristy
+  Commits not on main: 8
+    487589d8 ci(release): add cargo-ndk install step and dynamic Xcode selection
+    55564b4b feat(v0.4.0): sprint branch -- compile fixes, module wiring, release alignment
+    d87d2132 fix(security): update vulnerable log-visualizer npm dependencies
+    9105cc8b fix(security): remove log visualizer DOM injection sinks
+    cb3a2ddc fix(security): replace broad emoji regex ranges with explicit allowlists
+    977e2ec0 ci: restrict workflow token permissions to contents:read
+    26e31d31 docs(pqc): PQC-14 protocol spec, residual risk register, and CI workflow hardening (#126)
+    a08f729d fix(security): replace broad emoji regex ranges
+  Summary: fix(security): replace broad emoji regex ranges
+  Files changed: 3
+  Verdict: MERGE
+
+Branch: gpt/release-version-truth
+  SHA: 35f8cddf | Date: 2026-07-29 12:05:04 | Author: pixiegirlchristy
+  Commits not on main: 10
+    487589d8 ci(release): add cargo-ndk install step and dynamic Xcode selection
+    55564b4b feat(v0.4.0): sprint branch -- compile fixes, module wiring, release alignment
+    d87d2132 fix(security): update vulnerable log-visualizer npm dependencies
+    9105cc8b fix(security): remove log visualizer DOM injection sinks
+    cb3a2ddc fix(security): replace broad emoji regex ranges with explicit allowlists
+    977e2ec0 ci: restrict workflow token permissions to contents:read
+    26e31d31 docs(pqc): PQC-14 protocol spec, residual risk register, and CI workflow hardening (#126)
+    35f8cddf fix(release): scope signing guard to artifact tasks
+    ... (2 more)
+  Summary: fix(release): scope signing guard to artifact tasks
+  Files changed: 8
+  Verdict: MERGE
+
+Branch: gpt/workflow-least-privilege
+  SHA: c7907aad | Date: 2026-07-29 11:42:38 | Author: pixiegirlchristy
+  Commits not on main: 8
+    487589d8 ci(release): add cargo-ndk install step and dynamic Xcode selection
+    55564b4b feat(v0.4.0): sprint branch -- compile fixes, module wiring, release alignment
+    d87d2132 fix(security): update vulnerable log-visualizer npm dependencies
+    9105cc8b fix(security): remove log visualizer DOM injection sinks
+    cb3a2ddc fix(security): replace broad emoji regex ranges with explicit allowlists
+    977e2ec0 ci: restrict workflow token permissions to contents:read
+    26e31d31 docs(pqc): PQC-14 protocol spec, residual risk register, and CI workflow hardening (#126)
+    c7907aad ci: restrict workflow token permissions
+  Summary: ci: restrict workflow token permissions
+  Files changed: 7
+  Verdict: MERGE
+
+Branch: gpt/security-dom-hardening
+  SHA: 2430249a | Date: 2026-07-29 11:23:20 | Author: pixiegirlchristy
+  Commits not on main: 8
+    487589d8 ci(release): add cargo-ndk install step and dynamic Xcode selection
+    55564b4b feat(v0.4.0): sprint branch -- compile fixes, module wiring, release alignment
+    d87d2132 fix(security): update vulnerable log-visualizer npm dependencies
+    9105cc8b fix(security): remove log visualizer DOM injection sinks
+    cb3a2ddc fix(security): replace broad emoji regex ranges with explicit allowlists
+    977e2ec0 ci: restrict workflow token permissions to contents:read
+    26e31d31 docs(pqc): PQC-14 protocol spec, residual risk register, and CI workflow hardening (#126)
+    2430249a fix(security): remove log visualizer DOM injection sinks
+  Summary: fix(security): remove log visualizer DOM injection sinks
+  Files changed: 6
+  Verdict: MERGE
+
+Branch: gpt/seeding-review
+  SHA: 7221b3d9 | Date: 2026-07-29 11:12:39 | Author: pixiegirlchristy
+  Commits not on main: 21
+    487589d8 ci(release): add cargo-ndk install step and dynamic Xcode selection
+    55564b4b feat(v0.4.0): sprint branch -- compile fixes, module wiring, release alignment
+    d87d2132 fix(security): update vulnerable log-visualizer npm dependencies
+    9105cc8b fix(security): remove log visualizer DOM injection sinks
+    cb3a2ddc fix(security): replace broad emoji regex ranges with explicit allowlists
+    977e2ec0 ci: restrict workflow token permissions to contents:read
+    26e31d31 docs(pqc): PQC-14 protocol spec, residual risk register, and CI workflow hardening (#126)
+    7221b3d9 docs(gpt): wake Windows readiness execution [skip ci]
+    ... (13 more)
+  Summary: docs(gpt): wake Windows readiness execution [skip ci]
+  Files changed: 4
+  Verdict: MERGE
+
+Branch: gpt/v050-ios-readiness
+  SHA: 4bad0b49 | Date: 2026-07-29 10:57:49 | Author: pixiegirlchristy
+  Commits not on main: 16
+    487589d8 ci(release): add cargo-ndk install step and dynamic Xcode selection
+    55564b4b feat(v0.4.0): sprint branch -- compile fixes, module wiring, release alignment
+    d87d2132 fix(security): update vulnerable log-visualizer npm dependencies
+    9105cc8b fix(security): remove log visualizer DOM injection sinks
+    cb3a2ddc fix(security): replace broad emoji regex ranges with explicit allowlists
+    977e2ec0 ci: restrict workflow token permissions to contents:read
+    26e31d31 docs(pqc): PQC-14 protocol spec, residual risk register, and CI workflow hardening (#126)
+    4bad0b49 docs(gpt): wake Windows readiness execution [skip ci]
+    ... (8 more)
+  Summary: docs(gpt): wake Windows readiness execution [skip ci]
+  Files changed: 13
+  Verdict: MERGE
+
+Branch: wip/v040-seeding-fixes
+  SHA: 2c18da7f | Date: 2026-07-29 10:19:28 | Author: Treystu
+  Commits not on main: 35
+    487589d8 ci(release): add cargo-ndk install step and dynamic Xcode selection
+    55564b4b feat(v0.4.0): sprint branch -- compile fixes, module wiring, release alignment
+    d87d2132 fix(security): update vulnerable log-visualizer npm dependencies
+    9105cc8b fix(security): remove log visualizer DOM injection sinks
+    cb3a2ddc fix(security): replace broad emoji regex ranges with explicit allowlists
+    977e2ec0 ci: restrict workflow token permissions to contents:read
+    26e31d31 docs(pqc): PQC-14 protocol spec, residual risk register, and CI workflow hardening (#126)
+    7d396f4d native: GPT primary-driver handoff + Fusion ceiling 0.10
+    ... (27 more)
+  Summary: native: GPT primary-driver handoff + Fusion ceiling 0.10
+  Files changed: 13
+  Verdict: NEEDS-DECISION
+
+Branch: gpt/pr111-safe-device-resolution
+  SHA: fb4f6e90 | Date: 2026-07-28 22:58:01 | Author: pixiegirlchristy
+  Commits not on main: 13
+    487589d8 ci(release): add cargo-ndk install step and dynamic Xcode selection
+    55564b4b feat(v0.4.0): sprint branch -- compile fixes, module wiring, release alignment
+    d87d2132 fix(security): update vulnerable log-visualizer npm dependencies
+    9105cc8b fix(security): remove log visualizer DOM injection sinks
+    cb3a2ddc fix(security): replace broad emoji regex ranges with explicit allowlists
+    977e2ec0 ci: restrict workflow token permissions to contents:read
+    26e31d31 docs(pqc): PQC-14 protocol spec, residual risk register, and CI workflow hardening (#126)
+    7d396f4d native: GPT primary-driver handoff + Fusion ceiling 0.10
+    ... (5 more)
+  Summary: fix(ios): resolve paired CoreDevice IDs safely
+  Files changed: 8
+  Verdict: MERGE
+
+Branch: gpt/ios-lane-1
+  SHA: a2386ee3 | Date: 2026-07-28 20:51:57 | Author: pixiegirlchristy
+  Commits not on main: 29
+    487589d8 ci(release): add cargo-ndk install step and dynamic Xcode selection
+    55564b4b feat(v0.4.0): sprint branch -- compile fixes, module wiring, release alignment
+    d87d2132 fix(security): update vulnerable log-visualizer npm dependencies
+    9105cc8b fix(security): remove log visualizer DOM injection sinks
+    cb3a2ddc fix(security): replace broad emoji regex ranges with explicit allowlists
+    977e2ec0 ci: restrict workflow token permissions to contents:read
+    26e31d31 docs(pqc): PQC-14 protocol spec, residual risk register, and CI workflow hardening (#126)
+    7d396f4d native: GPT primary-driver handoff + Fusion ceiling 0.10
+    ... (21 more)
+  Summary: feat(ios): complete parity lane and register XCTest suite
+  Files changed: 11
+  Verdict: MERGE
+
+Branch: dependabot/github_actions/actions/cache-6
+  SHA: bfba8154 | Date: 2026-07-26 18:56:04 | Author: dependabot[bot]
+  Commits not on main: 54
+    487589d8 ci(release): add cargo-ndk install step and dynamic Xcode selection
+    55564b4b feat(v0.4.0): sprint branch -- compile fixes, module wiring, release alignment
+    d87d2132 fix(security): update vulnerable log-visualizer npm dependencies
+    9105cc8b fix(security): remove log visualizer DOM injection sinks
+    cb3a2ddc fix(security): replace broad emoji regex ranges with explicit allowlists
+    977e2ec0 ci: restrict workflow token permissions to contents:read
+    26e31d31 docs(pqc): PQC-14 protocol spec, residual risk register, and CI workflow hardening (#126)
+    7d396f4d native: GPT primary-driver handoff + Fusion ceiling 0.10
+    ... (46 more)
+  Summary: build(deps): bump actions/cache from 3 to 6
+  Files changed: 2
+  Verdict: MERGE
+
+Branch: codex/ios-updates-dependency-audit
+  SHA: f8097555 | Date: 2026-07-25 05:26:08 | Author: pixiegirlchristy
+  Commits not on main: 67
+    487589d8 ci(release): add cargo-ndk install step and dynamic Xcode selection
+    55564b4b feat(v0.4.0): sprint branch -- compile fixes, module wiring, release alignment
+    d87d2132 fix(security): update vulnerable log-visualizer npm dependencies
+    9105cc8b fix(security): remove log visualizer DOM injection sinks
+    cb3a2ddc fix(security): replace broad emoji regex ranges with explicit allowlists
+    977e2ec0 ci: restrict workflow token permissions to contents:read
+    26e31d31 docs(pqc): PQC-14 protocol spec, residual risk register, and CI workflow hardening (#126)
+    7d396f4d native: GPT primary-driver handoff + Fusion ceiling 0.10
+    ... (59 more)
+  Summary: doc align - relays -> node. we have nodes and they all relay, but we have no dedicated relays, all n
+  Files changed: 15
+  Verdict: NEEDS-DECISION
+
+
+========================================================================================================================
+B. CONFLICT MAP - Files Touched by Multiple Unmerged Branches
+========================================================================================================================
+
+Total files with conflicts: 55
+
+.github/workflows/auto-tag-release.yml
+  - dependabot/github_actions/actions/checkout-7
+  - gpt/seeding-f10-remediation
+  - gpt/release-version-truth
+  - wip/v040-seeding-fixes
+.github/workflows/ci.yml
+  - dependabot/github_actions/actions/checkout-7
+  - gpt/workflow-least-privilege
+.github/workflows/cross-platform-test.yml
+  - dependabot/github_actions/actions/checkout-7
+  - gpt/workflow-least-privilege
+  - dependabot/github_actions/actions/cache-6
+.github/workflows/cross.yml
+  - dependabot/github_actions/actions/checkout-7
+  - gpt/workflow-least-privilege
+.github/workflows/desktop.yml
+  - dependabot/github_actions/actions/checkout-7
+  - gpt/workflow-least-privilege
+.github/workflows/hygiene.yml
+  - dependabot/github_actions/actions/checkout-7
+  - gpt/workflow-least-privilege
+.github/workflows/ios-build-test.yml
+  - dependabot/github_actions/actions/checkout-7
+  - gpt/v050-ios-device-install
+  - gpt/v050-ios-release-ready
+  - gpt/pr111-safe-device-resolution
+.github/workflows/lint.yml
+  - dependabot/github_actions/actions/checkout-7
+  - dependabot/github_actions/actions/cache-6
+.github/workflows/mobile.yml
+  - dependabot/github_actions/actions/checkout-7
+  - gpt/workflow-least-privilege
+.github/workflows/release.yml
+  - dependabot/github_actions/actions/checkout-7
+  - gpt/release-version-truth
+.github/workflows/security.yml
+  - dependabot/github_actions/actions/checkout-7
+  - gpt/workflow-least-privilege
+.gitignore
+  - audit_system
+  - gpt/v050-ios-device-install
+  - gpt/pr111-safe-device-resolution
+HANDOFF/GPT_PRIMARY_HANDOFF_2026-07-29.md
+  - gpt/seeding-f10-remediation
+  - wip/v040-seeding-fixes
+HANDOFF/gpt/GPT_SEEDING_REVIEW_TERMINAL_REQUEST.md
+  - gpt/seeding-f10-remediation
+  - wip/v040-seeding-fixes
+HANDOFF/gpt/QWEN_WAKE_EXECUTE_RELEASE_READINESS_2026-07-29.md
+  - gpt/seeding-review
+  - gpt/v050-ios-readiness
+HANDOFF/review/V040_BASELINE_FREEZE.md
+  - gpt/seeding-f10-remediation
+  - wip/v040-seeding-fixes
+HANDOFF/review/V040_FINDING_DISPOSITIONS.md
+  - fix/seeding-security-remediation-v040
+  - gpt/seeding-f10-remediation
+  - wip/v040-seeding-fixes
+HANDOFF/review/V040_S3_RELEASE_MECHANICS.md
+  - fix/seeding-security-remediation-v040
+  - gpt/seeding-f10-remediation
+  - wip/v040-seeding-fixes
+HANDOFF/review/V040_S4_DELIVERY_PROOF_RUNBOOK.md
+  - gpt/seeding-f10-remediation
+  - wip/v040-seeding-fixes
+HANDOFF/review/V040_S5_JOSH_WAN_RUNBOOK.md
+  - fix/seeding-security-remediation-v040
+  - gpt/seeding-f10-remediation
+  - wip/v040-seeding-fixes
+core/src/mobile_bridge.rs
+  - fix/seeding-security-remediation-v040
+  - feature/v040-v050-completion-sprint
+  - gpt/seeding-f10-remediation
+  - wip/v040-seeding-fixes
+core/src/store/ledger_entry.rs
+  - gpt/seeding-f10-remediation
+  - wip/v040-seeding-fixes
+core/src/transport/swarm.rs
+  - fix/seeding-security-remediation-v040
+  - gpt/seeding-f10-remediation
+  - wip/v040-seeding-fixes
+iOS/SCMessenger/SCMessenger.xcodeproj/project.pbxproj
+  - gpt/v050-ios-device-install
+  - gpt/v050-ios-release-ready
+  - gpt/ios-lane-1
+iOS/SCMessenger/SCMessenger/Data/MeshRepository.swift
+  - gpt/v050-ios-device-install
+  - gpt/v050-ios-release-ready
+  - gpt/ios-lane-1
+iOS/SCMessenger/SCMessenger/Generated/apiFFI.modulemap
+  - gpt/v050-ios-device-install
+  - gpt/v050-ios-release-ready
+iOS/SCMessenger/SCMessenger/Info.plist
+  - gpt/v050-ios-device-install
+  - gpt/v050-ios-release-ready
+iOS/SCMessenger/SCMessenger/PrivacyInfo.xcprivacy
+  - gpt/v050-ios-device-install
+  - gpt/v050-ios-release-ready
+iOS/SCMessenger/SCMessenger/SCMessengerApp.swift
+  - gpt/v050-ios-device-install
+  - gpt/v050-ios-release-ready
+  - gpt/ios-test-truth
+  - gpt/v050-ios-readiness
+iOS/SCMessenger/SCMessenger/Transport/mDNSServiceDiscovery.swift
+  - gpt/v050-ios-device-install
+  - gpt/v050-ios-release-ready
+iOS/SCMessenger/SCMessenger/ViewModels/SettingsViewModel.swift
+  - gpt/v050-ios-device-install
+  - gpt/v050-ios-release-ready
+iOS/SCMessenger/SCMessenger/Views/Contacts/ContactsListView.swift
+  - gpt/v050-ios-device-install
+  - gpt/v050-ios-release-ready
+  - gpt/ios-test-truth
+  - gpt/v050-ios-readiness
+iOS/SCMessenger/SCMessenger/Views/Contacts/VerifySafetyNumberSheet.swift
+  - gpt/v050-ios-device-install
+  - gpt/v050-ios-release-ready
+  - gpt/ios-test-truth
+  - gpt/v050-ios-readiness
+iOS/SCMessenger/SCMessenger/Views/Dashboard/MeshDashboardView.swift
+  - gpt/v050-ios-device-install
+  - gpt/v050-ios-release-ready
+  - gpt/ios-test-truth
+  - gpt/v050-ios-readiness
+iOS/SCMessenger/SCMessenger/Views/Navigation/MainTabView.swift
+  - gpt/v050-ios-device-install
+  - gpt/v050-ios-release-ready
+  - gpt/ios-test-truth
+iOS/SCMessenger/SCMessenger/Views/Onboarding/OnboardingFlow.swift
+  - gpt/v050-ios-device-install
+  - gpt/v050-ios-release-ready
+  - gpt/ios-test-truth
+  - gpt/v050-ios-readiness
+iOS/SCMessenger/SCMessenger/Views/Settings/DiagnosticsView.swift
+  - gpt/v050-ios-device-install
+  - gpt/v050-ios-release-ready
+  - gpt/ios-test-truth
+  - gpt/v050-ios-readiness
+iOS/SCMessenger/SCMessenger/Views/Settings/SettingsView.swift
+  - gpt/v050-ios-device-install
+  - gpt/v050-ios-release-ready
+  - gpt/ios-test-truth
+  - gpt/v050-ios-readiness
+iOS/SCMessenger/SCMessenger/Views/Topics/JoinMeshView.swift
+  - gpt/v050-ios-device-install
+  - gpt/v050-ios-release-ready
+  - gpt/ios-test-truth
+  - gpt/v050-ios-readiness
+iOS/SCMessengerTests/MeshBackgroundServiceTests.swift
+  - gpt/v050-ios-device-install
+  - gpt/v050-ios-release-ready
+  - gpt/ios-test-truth
+  - gpt/v050-ios-readiness
+iOS/SCMessengerTests/NotificationVerificationTests.swift
+  - gpt/v050-ios-device-install
+  - gpt/v050-ios-release-ready
+  - gpt/ios-test-truth
+  - gpt/v050-ios-readiness
+iOS/SCMessengerTests/OutboxRetryPolicyTests.swift
+  - gpt/v050-ios-device-install
+  - gpt/v050-ios-release-ready
+  - gpt/ios-test-truth
+iOS/SCMessengerTests/ReceiptUnificationTests.swift
+  - gpt/v050-ios-device-install
+  - gpt/v050-ios-release-ready
+  - gpt/ios-test-truth
+  - gpt/v050-ios-readiness
+iOS/assert-generated-path.sh
+  - gpt/v050-ios-device-install
+  - gpt/v050-ios-release-ready
+iOS/copy-bindings.sh
+  - gpt/v050-ios-device-install
+  - gpt/v050-ios-release-ready
+iOS/install-device.sh
+  - gpt/v050-ios-device-install
+  - gpt/pr111-safe-device-resolution
+  - codex/ios-updates-dependency-audit
+iOS/resolve-coredevice.jq
+  - gpt/v050-ios-device-install
+  - gpt/pr111-safe-device-resolution
+iOS/tests/fixtures/devicectl-device-resolution.json
+  - gpt/v050-ios-device-install
+  - gpt/pr111-safe-device-resolution
+iOS/tests/fixtures/xcdevice-device-resolution.json
+  - gpt/v050-ios-device-install
+  - gpt/pr111-safe-device-resolution
+iOS/tests/helpers/xcrun
+  - gpt/v050-ios-device-install
+  - gpt/pr111-safe-device-resolution
+iOS/tests/install-device-resolution-test.sh
+  - gpt/v050-ios-device-install
+  - gpt/pr111-safe-device-resolution
+log-visualizer/package.json
+  - gpt/npm-security-remediation
+  - gpt/security-dom-hardening
+scripts/delegate_task.py
+  - gpt/seeding-f10-remediation
+  - wip/v040-seeding-fixes
+scripts/fusion_lite.py
+  - gpt/seeding-f10-remediation
+  - wip/v040-seeding-fixes
+scripts/verify_ios_bindings.sh
+  - gpt/v050-ios-device-install
+  - gpt/v050-ios-release-ready
+
+
+========================================================================================================================
+C. VERDICT SUMMARY
+========================================================================================================================
+
+MERGE (17):
+  - dependabot/github_actions/actions/cache-6
+  - dependabot/github_actions/actions/checkout-7
+  - feature/v040-v050-completion-sprint
+  - fix/seeding-security-remediation-v040
+  - gpt/codeql-regex-remediation
+  - gpt/ios-lane-1
+  - gpt/ios-test-truth
+  - gpt/npm-security-remediation
+  - gpt/pr111-safe-device-resolution
+  - gpt/release-version-truth
+  - gpt/security-dom-hardening
+  - gpt/seeding-f10-remediation
+  - gpt/seeding-review
+  - gpt/v050-ios-device-install
+  - gpt/v050-ios-readiness
+  - gpt/v050-ios-release-ready
+  - gpt/workflow-least-privilege
+
+ALREADY-LANDED (0):
+
+SUPERSEDED (0):
+
+ABANDON (0):
+
+NEEDS-DECISION (3):
+  - audit_system
+  - codex/ios-updates-dependency-audit
+  - wip/v040-seeding-fixes

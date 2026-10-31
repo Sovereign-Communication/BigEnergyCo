@@ -1,0 +1,40 @@
+run1: records baselines
+visual (plan Q-09) — 32 of 32 snapshots, engine chromium, threshold 0.10% of pixels
+baseline .quality-evidence\visual-baseline
+
+cell                          status    detail
+home/320/none/ltr             new       recorded, no baseline to differ from yet  (2145ms)
+home/320/none/rtl             new       recorded, no baseline to differ from yet  (2934ms)
+home/390/none/ltr             new       recorded, no baseline to differ from yet  (1999ms)
+home/390/none/rtl             new       recorded, no baseline to differ from yet  (1913ms)
+home/768/none/ltr             new       recorded, no baseline to differ from yet  (1988ms)
+home/768/none/rtl             new       recorded, no baseline to differ from yet  (1956ms)
+home/1440/none/ltr            new       recorded, no baseline to differ from yet  (2020ms)
+home/1440/none/rtl            new       recorded, no baseline to differ from yet  (1961ms)
+heatmap/320/none/ltr          new       recorded, no baseline to differ from yet  (1813ms)
+heatmap/390/none/ltr          new       recorded, no baseline to differ from yet  (1819ms)
+heatmap/768/none/ltr          new       recorded, no baseline to differ from yet  (1776ms)
+heatmap/1440/none/ltr         new       recorded, no baseline to differ from yet  (1802ms)
+about/320/none/ltr            new       recorded, no baseline to differ from yet  (1490ms)
+about/390/none/ltr            new       recorded, no baseline to differ from yet  (1487ms)
+about/768/none/ltr            new       recorded, no baseline to differ from yet  (1487ms)
+about/1440/none/ltr           new       recorded, no baseline to differ from yet  (1497ms)
+blog-index/320/none/ltr       new       recorded, no baseline to differ from yet  (1628ms)
+blog-index/390/none/ltr       new       recorded, no baseline to differ from yet  (1581ms)
+blog-index/768/none/ltr       new       recorded, no baseline to differ from yet  (1640ms)
+blog-index/1440/none/ltr      new       recorded, no baseline to differ from yet  (1695ms)
+blog-post/320/none/ltr        new       recorded, no baseline to differ from yet  (1841ms)
+blog-post/390/none/ltr        new       recorded, no baseline to differ from yet  (1823ms)
+blog-post/768/none/ltr        new       recorded, no baseline to differ from yet  (1892ms)
+blog-post/1440/none/ltr       new       recorded, no baseline to differ from yet  (2057ms)
+404/320/none/ltr              new       recorded, no baseline to differ from yet  (1390ms)
+404/390/none/ltr              new       recorded, no baseline to differ from yet  (1387ms)
+404/768/none/ltr              new       recorded, no baseline to differ from yet  (1387ms)
+404/1440/none/ltr             new       recorded, no baseline to differ from yet  (1393ms)
+city/320/none/ltr             new       recorded, no baseline to differ from yet  (1489ms)
+city/390/none/ltr             new       recorded, no baseline to differ from yet  (1489ms)
+city/768/none/ltr             new       recorded, no baseline to differ from yet  (1536ms)
+city/1440/none/ltr            new       recorded, no baseline to differ from yet  (1567ms)
+
+VISUAL OK: 32 snapshots, 32 new, 0 measured-not-gated, 0 unapproved diffs (> 0.10%)
+run1 exit=0

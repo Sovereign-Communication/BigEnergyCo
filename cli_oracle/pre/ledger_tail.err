@@ -1,0 +1,3 @@
+usage: harness [-h]
+               {serve,desktop,verify,apply,continue,offer,defer,ledger,models,bench,lint-claims,capabilities,spend,rankings,trust,dogfood} ...
+harness: error: unrecognized arguments: -n

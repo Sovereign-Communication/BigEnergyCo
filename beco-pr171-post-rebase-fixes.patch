@@ -1,0 +1,30 @@
+diff --git a/assets/js/sizing/engine.js b/assets/js/sizing/engine.js
+index 47354bb4..7684f533 100644
+--- a/assets/js/sizing/engine.js
++++ b/assets/js/sizing/engine.js
+@@ -11,13 +11,6 @@ import {
+   CYCLE_LIFE_CURVES,
+   cycleLifeForDoD,
+ } from "./chem-model.js?v=20261022p";
+-export {
+-  CHEMISTRIES,
+-  coldCapacityScale,
+-  capacityScaleFor,
+-  CYCLE_LIFE_CURVES,
+-  cycleLifeForDoD,
+-};
+ 
+ //
+ // Units:
+diff --git a/tests/polish-pass1.test.mjs b/tests/polish-pass1.test.mjs
+index aac8d1c7..3fb9ab12 100644
+--- a/tests/polish-pass1.test.mjs
++++ b/tests/polish-pass1.test.mjs
+@@ -17,6 +17,7 @@ import {
+ import {
+   LEAFLET_SCRIPT_SRI,
+   LEAFLET_STYLE_SRI,
++  LEAFLET_STYLE_URL,
+   createLeafletProvider,
+ } from "../assets/js/sizing/map-provider.js";
+ import {

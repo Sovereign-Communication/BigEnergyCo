@@ -1,0 +1,13 @@
+﻿import fs from "node:fs";
+const path = "blog/index.html";
+let html = fs.readFileSync(path, "utf8");
+const old = "<span>Published Aug 30, 2026 &middot; Last reviewed Oct 22, 2026</span>";
+const next = '<span>Published Aug 30, 2026 &middot; <time datetime="2026-10-22">Last reviewed: Oct 22, 2026</time></span>';
+if (html.split(old).length !== 2) throw new Error("expected one card date");
+html = html.replace(old, next);
+fs.writeFileSync(path, html, "utf8");
+const testPath = "tests/blog-solar-bill-claims.test.mjs";
+let test = fs.readFileSync(testPath, "utf8");
+if (test.charCodeAt(0) === 0xfeff) test = test.slice(1);
+test = test.replace('assert.match(card, /Last reviewed Oct 22, 2026/);', 'assert.match(card, /Last reviewed: Oct 22, 2026/);');
+fs.writeFileSync(testPath, test, "utf8");

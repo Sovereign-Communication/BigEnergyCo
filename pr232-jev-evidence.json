@@ -1,0 +1,22 @@
+{
+    "tests_green":  true,
+    "prettier_clean":  true,
+    "seo_green":  true,
+    "smoke_green":  false,
+    "ci_green":  false,
+    "legacy_gates_green":  false,
+    "tests_summary":  "npm test recorded 1697/1697 passing in this Windows worktree after temporarily using the committed LF blob for robots.txt to neutralize core.autocrlf; the exact original robots.txt bytes were restored and SHA-256 verified. The isolated privacy-browser verdict test also passed 1/1 on the original worktree bytes.",
+    "prettier_clean_summary":  "npx --yes prettier@3.9.6 --check . exited 0 on the current candidate tree.",
+    "seo_summary":  "npm run seo exited 0 on the current candidate tree; all SEO, JSON-LD, headers, i18n, privacy, provenance, generated-page, and asset-token checks passed.",
+    "smoke_note":  "The focused privacy-browser verdict test passed 1/1. Full browser smoke was not run.",
+    "ci_summary":  "Required PR CI has not run for this candidate commit; remote candidate checks remain unverified.",
+    "facet_evidence":  {
+                           "docs":  "npm run plan:check passed; the master plan pin is verified. npm run deploy:check passed in local check mode without publishing.",
+                           "seo":  "npm run seo exited 0 on this tree; check-chars and all SEO, JSON-LD, headers, i18n, privacy, provenance, generated-page, and asset-token checks passed."
+                       },
+    "notes":  [
+                  "Focused Jev tests passed 30/30 after the final scope-aware evidence change.",
+                  "Local candidate branch only; no remote ref or PR update.",
+                  "No full browser smoke or candidate-head CI result is available."
+              ]
+}

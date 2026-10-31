@@ -1,0 +1,52 @@
+        <h2>3. Chemistry does not guarantee a service life</h2>
+        <p>
+          Cycle-life figures describe a particular cell or pack under a stated
+          test. Chemistry alone does not establish usable capacity, cycle life,
+          calendar life, cold-weather performance, or replacement timing. Read
+          the exact product documentation and compare the conditions behind
+          each rating.
+        </p>
+
+        <h3>Lithium iron phosphate (LFP)</h3>
+        <p>
+          A cycle count is meaningful only with its test conditions and
+          end-of-life definition. Preger et al. tested commercial lithium-ion
+          cells under different cycling conditions and found substantial
+          variation in the time and cycle count to 80% capacity. That study
+          describes its tested cells; it is not a universal curve for every LFP
+          product. See
+          <a href="https://www.osti.gov/biblio/1650174">the study record</a>.
+        </p>
+        <p>
+          For a product comparison, check the maker's stated charge and
+          discharge limits, temperature, rate, depth of discharge, and capacity
+          threshold. Do not convert a lab cycle count directly into a calendar
+          service-life promise.
+        </p>
+
+        <h3>Sodium-ion</h3>
+        <p>
+          Do not infer a pack's usable range, voltage limits, storage behavior,
+          cold-weather limits, or inverter compatibility from the chemistry
+          name. Follow the exact battery manufacturer's operating limits,
+          battery-management-system cutoffs, and the inverter maker's
+          compatibility guidance. Treat any cycle-life figure as specific to
+          the product and test conditions that produced it.
+        </p>
+
+        <h3>Lead-acid and AGM</h3>
+        <p>
+          Cycle life also depends on the particular model and its use. For
+          example, Discover's AGM performance sheet says cyclic life depends
+          on capacity taken, discharge rate, temperature, and charging method.
+          Its cycle-life chart gives the test current, final voltage, charge
+          current, and temperature. Those results describe the listed test, not
+          every AGM battery. See the
+          <a href="https://assets.discoverbattery.com/documents/07_sla/885_product_literature/standard-agm-battery-performance.pdf">manufacturer's performance sheet</a>.
+        </p>
+        <p>
+          Across chemistries, use the exact model's warranty and maintenance
+          instructions, and plan around the loads, environment, and service
+          conditions you expect. A cycle count alone cannot establish how many
+          years a home battery will last.
+        </p>

@@ -1,0 +1,12 @@
+--- new-york: picked=New York, New York, USA fx=USD rate=0.23 errors=0
+--- london: picked=London, Europe, United Kingdom fx=GBP rate=0.2571 errors=0
+--- berlin: picked=Berlin, Europe, Germany fx=EUR rate=0.3578 errors=0
+--- tokyo: picked=Tokyo, East Asia, Japan fx=JPY rate=31.6611 errors=0
+--- lagos: picked=Lagos, Africa, Nigeria fx=NGN rate=93.2278 errors=0
+--- delhi: picked=Delhi, South Asia, India fx=INR rate=7.6202 errors=0
+--- santiago: picked=Santiago, South America, Chile fx=CLP rate=166.9087 errors=0
+--- ho-chi-minh-city: picked=Ho Chi Minh City, Southeast Asia, Vietnam fx=VND rate=2071.2161 errors=0
+--- suva: picked=Suva, Oceania, Fiji fx=FJD rate=0.6504 errors=0
+--- papeete: picked=Papeete, Oceania, French Polynesia fx=XPF rate=29.8869 errors=0
+--- kathmandu: picked=Kathmandu, South Asia, Nepal fx=NPR rate=12.1923 errors=0
+wrote /c/tmp/scan/world-calc-measure.json

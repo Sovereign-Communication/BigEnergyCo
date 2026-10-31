@@ -1,0 +1,12 @@
+usage: harness ledger [-h] {verify,report,tail,defer-stats,repair} ...
+
+positional arguments:
+  {verify,report,tail,defer-stats,repair}
+    tail                show the last N ledger entries (default 20)
+    defer-stats         aggregate WHY runs deferred (panel defer rate, mid-
+                        task categories, consent outcomes)
+    repair              truncate the ledger to its longest valid hash-chain
+                        prefix (drops forked/duplicate tail)
+
+options:
+  -h, --help            show this help message and exit

@@ -1,0 +1,101 @@
+{
+  "model": "jev-1.13.0",
+  "answers": {
+    "top_focus": {
+      "type": "choice",
+      "choice": "C_product_trace",
+      "confidence": 0.85,
+      "probabilities": {
+        "B_vendored_crypto": 0.01,
+        "C_product_trace": 0.88,
+        "A_zksync": 0.07,
+        "D_clean_files": 0.0,
+        "no_match": 0.0,
+        "E_fresh_programs": 0.04
+      }
+    },
+    "A_score": {
+      "type": "score",
+      "score": 0.89,
+      "confidence": 0.79,
+      "legend": {
+        "0": "Dead end: unbuildable means unreportable",
+        "1": "Plausible: one fix reproduces an Oasis-class binding bug",
+        "2": "High-yield: likely product-triggerable fund-loss path"
+      },
+      "probabilities": {
+        "0": 0.13,
+        "1": 0.86,
+        "2": 0.01
+      }
+    },
+    "B_score": {
+      "type": "score",
+      "score": 0.8,
+      "confidence": 0.63,
+      "legend": {
+        "0": "Dead end: reference-correct code, triager calls it vendored",
+        "1": "Plausible: real divergence findable by diffing upstream",
+        "2": "High-yield: signature-path defect with product impact"
+      },
+      "probabilities": {
+        "0": 0.23,
+        "1": 0.75,
+        "2": 0.02
+      }
+    },
+    "C_score": {
+      "type": "score",
+      "score": 0.95,
+      "confidence": 0.79,
+      "legend": {
+        "0": "Dead end: SDK defects with no product surface",
+        "1": "Plausible: one finding traces to Wallet/DEX flow",
+        "2": "High-yield: direct graduation to a filed bounty report"
+      },
+      "probabilities": {
+        "0": 0.09,
+        "1": 0.86,
+        "2": 0.05
+      }
+    },
+    "D_score": {
+      "type": "score",
+      "score": 0.25,
+      "confidence": 0.62,
+      "legend": {
+        "0": "Dead end: low hit rate per hour",
+        "1": "Plausible: semantic review finds wrong-constant bugs",
+        "2": "High-yield: systematic yield across 476 files"
+      },
+      "probabilities": {
+        "0": 0.76,
+        "1": 0.23,
+        "2": 0.01
+      }
+    },
+    "E_score": {
+      "type": "score",
+      "score": 1.11,
+      "confidence": 0.45,
+      "legend": {
+        "0": "Dead end: spreads effort, resets domain knowledge",
+        "1": "Plausible: low-competition scope converts faster",
+        "2": "High-yield: fastest path to first $50 payout"
+      },
+      "probabilities": {
+        "0": 0.13,
+        "1": 0.63,
+        "2": 0.24
+      }
+    },
+    "needs_new_evidence": {
+      "type": "noul",
+      "noul": 0.9
+    }
+  },
+  "usage": {
+    "input_tokens": 1603,
+    "output_tokens": 169
+  }
+}

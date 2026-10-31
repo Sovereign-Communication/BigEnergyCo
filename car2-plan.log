@@ -1,0 +1,6 @@
+
+> bigenergyco@1.0.0 plan:check
+> node scripts/check-plan-pin.mjs
+
+note: no base plan to compare (adoption PR or no --base given)
+PLAN PIN OK: docs/plan/MASTER_PLAN.md sha256 c6799a475a42cf33b91d22269b901dddd9c466c37d39630f0bccb3fb31c0d6bd

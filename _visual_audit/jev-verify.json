@@ -1,0 +1,23 @@
+{
+  "at": "2026-10-28T20:03:25.258Z",
+  "wire": {
+    "answers": {
+      "visual_audit": {
+        "type": "choice",
+        "choice": "pass",
+        "confidence": 0.8,
+        "probabilities": {
+          "pass": 0.9,
+          "fail": 0.1
+        }
+      }
+    },
+    "usage": {
+      "input_tokens": 1214,
+      "output_tokens": 33
+    },
+    "provider": "typesafe",
+    "model": "jev-1.14.0",
+    "notes": []
+  }
+}

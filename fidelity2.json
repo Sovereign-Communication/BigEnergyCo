@@ -1,0 +1,158 @@
+[
+ {
+  "id": "harness/jev_policy.py",
+  "rep": 1,
+  "axes": {
+   "stage": "adjudicate",
+   "brief_treatment": "signature",
+   "handling": "code_owned"
+  },
+  "level": "central: in any repo-wide waist brief",
+  "conf": 0.86,
+  "fallback": false,
+  "cost": 0.046578
+ },
+ {
+  "id": "docs/jev-roadmap.md",
+  "rep": 1,
+  "axes": {
+   "stage": "prep",
+   "brief_treatment": "exclude_raw",
+   "handling": "scout"
+  },
+  "level": "background: omit from a tight brief",
+  "conf": 0.29,
+  "fallback": false,
+  "cost": 0.038598
+ },
+ {
+  "id": "tests/test_cli.py",
+  "rep": 1,
+  "axes": {
+   "stage": "adjudicate",
+   "brief_treatment": "signature",
+   "handling": "code_owned"
+  },
+  "level": "background: omit from a tight brief",
+  "conf": 0.56,
+  "fallback": false,
+  "cost": 0.041916
+ },
+ {
+  "id": "audits/self/audit.py",
+  "rep": 1,
+  "axes": {
+   "stage": "adjudicate",
+   "brief_treatment": "exclude_raw",
+   "handling": "code_owned"
+  },
+  "level": "notable: include when goal touches it",
+  "conf": 0.05,
+  "fallback": false,
+  "cost": 0.04536
+ },
+ {
+  "id": "packs/repo_summary.pack.json",
+  "rep": 1,
+  "axes": {
+   "stage": "condense",
+   "brief_treatment": "exclude_raw",
+   "handling": "scout"
+  },
+  "level": "central: in any repo-wide waist brief",
+  "conf": 0.0,
+  "fallback": false,
+  "cost": 0.037758
+ },
+ {
+  "id": "harness/ui/index.html",
+  "rep": 1,
+  "axes": {
+   "stage": "cross_cutting",
+   "brief_treatment": "exclude_raw",
+   "handling": "code_owned"
+  },
+  "level": "background: omit from a tight brief",
+  "conf": 0.0,
+  "fallback": false,
+  "cost": 0.036246
+ },
+ {
+  "id": "harness/jev_policy.py",
+  "rep": 2,
+  "axes": {
+   "stage": "adjudicate",
+   "brief_treatment": "signature",
+   "handling": "code_owned"
+  },
+  "level": "central: in any repo-wide waist brief",
+  "conf": 0.88,
+  "fallback": false,
+  "cost": 0.046578
+ },
+ {
+  "id": "docs/jev-roadmap.md",
+  "rep": 2,
+  "axes": {
+   "stage": "prep",
+   "brief_treatment": "exclude_raw",
+   "handling": "scout"
+  },
+  "level": "background: omit from a tight brief",
+  "conf": 0.27,
+  "fallback": false,
+  "cost": 0.038598
+ },
+ {
+  "id": "tests/test_cli.py",
+  "rep": 2,
+  "axes": {
+   "stage": "adjudicate",
+   "brief_treatment": "signature",
+   "handling": "code_owned"
+  },
+  "level": "background: omit from a tight brief",
+  "conf": 0.61,
+  "fallback": false,
+  "cost": 0.041916
+ },
+ {
+  "id": "audits/self/audit.py",
+  "rep": 2,
+  "axes": {
+   "stage": "adjudicate",
+   "brief_treatment": "exclude_raw",
+   "handling": "code_owned"
+  },
+  "level": "central: in any repo-wide waist brief",
+  "conf": 0.0,
+  "fallback": false,
+  "cost": 0.04536
+ },
+ {
+  "id": "packs/repo_summary.pack.json",
+  "rep": 2,
+  "axes": {
+   "stage": "cross_cutting",
+   "brief_treatment": "exclude_raw",
+   "handling": "scout"
+  },
+  "level": "central: in any repo-wide waist brief",
+  "conf": 0.0,
+  "fallback": false,
+  "cost": 0.037758
+ },
+ {
+  "id": "harness/ui/index.html",
+  "rep": 2,
+  "axes": {
+   "stage": "cross_cutting",
+   "brief_treatment": "exclude_raw",
+   "handling": "code_owned"
+  },
+  "level": "background: omit from a tight brief",
+  "conf": 0.0,
+  "fallback": false,
+  "cost": 0.036246
+ }
+]

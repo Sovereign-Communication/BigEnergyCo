@@ -1,0 +1,1164 @@
+{
+  "gate": "jev-complete",
+  "pack_id": "bigenergyco-complete-gate-v2",
+  "min_score": 95,
+  "score": 96.79,
+  "pass": true,
+  "program_exit_pass": false,
+  "program_exit_blockers": [
+    "program exit facet not proven: accessibility",
+    "program exit facet not proven: advisor",
+    "program exit facet not proven: correctness",
+    "program exit facet not proven: docs",
+    "program exit facet not proven: experience",
+    "program exit facet not proven: i18n",
+    "program exit facet not proven: performance",
+    "program exit facet not proven: physics",
+    "program exit facet not proven: provenance",
+    "program exit facet not proven: quality",
+    "program exit facet not proven: release",
+    "program exit facet not proven: resilience",
+    "program exit facet not proven: security",
+    "program exit facet not proven: spec",
+    "program exit facet not proven: translation",
+    "program exit confidence below 0.95: accessibility",
+    "program exit confidence below 0.95: advisor",
+    "program exit confidence below 0.95: comparison",
+    "program exit confidence below 0.95: correctness",
+    "program exit confidence below 0.95: design",
+    "program exit confidence below 0.95: docs",
+    "program exit confidence below 0.95: experience",
+    "program exit confidence below 0.95: i18n",
+    "program exit confidence below 0.95: performance",
+    "program exit confidence below 0.95: physics",
+    "program exit confidence below 0.95: privacy",
+    "program exit confidence below 0.95: provenance",
+    "program exit confidence below 0.95: quality",
+    "program exit confidence below 0.95: release",
+    "program exit confidence below 0.95: resilience",
+    "program exit confidence below 0.95: security",
+    "program exit confidence below 0.95: seo",
+    "program exit confidence below 0.95: spec",
+    "program exit confidence below 0.95: testing",
+    "program exit confidence below 0.95: translation",
+    "program exit confidence below 0.95: usecases"
+  ],
+  "hard_gates_passed": true,
+  "facets_not_proven": [
+    "accessibility",
+    "advisor",
+    "correctness",
+    "docs",
+    "experience",
+    "i18n",
+    "performance",
+    "physics",
+    "provenance",
+    "quality",
+    "release",
+    "resilience",
+    "security",
+    "spec",
+    "translation"
+  ],
+  "facets_not_proven_detail": [
+    {
+      "facet": "accessibility",
+      "ordinal_got": 85,
+      "ordinal_need": 100,
+      "ordinal_met": false,
+      "confidence_got": 0.85,
+      "confidence_need": 0.95,
+      "confidence_met": false,
+      "level": "confident — solid with minor gaps",
+      "source": "live"
+    },
+    {
+      "facet": "advisor",
+      "ordinal_got": 85,
+      "ordinal_need": 100,
+      "ordinal_met": false,
+      "confidence_got": 0.68,
+      "confidence_need": 0.95,
+      "confidence_met": false,
+      "level": "confident — solid with minor gaps",
+      "source": "live"
+    },
+    {
+      "facet": "comparison",
+      "ordinal_got": 100,
+      "ordinal_need": 100,
+      "ordinal_met": true,
+      "confidence_got": 0.68,
+      "confidence_need": 0.95,
+      "confidence_met": false,
+      "level": "proven — google-quality, evidenced end to end",
+      "source": "live"
+    },
+    {
+      "facet": "correctness",
+      "ordinal_got": 85,
+      "ordinal_need": 100,
+      "ordinal_met": false,
+      "confidence_got": 0.61,
+      "confidence_need": 0.95,
+      "confidence_met": false,
+      "level": "confident — solid with minor gaps",
+      "source": "live"
+    },
+    {
+      "facet": "design",
+      "ordinal_got": 100,
+      "ordinal_need": 100,
+      "ordinal_met": true,
+      "confidence_got": 0.61,
+      "confidence_need": 0.95,
+      "confidence_met": false,
+      "level": "proven — google-quality, evidenced end to end",
+      "source": "live"
+    },
+    {
+      "facet": "docs",
+      "ordinal_got": 85,
+      "ordinal_need": 100,
+      "ordinal_met": false,
+      "confidence_got": 0.52,
+      "confidence_need": 0.95,
+      "confidence_met": false,
+      "level": "confident — solid with minor gaps",
+      "source": "live"
+    },
+    {
+      "facet": "experience",
+      "ordinal_got": 85,
+      "ordinal_need": 100,
+      "ordinal_met": false,
+      "confidence_got": 0.57,
+      "confidence_need": 0.95,
+      "confidence_met": false,
+      "level": "confident — solid with minor gaps",
+      "source": "live"
+    },
+    {
+      "facet": "i18n",
+      "ordinal_got": 85,
+      "ordinal_need": 100,
+      "ordinal_met": false,
+      "confidence_got": 0.73,
+      "confidence_need": 0.95,
+      "confidence_met": false,
+      "level": "confident — solid with minor gaps",
+      "source": "live"
+    },
+    {
+      "facet": "performance",
+      "ordinal_got": 85,
+      "ordinal_need": 100,
+      "ordinal_met": false,
+      "confidence_got": 0.51,
+      "confidence_need": 0.95,
+      "confidence_met": false,
+      "level": "confident — solid with minor gaps",
+      "source": "live"
+    },
+    {
+      "facet": "physics",
+      "ordinal_got": 85,
+      "ordinal_need": 100,
+      "ordinal_met": false,
+      "confidence_got": 0.56,
+      "confidence_need": 0.95,
+      "confidence_met": false,
+      "level": "confident — solid with minor gaps",
+      "source": "live"
+    },
+    {
+      "facet": "privacy",
+      "ordinal_got": 100,
+      "ordinal_need": 100,
+      "ordinal_met": true,
+      "confidence_got": 0.72,
+      "confidence_need": 0.95,
+      "confidence_met": false,
+      "level": "proven — google-quality, evidenced end to end",
+      "source": "live"
+    },
+    {
+      "facet": "provenance",
+      "ordinal_got": 85,
+      "ordinal_need": 100,
+      "ordinal_met": false,
+      "confidence_got": 0.52,
+      "confidence_need": 0.95,
+      "confidence_met": false,
+      "level": "confident — solid with minor gaps",
+      "source": "live"
+    },
+    {
+      "facet": "quality",
+      "ordinal_got": 85,
+      "ordinal_need": 100,
+      "ordinal_met": false,
+      "confidence_got": 0.52,
+      "confidence_need": 0.95,
+      "confidence_met": false,
+      "level": "confident — solid with minor gaps",
+      "source": "live"
+    },
+    {
+      "facet": "release",
+      "ordinal_got": 85,
+      "ordinal_need": 100,
+      "ordinal_met": false,
+      "confidence_got": 0.29,
+      "confidence_need": 0.95,
+      "confidence_met": false,
+      "level": "confident — solid with minor gaps",
+      "source": "live"
+    },
+    {
+      "facet": "resilience",
+      "ordinal_got": 85,
+      "ordinal_need": 100,
+      "ordinal_met": false,
+      "confidence_got": 0.74,
+      "confidence_need": 0.95,
+      "confidence_met": false,
+      "level": "confident — solid with minor gaps",
+      "source": "live"
+    },
+    {
+      "facet": "security",
+      "ordinal_got": 85,
+      "ordinal_need": 100,
+      "ordinal_met": false,
+      "confidence_got": 0.57,
+      "confidence_need": 0.95,
+      "confidence_met": false,
+      "level": "confident — solid with minor gaps",
+      "source": "live"
+    },
+    {
+      "facet": "seo",
+      "ordinal_got": 100,
+      "ordinal_need": 100,
+      "ordinal_met": true,
+      "confidence_got": 0.85,
+      "confidence_need": 0.95,
+      "confidence_met": false,
+      "level": "proven — google-quality, evidenced end to end",
+      "source": "code"
+    },
+    {
+      "facet": "spec",
+      "ordinal_got": 85,
+      "ordinal_need": 100,
+      "ordinal_met": false,
+      "confidence_got": 0.47,
+      "confidence_need": 0.95,
+      "confidence_met": false,
+      "level": "confident — solid with minor gaps",
+      "source": "live"
+    },
+    {
+      "facet": "testing",
+      "ordinal_got": 100,
+      "ordinal_need": 100,
+      "ordinal_met": true,
+      "confidence_got": 0.68,
+      "confidence_need": 0.95,
+      "confidence_met": false,
+      "level": "proven — google-quality, evidenced end to end",
+      "source": "code"
+    },
+    {
+      "facet": "translation",
+      "ordinal_got": 85,
+      "ordinal_need": 100,
+      "ordinal_met": false,
+      "confidence_got": 0.46,
+      "confidence_need": 0.95,
+      "confidence_met": false,
+      "level": "confident — solid with minor gaps",
+      "source": "live"
+    },
+    {
+      "facet": "usecases",
+      "ordinal_got": 100,
+      "ordinal_need": 100,
+      "ordinal_met": true,
+      "confidence_got": 0.46,
+      "confidence_need": 0.95,
+      "confidence_met": false,
+      "level": "proven — google-quality, evidenced end to end",
+      "source": "live"
+    }
+  ],
+  "facets_low_confidence": [
+    "accessibility",
+    "advisor",
+    "comparison",
+    "correctness",
+    "design",
+    "docs",
+    "experience",
+    "i18n",
+    "performance",
+    "physics",
+    "privacy",
+    "provenance",
+    "quality",
+    "release",
+    "resilience",
+    "security",
+    "seo",
+    "spec",
+    "testing",
+    "translation",
+    "usecases"
+  ],
+  "min_confidence": 0.95,
+  "staging_policy": {
+    "min_score": 95,
+    "facet_min_ordinal": 85,
+    "facet_floor_ordinal": 60,
+    "confidence_threshold": 0.95,
+    "confidence_blocks": false
+  },
+  "facets_below_staging_minimum": [],
+  "facets_below_staging_floor": [],
+  "confidence_telemetry": {
+    "threshold": 0.95,
+    "facets_below_threshold": [
+      "accessibility",
+      "advisor",
+      "comparison",
+      "correctness",
+      "design",
+      "docs",
+      "experience",
+      "i18n",
+      "performance",
+      "physics",
+      "privacy",
+      "provenance",
+      "quality",
+      "release",
+      "resilience",
+      "security",
+      "seo",
+      "spec",
+      "testing",
+      "translation",
+      "usecases"
+    ],
+    "investigation_required": true,
+    "blocks": false
+  },
+  "hard_gates": {
+    "tests_green": true,
+    "smoke_green": true,
+    "ci_green": true,
+    "prettier_clean": true,
+    "seo_green": true,
+    "secrets_clean": true,
+    "tree_clean": true
+  },
+  "mechanical_score": 100,
+  "semantic_score": 89.29,
+  "facets": {
+    "spec": {
+      "bucket": "spec_gap",
+      "authority": "jev",
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
+      "source": "live",
+      "confidence": 0.47,
+      "jev_probability_distribution": [
+        {
+          "level": "failing — evidence contradicts quality",
+          "probability": 0.03
+        },
+        {
+          "level": "at risk — known gap likely to hurt users or review",
+          "probability": 0.07
+        },
+        {
+          "level": "mixed — partial or unverified evidence",
+          "probability": 0.14
+        },
+        {
+          "level": "confident — solid with minor gaps",
+          "probability": 0.49
+        },
+        {
+          "level": "proven — google-quality, evidenced end to end",
+          "probability": 0.27
+        }
+      ]
+    },
+    "design": {
+      "bucket": "design_gap",
+      "authority": "jev",
+      "level": "proven — google-quality, evidenced end to end",
+      "index": 4,
+      "ordinal": 100,
+      "source": "live",
+      "confidence": 0.61,
+      "jev_probability_distribution": [
+        {
+          "level": "failing — evidence contradicts quality",
+          "probability": 0
+        },
+        {
+          "level": "at risk — known gap likely to hurt users or review",
+          "probability": 0
+        },
+        {
+          "level": "mixed — partial or unverified evidence",
+          "probability": 0.01
+        },
+        {
+          "level": "confident — solid with minor gaps",
+          "probability": 0.45
+        },
+        {
+          "level": "proven — google-quality, evidenced end to end",
+          "probability": 0.54
+        }
+      ]
+    },
+    "correctness": {
+      "bucket": "correctness_gap",
+      "authority": "jev",
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
+      "source": "live",
+      "confidence": 0.61,
+      "jev_probability_distribution": [
+        {
+          "level": "failing — evidence contradicts quality",
+          "probability": 0.01
+        },
+        {
+          "level": "at risk — known gap likely to hurt users or review",
+          "probability": 0.01
+        },
+        {
+          "level": "mixed — partial or unverified evidence",
+          "probability": 0.08
+        },
+        {
+          "level": "confident — solid with minor gaps",
+          "probability": 0.56
+        },
+        {
+          "level": "proven — google-quality, evidenced end to end",
+          "probability": 0.34
+        }
+      ]
+    },
+    "quality": {
+      "bucket": "quality_gap",
+      "authority": "jev",
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
+      "source": "live",
+      "confidence": 0.52,
+      "jev_probability_distribution": [
+        {
+          "level": "failing — evidence contradicts quality",
+          "probability": 0.03
+        },
+        {
+          "level": "at risk — known gap likely to hurt users or review",
+          "probability": 0.05
+        },
+        {
+          "level": "mixed — partial or unverified evidence",
+          "probability": 0.29
+        },
+        {
+          "level": "confident — solid with minor gaps",
+          "probability": 0.53
+        },
+        {
+          "level": "proven — google-quality, evidenced end to end",
+          "probability": 0.1
+        }
+      ]
+    },
+    "security": {
+      "bucket": "security_gap",
+      "authority": "jev",
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
+      "source": "live",
+      "confidence": 0.57,
+      "jev_probability_distribution": [
+        {
+          "level": "failing — evidence contradicts quality",
+          "probability": 0
+        },
+        {
+          "level": "at risk — known gap likely to hurt users or review",
+          "probability": 0.01
+        },
+        {
+          "level": "mixed — partial or unverified evidence",
+          "probability": 0.01
+        },
+        {
+          "level": "confident — solid with minor gaps",
+          "probability": 0.49
+        },
+        {
+          "level": "proven — google-quality, evidenced end to end",
+          "probability": 0.49
+        }
+      ]
+    },
+    "performance": {
+      "bucket": "perf_gap",
+      "authority": "jev",
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
+      "source": "live",
+      "confidence": 0.51,
+      "jev_probability_distribution": [
+        {
+          "level": "failing — evidence contradicts quality",
+          "probability": 0.03
+        },
+        {
+          "level": "at risk — known gap likely to hurt users or review",
+          "probability": 0.06
+        },
+        {
+          "level": "mixed — partial or unverified evidence",
+          "probability": 0.24
+        },
+        {
+          "level": "confident — solid with minor gaps",
+          "probability": 0.53
+        },
+        {
+          "level": "proven — google-quality, evidenced end to end",
+          "probability": 0.14
+        }
+      ]
+    },
+    "accessibility": {
+      "bucket": "a11y_gap",
+      "authority": "jev",
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
+      "source": "live",
+      "confidence": 0.85,
+      "jev_probability_distribution": [
+        {
+          "level": "failing — evidence contradicts quality",
+          "probability": 0
+        },
+        {
+          "level": "at risk — known gap likely to hurt users or review",
+          "probability": 0
+        },
+        {
+          "level": "mixed — partial or unverified evidence",
+          "probability": 0.11
+        },
+        {
+          "level": "confident — solid with minor gaps",
+          "probability": 0.82
+        },
+        {
+          "level": "proven — google-quality, evidenced end to end",
+          "probability": 0.07
+        }
+      ]
+    },
+    "i18n": {
+      "bucket": "i18n_gap",
+      "authority": "jev",
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
+      "source": "live",
+      "confidence": 0.73,
+      "jev_probability_distribution": [
+        {
+          "level": "failing — evidence contradicts quality",
+          "probability": 0
+        },
+        {
+          "level": "at risk — known gap likely to hurt users or review",
+          "probability": 0.09
+        },
+        {
+          "level": "mixed — partial or unverified evidence",
+          "probability": 0.1
+        },
+        {
+          "level": "confident — solid with minor gaps",
+          "probability": 0.77
+        },
+        {
+          "level": "proven — google-quality, evidenced end to end",
+          "probability": 0.04
+        }
+      ]
+    },
+    "seo": {
+      "bucket": "seo_gap",
+      "authority": "code",
+      "level": "proven — google-quality, evidenced end to end",
+      "index": 4,
+      "ordinal": 100,
+      "source": "code",
+      "confidence": 0.85,
+      "jev_probability_distribution": [
+        {
+          "level": "failing — evidence contradicts quality",
+          "probability": 0
+        },
+        {
+          "level": "at risk — known gap likely to hurt users or review",
+          "probability": 0
+        },
+        {
+          "level": "mixed — partial or unverified evidence",
+          "probability": 0.02
+        },
+        {
+          "level": "confident — solid with minor gaps",
+          "probability": 0.14
+        },
+        {
+          "level": "proven — google-quality, evidenced end to end",
+          "probability": 0.84
+        }
+      ]
+    },
+    "resilience": {
+      "bucket": "resilience_gap",
+      "authority": "jev",
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
+      "source": "live",
+      "confidence": 0.74,
+      "jev_probability_distribution": [
+        {
+          "level": "failing — evidence contradicts quality",
+          "probability": 0
+        },
+        {
+          "level": "at risk — known gap likely to hurt users or review",
+          "probability": 0.01
+        },
+        {
+          "level": "mixed — partial or unverified evidence",
+          "probability": 0.09
+        },
+        {
+          "level": "confident — solid with minor gaps",
+          "probability": 0.7
+        },
+        {
+          "level": "proven — google-quality, evidenced end to end",
+          "probability": 0.2
+        }
+      ]
+    },
+    "experience": {
+      "bucket": "experience_gap",
+      "authority": "jev",
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
+      "source": "live",
+      "confidence": 0.57,
+      "jev_probability_distribution": [
+        {
+          "level": "failing — evidence contradicts quality",
+          "probability": 0.01
+        },
+        {
+          "level": "at risk — known gap likely to hurt users or review",
+          "probability": 0.05
+        },
+        {
+          "level": "mixed — partial or unverified evidence",
+          "probability": 0.13
+        },
+        {
+          "level": "confident — solid with minor gaps",
+          "probability": 0.55
+        },
+        {
+          "level": "proven — google-quality, evidenced end to end",
+          "probability": 0.26
+        }
+      ]
+    },
+    "docs": {
+      "bucket": "docs_gap",
+      "authority": "jev",
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
+      "source": "live",
+      "confidence": 0.52,
+      "jev_probability_distribution": [
+        {
+          "level": "failing — evidence contradicts quality",
+          "probability": 0.01
+        },
+        {
+          "level": "at risk — known gap likely to hurt users or review",
+          "probability": 0.01
+        },
+        {
+          "level": "mixed — partial or unverified evidence",
+          "probability": 0.07
+        },
+        {
+          "level": "confident — solid with minor gaps",
+          "probability": 0.46
+        },
+        {
+          "level": "proven — google-quality, evidenced end to end",
+          "probability": 0.45
+        }
+      ]
+    },
+    "testing": {
+      "bucket": "tests_gap",
+      "authority": "code",
+      "level": "proven — google-quality, evidenced end to end",
+      "index": 4,
+      "ordinal": 100,
+      "source": "code",
+      "confidence": 0.68,
+      "jev_probability_distribution": [
+        {
+          "level": "failing — evidence contradicts quality",
+          "probability": 0.01
+        },
+        {
+          "level": "at risk — known gap likely to hurt users or review",
+          "probability": 0.01
+        },
+        {
+          "level": "mixed — partial or unverified evidence",
+          "probability": 0.02
+        },
+        {
+          "level": "confident — solid with minor gaps",
+          "probability": 0.27
+        },
+        {
+          "level": "proven — google-quality, evidenced end to end",
+          "probability": 0.69
+        }
+      ]
+    },
+    "release": {
+      "bucket": "release_gap",
+      "authority": "code",
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
+      "source": "live",
+      "confidence": 0.29,
+      "jev_probability_distribution": [
+        {
+          "level": "failing — evidence contradicts quality",
+          "probability": 0.06
+        },
+        {
+          "level": "at risk — known gap likely to hurt users or review",
+          "probability": 0.14
+        },
+        {
+          "level": "mixed — partial or unverified evidence",
+          "probability": 0.09
+        },
+        {
+          "level": "confident — solid with minor gaps",
+          "probability": 0.41
+        },
+        {
+          "level": "proven — google-quality, evidenced end to end",
+          "probability": 0.3
+        }
+      ]
+    },
+    "advisor": {
+      "bucket": "advisor_gap",
+      "authority": "jev",
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
+      "source": "live",
+      "confidence": 0.68,
+      "jev_probability_distribution": [
+        {
+          "level": "failing — evidence contradicts quality",
+          "probability": 0
+        },
+        {
+          "level": "at risk — known gap likely to hurt users or review",
+          "probability": 0.01
+        },
+        {
+          "level": "mixed — partial or unverified evidence",
+          "probability": 0.11
+        },
+        {
+          "level": "confident — solid with minor gaps",
+          "probability": 0.63
+        },
+        {
+          "level": "proven — google-quality, evidenced end to end",
+          "probability": 0.25
+        }
+      ]
+    },
+    "physics": {
+      "bucket": "physics_gap",
+      "authority": "jev",
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
+      "source": "live",
+      "confidence": 0.56,
+      "jev_probability_distribution": [
+        {
+          "level": "failing — evidence contradicts quality",
+          "probability": 0.01
+        },
+        {
+          "level": "at risk — known gap likely to hurt users or review",
+          "probability": 0.02
+        },
+        {
+          "level": "mixed — partial or unverified evidence",
+          "probability": 0.14
+        },
+        {
+          "level": "confident — solid with minor gaps",
+          "probability": 0.51
+        },
+        {
+          "level": "proven — google-quality, evidenced end to end",
+          "probability": 0.32
+        }
+      ]
+    },
+    "provenance": {
+      "bucket": "provenance_gap",
+      "authority": "jev",
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
+      "source": "live",
+      "confidence": 0.52,
+      "jev_probability_distribution": [
+        {
+          "level": "failing — evidence contradicts quality",
+          "probability": 0.01
+        },
+        {
+          "level": "at risk — known gap likely to hurt users or review",
+          "probability": 0.05
+        },
+        {
+          "level": "mixed — partial or unverified evidence",
+          "probability": 0.12
+        },
+        {
+          "level": "confident — solid with minor gaps",
+          "probability": 0.5
+        },
+        {
+          "level": "proven — google-quality, evidenced end to end",
+          "probability": 0.32
+        }
+      ]
+    },
+    "comparison": {
+      "bucket": "comparison_gap",
+      "authority": "jev",
+      "level": "proven — google-quality, evidenced end to end",
+      "index": 4,
+      "ordinal": 100,
+      "source": "live",
+      "confidence": 0.68,
+      "jev_probability_distribution": [
+        {
+          "level": "failing — evidence contradicts quality",
+          "probability": 0.01
+        },
+        {
+          "level": "at risk — known gap likely to hurt users or review",
+          "probability": 0.01
+        },
+        {
+          "level": "mixed — partial or unverified evidence",
+          "probability": 0.03
+        },
+        {
+          "level": "confident — solid with minor gaps",
+          "probability": 0.26
+        },
+        {
+          "level": "proven — google-quality, evidenced end to end",
+          "probability": 0.69
+        }
+      ]
+    },
+    "usecases": {
+      "bucket": "usecases_gap",
+      "authority": "jev",
+      "level": "proven — google-quality, evidenced end to end",
+      "index": 4,
+      "ordinal": 100,
+      "source": "live",
+      "confidence": 0.46,
+      "jev_probability_distribution": [
+        {
+          "level": "failing — evidence contradicts quality",
+          "probability": 0.02
+        },
+        {
+          "level": "at risk — known gap likely to hurt users or review",
+          "probability": 0.03
+        },
+        {
+          "level": "mixed — partial or unverified evidence",
+          "probability": 0.08
+        },
+        {
+          "level": "confident — solid with minor gaps",
+          "probability": 0.32
+        },
+        {
+          "level": "proven — google-quality, evidenced end to end",
+          "probability": 0.55
+        }
+      ]
+    },
+    "privacy": {
+      "bucket": "privacy_gap",
+      "authority": "jev",
+      "level": "proven — google-quality, evidenced end to end",
+      "index": 4,
+      "ordinal": 100,
+      "source": "live",
+      "confidence": 0.72,
+      "jev_probability_distribution": [
+        {
+          "level": "failing — evidence contradicts quality",
+          "probability": 0
+        },
+        {
+          "level": "at risk — known gap likely to hurt users or review",
+          "probability": 0.01
+        },
+        {
+          "level": "mixed — partial or unverified evidence",
+          "probability": 0.01
+        },
+        {
+          "level": "confident — solid with minor gaps",
+          "probability": 0.29
+        },
+        {
+          "level": "proven — google-quality, evidenced end to end",
+          "probability": 0.69
+        }
+      ]
+    },
+    "translation": {
+      "bucket": "translation_gap",
+      "authority": "jev",
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
+      "source": "live",
+      "confidence": 0.46,
+      "jev_probability_distribution": [
+        {
+          "level": "failing — evidence contradicts quality",
+          "probability": 0
+        },
+        {
+          "level": "at risk — known gap likely to hurt users or review",
+          "probability": 0.14
+        },
+        {
+          "level": "mixed — partial or unverified evidence",
+          "probability": 0.36
+        },
+        {
+          "level": "confident — solid with minor gaps",
+          "probability": 0.49
+        },
+        {
+          "level": "proven — google-quality, evidenced end to end",
+          "probability": 0.01
+        }
+      ]
+    }
+  },
+  "blocking_facets": [],
+  "required_work": [
+    {
+      "bucket": "translation_gap",
+      "label": "Translation quality gap",
+      "path_id": "complete/translation",
+      "work_type": "contract-tests",
+      "suggested_next_action": "Gate each locale on parity in both directions, placeholder integrity, no English leakage and no raw key name reaching a visitor, then back-translate the rendered strings and read them for meaning: fix any string that is technically present and not actually readable.",
+      "axis": null,
+      "level": null,
+      "ordinal": null,
+      "source": "live",
+      "confidence": null,
+      "primary": true
+    }
+  ],
+  "recommended_actions": {
+    "contract-tests": [
+      {
+        "bucket": "translation_gap",
+        "label": "Translation quality gap",
+        "path_id": "complete/translation",
+        "suggested_next_action": "Gate each locale on parity in both directions, placeholder integrity, no English leakage and no raw key name reaching a visitor, then back-translate the rendered strings and read them for meaning: fix any string that is technically present and not actually readable.",
+        "axis": null,
+        "level": null,
+        "ordinal": null,
+        "primary": true
+      }
+    ]
+  },
+  "blockers": [],
+  "live": {
+    "is_fallback": false,
+    "primary_gap": "translation_gap",
+    "primary_gap_source": "live",
+    "notes": [
+      "spec:confident — solid with minor gaps",
+      "design:proven — google-quality, evidenced end to end",
+      "correctness:confident — solid with minor gaps",
+      "quality:confident — solid with minor gaps",
+      "security:confident — solid with minor gaps",
+      "performance:confident — solid with minor gaps",
+      "accessibility:confident — solid with minor gaps",
+      "i18n:confident — solid with minor gaps",
+      "seo:proven — google-quality, evidenced end to end",
+      "resilience:confident — solid with minor gaps",
+      "experience:confident — solid with minor gaps",
+      "docs:confident — solid with minor gaps",
+      "testing:proven — google-quality, evidenced end to end",
+      "release:confident — solid with minor gaps",
+      "advisor:confident — solid with minor gaps",
+      "physics:confident — solid with minor gaps",
+      "provenance:confident — solid with minor gaps",
+      "comparison:proven — google-quality, evidenced end to end",
+      "usecases:proven — google-quality, evidenced end to end",
+      "privacy:proven — google-quality, evidenced end to end",
+      "translation:confident — solid with minor gaps",
+      "primary_gap:translation_gap"
+    ],
+    "accepted": true,
+    "model": "jev-1.14.0",
+    "model_requested": "jev-latest"
+  },
+  "evidence": {
+    "tests_summary": "1983/1983 npm test green (0 failed, 0 skipped), measured on this tree by scripts/run-tests.mjs, which runs `node --test \"tests/*.test.mjs\"` and writes the counts it read from the runner's own summary block to jev-artifacts/test-measurement.json. The number is composed into this record from that file on every run, so it cannot outlive the suite it describes. The gates it covers: five pack facets' proof lines, the ledger's declared baseline resolving, one job writing only its own result, a non-passing recorded step cutting the run short, the live model pinned rather than aliased, one run described one way, and a run that never called the provider read as a configuration gap rather than a provider error. deploy:check stages the build clean.",
+    "seo_summary": "npm run seo and check-chars validate localized homepage and chart copy, provenance, country pages, metadata and headers. Asset/cache versions are checked against shipped bytes; the rebase preserves main off-grid behavior.",
+    "smoke_note": "The browser smoke runs 232 gates; measured this run: 232 pass, 0 fail. The count is written by scripts/smoke/runtime.mjs, not typed here. This verifies the staged PR build only; it makes no claim about a production deployment or production parity.",
+    "ci_summary": "This head: 1983/1983 tests, 232/232 browser smoke gates, prettier, seo, plan:check, check-chars, deploy:check and gate:byte-budgets green, CodeQL green, Jev report attached. Every count here is composed from the run that produced this record, and every stated fact about shipped bytes is checked against the tree by scripts/check-evidence-freshness.mjs, which fails the build if the record states a count or a stamp the tree contradicts. The jev-complete job runs on pull_request only, needs every gate job this workflow runs plus always() so a red gate still produces a record, and writes its evidence and report to runner temp storage so the checkout stays clean.",
+    "advisor_audit": "Advisor audit 2026-10-25, real chat+worker paths: live sessions in English and Spanish. The advisor cited the run's own figures, followed the selected UI language, kept the safety line + localized AI caveat, and refused a spoof-label override. Injection, single-flight, locale, privacy, fallback pins green. Limits: two live sessions; the rest pinned.",
+    "notes": [
+      "P0.3a gave the Jev price one canonical constant (0.00042) shared by the gate and the worker, replacing a private 42.0 that was 100,000x the D-13 rate; the worker records TypeSafe token counts and cost",
+      "P0.3b removed the second Jev provider from every path — both fallback blocks, both key lookups, the health flag, the config key and the doc; OPENROUTER_API_KEY was deleted as a live Cloudflare Worker secret",
+      "freeoffgridcalculator.com 403s non-browser clients, but a real browser passes it and serves the app: verified in Chromium, mounts, FX 200, RUM 204. Its only CSP finding is the blocked inline __CF$cv$params script",
+      "the `performance` facet line was REMOVED from the former JSON facet_evidence field, deliberately not replaced by a typed line. It was the only axis whose proof line was a hand-typed PROXY ('eager first-load JS is 786,390 bytes against the 790,000 budget') — bytes, not a measured first paint — and it went unread while a real Lighthouse measurement sat in a CI artifact. The Lighthouse gate (Q-02, P0.4) now composes this line from the run that measured it: the report declares facet_axes and a composed facet_line, and build-jev-evidence.mjs derives the axis from the gate reports, so the judge's numbers and the report's cannot drift apart. A missing report leaves the axis absent, which the judge reads as unverified and never as proven. tests/jev-derived-facets.test.mjs fails the build if a typed `performance` line returns to this file",
+      "the `experience` facet line was REMOVED from the former JSON facet_evidence field, on the same terms as `performance`. It was a sentence about TEST COVERAGE (30 of 153 smoke gates are battery-only) — a true fact about this repo, about nothing a visitor touches. scripts/check-experience.mjs (P0.4) now drives the staged build through the nine-step journey, provokes the reachable errors, reads the empty surfaces, and sweeps the DOM for dictionary keys painted into the page; its report declares facet_axes and carries a composed facet_line. On its first walk it found two surfaces rendering their own i18n key and two error messages that named a failure with no way out — all inside a panel quick mode hides. A missing report leaves the axis absent, which is read as unverified and never as proven. tests/jev-derived-facets.test.mjs fails the build if a typed experience line returns",
+      "the `translation` facet line was REMOVED from the former JSON facet_evidence field; the axis now belongs to scripts/check-experience.mjs, composed from the run. The typed line was 1233 characters against the 280-char clip: the judge read its first clause, cut mid-sentence, while six locales of measured copy sat unread. PARITY IS NOT LOST: it moved to the `i18n` axis and scripts/check-i18n.mjs (still inside npm run seo, gating two-direction parity and placeholder integrity); the composed line names it. The typed line's history — ten translated-only strings, tariffNote built from an English template literal, de.tariffNote missing — is in the ledger. Back-reading all rendered strings for meaning was completed 2026-10-24 as an AI fluent review (436x6 against English; 23 fixes pinned in tests/translation-review.test.mjs, TRANSLATION_MEANING_BACKREAD_2026-10-24.md); a reviewer back-read, not native-speaker validation. THE CLAUSE THE NATIVE NAME CARRIED, NOW EVIDENCED (owner-directed 2026-10-25, #287 Phase 4): the work order's remediation — back-translate the rendered strings, read for meaning, fix what is not actually readable — is complete. The 2026-10-25 pass back-translated every rendered string (466 keys x 6) with a machine engine admitted FIRST by blinded seeded controls (36/36: corruptions caught, verbatim pairs cleared), read every divergent string against English, dispositioned all 185 divergences blind (every material one a caught seeded control; the rest documented noise; no shipped fix beyond the 23 above) (TRANSLATION_BACKTRANSLATION_2026-10-25.md). GAPS BOUNDED: `engine` = the ~6 callout variants the engine composes in the Worker (engine.js/rescale.js/charts.js), English in all 7 — the worker cannot carry the dictionary; close = codes-to-keys (P5); drafted keys removed as unwired (named in the record). `F-42` = hand-built number remnants post-TOU-cash fix. Native-speaker review remains open as the named attribution LIMIT — no native speaker has validated idiomaticity; nothing here claims otherwise — not as an unperformed remediation: B1 staging (A-007) and P10's bar are unchanged. P5.5/R-I18N-06 now ships on this branch; scripts/check-experience.mjs measures its staged locale/page/key draft path and verifies it sends no request.",
+      "Back-read the PR #309 suggestion CTA against its English source in all seven locales. One supported defect in Dutch: the old label implied improving the translation directly instead of proposing a correction; the Dutch CTA was clarified and a focused test pins the reviewed values. A semantic spot-check of the new CTA only — not whole-site meaning/naturalness or native-speaker review; see docs/jev-completion/TRANSLATION_SUGGESTION_LABEL_BACKREAD_2026-10-24.md.",
+      "Back-read the 43 chart localization keys introduced by PR #248 against English in all six translated locales. No material numeric or grid/generator meaning reversal; the five-year weather-data labels were clarified and Dutch derating jargon replaced. This semantic review is not native-speaker review; the 2026-10-25 back-translation record (TRANSLATION_BACKTRANSLATION_2026-10-25.md) disposes that clause; method in docs/jev-completion/CHART_TRANSLATION_BACKREAD_2026-10-22.md."
+    ],
+    "dirty_paths": []
+  },
+  "target": "? @ 493e41c",
+  "scope": "P9.1",
+  "verdict_mode": "scoped",
+  "auto_facts": {
+    "tree_clean": true,
+    "secrets_clean": true,
+    "env_ignored": true,
+    "test_count": 164,
+    "dirty_paths": []
+  },
+  "live_jev": {
+    "is_fallback": false,
+    "accepted": true,
+    "provider": "typesafe",
+    "model": "jev-1.14.0",
+    "model_requested": "jev-latest",
+    "input_tokens": 6979,
+    "cost_usd": 0.0000029311800000000003,
+    "notes": []
+  },
+  "evidence_source": "/home/runner/work/_temp/jev-evidence.json",
+  "evidence_source_kind": "ci-generated",
+  "run_class": "judgment",
+  "rerun_allowed": false,
+  "rerun_policy": "plan §8 P0.3(e): a provider error may be re-run once; a judgment may not.",
+  "scoped": {
+    "scope": "P9.1",
+    "facets": [
+      "i18n",
+      "seo",
+      "translation"
+    ],
+    "semantic_score": 90,
+    "score": 97,
+    "min_score": 95,
+    "bootstrap_applies": false,
+    "bootstrap_rule": "plan §9 rule 6: P0.3 sub-PRs merge on green CI plus no ratchet regression, even below 99",
+    "facets_short_of_proven": [
+      "i18n",
+      "translation"
+    ],
+    "facets_below_confidence": [
+      "i18n",
+      "seo",
+      "translation"
+    ],
+    "min_confidence": 0.95,
+    "facet_min_ordinal": 95,
+    "exit_rule_binds_from": "P0.4",
+    "exit_rule_binding": true,
+    "ratchet": {
+      "status": "met",
+      "baseline_ts": "2026-10-04",
+      "baseline_ref": "P9.4-baseline-2",
+      "facets_compared": 21,
+      "baseline_bars": 21,
+      "unreadable_bars": [],
+      "regressions": []
+    },
+    "pass": false
+  }
+}

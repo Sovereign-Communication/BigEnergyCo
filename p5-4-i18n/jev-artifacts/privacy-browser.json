@@ -1,0 +1,45 @@
+{
+  "ok": false,
+  "cookieCount": 0,
+  "cookieNames": [],
+  "httpOnlyCount": 0,
+  "visibleToDocument": 0,
+  "localStorageKeys": [],
+  "sessionStorageKeys": [],
+  "requestCount": 91,
+  "thirdPartyOrigins": [
+    "https://nominatim.openstreetmap.org",
+    "https://open.er-api.com"
+  ],
+  "thirdPartyUrls": [
+    "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&addressdetails=1&q=Portland",
+    "https://open.er-api.com/v6/latest/USD"
+  ],
+  "weatherHosts": [],
+  "identifying": [],
+  "coordinateFindings": [],
+  "journeysDriven": [
+    {
+      "name": "city-search",
+      "requests": 2
+    },
+    {
+      "name": "sizing-run",
+      "requests": 1
+    },
+    {
+      "name": "advisor",
+      "requests": 0
+    }
+  ],
+  "measurement": "real browser (CDP) on the staged allowlist build, across 4 journeys: arrival, city search, sizing run, advisor",
+  "turnstile": {
+    "provision": true,
+    "action": "provision",
+    "why": "0 cookies measured, so provisioning Turnstile does not breach Q-15"
+  },
+  "facet_axes": [
+    "privacy"
+  ],
+  "facet_line": "CDP browser, 4 journeys, 91 requests: 0 cookies (0 HttpOnly), 0 storage keys, 0 with an identifier, 0 over 0.01 deg. check-privacy.mjs: nothing logged, no ad/tracker/affiliate/lead capture, advisor egress disclosed, nothing unasked, geolocation click-gated."
+}

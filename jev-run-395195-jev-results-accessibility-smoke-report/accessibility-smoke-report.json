@@ -1,0 +1,123 @@
+{
+  "measured_by": "scripts/browser-smoke.mjs",
+  "facet_axes": [
+    "accessibility"
+  ],
+  "facet_lines": {
+    "accessibility": "Chrome a11y 20/20: keyboard result/quick/manual/kWh 8/8; 4 controls × 2 keys; names pass; WCAG AA result text pass; 2/2 normal and 2/2 reduced-motion scrolls; emulation reset pass."
+  },
+  "metric": {
+    "browser": "Chrome",
+    "checks": [
+      {
+        "name": "result card present for result-stage checks",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "keyboard result stage: reaches its controls",
+        "passed": true,
+        "detail": "66 stops"
+      },
+      {
+        "name": "keyboard result stage: tab order wraps (no trap)",
+        "passed": true,
+        "detail": "66 stops"
+      },
+      {
+        "name": "product text meets WCAG AA contrast",
+        "passed": true,
+        "detail": "all pass"
+      },
+      {
+        "name": "matchMedia reports no reduced motion by default",
+        "passed": true,
+        "detail": "false"
+      },
+      {
+        "name": "scroll site simple-mode: stays animated when motion is allowed",
+        "passed": true,
+        "detail": "moved 1207px, 0px before first frame"
+      },
+      {
+        "name": "scroll site see-details: stays animated when motion is allowed",
+        "passed": true,
+        "detail": "moved 2688px, 0px before first frame"
+      },
+      {
+        "name": "matchMedia honors emulated reduced motion",
+        "passed": true,
+        "detail": "true"
+      },
+      {
+        "name": "scroll site simple-mode: jumps instantly under reduced motion",
+        "passed": true,
+        "detail": "moved 1207px, 1207px before first frame"
+      },
+      {
+        "name": "scroll site see-details: jumps instantly under reduced motion",
+        "passed": true,
+        "detail": "moved 2739px, 2739px before first frame"
+      },
+      {
+        "name": "reduced-motion emulation clears cleanly",
+        "passed": true,
+        "detail": "false"
+      },
+      {
+        "name": "role=button divs respond to Enter and Space",
+        "passed": true,
+        "detail": "4 controls × 2 keys"
+      },
+      {
+        "name": "keyboard quick mode: reaches its controls",
+        "passed": true,
+        "detail": "66 stops"
+      },
+      {
+        "name": "keyboard quick mode: tab order wraps (no trap)",
+        "passed": true,
+        "detail": "66 stops"
+      },
+      {
+        "name": "keyboard manual mode: reaches its controls",
+        "passed": true,
+        "detail": "84 stops"
+      },
+      {
+        "name": "keyboard manual mode: tab order wraps (no trap)",
+        "passed": true,
+        "detail": "84 stops"
+      },
+      {
+        "name": "keyboard kWh load panel: reaches its controls",
+        "passed": true,
+        "detail": "49 stops"
+      },
+      {
+        "name": "keyboard kWh load panel: tab order wraps (no trap)",
+        "passed": true,
+        "detail": "49 stops"
+      },
+      {
+        "name": "every visible control has an accessible name",
+        "passed": true,
+        "detail": "all named"
+      },
+      {
+        "name": "accessibility facet evidence covers keyboard, names, contrast and motion",
+        "passed": true,
+        "detail": "8/8 keyboard checks, 2/2 normal and 2/2 reduced-motion scroll checks"
+      }
+    ],
+    "keyboard_states": [
+      "result stage",
+      "quick mode",
+      "manual mode",
+      "kWh load panel"
+    ],
+    "normal_motion_scroll_sites": 2,
+    "reduced_motion_scroll_sites": 2,
+    "complete": true
+  }
+}

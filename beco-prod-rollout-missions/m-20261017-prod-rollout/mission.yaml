@@ -1,0 +1,25 @@
+id: m-20261017-prod-rollout
+request: Audit and continue the canonical BigEnergyCo production deployment mission from thread b4588b76; inspect repo-wide PRs/issues/comments and all known worktrees, resolve eligible canonical work, land through main/staging, verify live production only when every required exit gate passes.
+scope:
+  in_scope:
+    - Canonical plan
+    - amendments
+    - lock
+    - ledger
+    - tracker; all open/recent PRs
+    - issues
+    - reviews and comments; open worktrees/branches; tests
+    - security
+    - Jev
+    - staging and production verification; eligible PR merges and deployment
+  out_of_scope:
+    - Changing immutable plan without owner-approved amendment; inventing owner approvals/evidence; altering unrelated user work; weakening gates; production release while required gates are unmet
+success_definition: "Canonical plan and amendments are honored; all eligible repo work is resolved and merged by PR; main/staging and production receive the same verified commit; required test, security, Jev >=99/all facets, owner, and live-site checks pass; blockers are evidenced and recorded."
+limits:
+  max_cost_usd: 2.0
+terminal_reserve:
+  cost_usd: 0.2
+persistence:
+  root: "C:/tmp/beco-prod-rollout-missions"
+verifier:
+  kind: claude-isolated-mission

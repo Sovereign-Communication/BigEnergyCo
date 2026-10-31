@@ -1,0 +1,7 @@
+{
+  "job": "coverage",
+  "conclusion": "success",
+  "steps": {
+    "coverage": "success"
+  }
+}

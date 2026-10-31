@@ -1,0 +1,8 @@
+{
+    "conclusion":  "success",
+    "steps":  {
+                  "stage":  "success",
+                  "lighthouse":  "success"
+              },
+    "job":  "lighthouse"
+}

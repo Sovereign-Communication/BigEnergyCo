@@ -1,0 +1,11 @@
+﻿const cp = require('node:child_process');
+const fs = require('node:fs');
+const p = 'docs/plan/LEDGER.jsonl';
+const base = cp.execFileSync('git', ['show', 'origin/codex/p95-battery-reviewed-date-20261022:' + p]);
+const rows = fs.readFileSync(p, 'utf8').split(/\r?\n/).map(s => { try { return JSON.parse(s); } catch { return null; } }).filter(x => x?.evidence?.pr === 269);
+if (rows.length !== 3) throw new Error('expected three PR 269 ledger records');
+const commits = ['73795e53', '0dd0add0', 'e3695c12'];
+for (let i = 0; i < rows.length; i++) rows[i].evidence.sha = cp.execFileSync('git', ['rev-parse', commits[i]], { encoding: 'utf8' }).trim();
+rows[0].evidence.full_test = 'npm test 1738/1738';
+const suffix = Buffer.from((base.length && base[base.length - 1] === 10 ? '' : '\n') + rows.map(x => JSON.stringify(x)).join('\n') + '\n', 'utf8');
+fs.writeFileSync(p, Buffer.concat([base, suffix]));

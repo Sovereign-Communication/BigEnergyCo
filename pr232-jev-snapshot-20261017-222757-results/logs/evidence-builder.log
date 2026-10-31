@@ -1,0 +1,3 @@
+﻿evidence: C:\tmp\pr232-jev-snapshot-20261017-222757-results\jev-evidence.json (ci-generated)
+required jobs: test web-smoke quality-lab lighthouse quality-evidence coverage
+records: tests_green=true prettier_clean=true seo_green=true smoke_green=true ci_green=true legacy_gates_green=true

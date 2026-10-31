@@ -1,0 +1,10 @@
+{
+  "measured_by": "scripts/run-tests.mjs (node --test summary block)",
+  "tests": 1690,
+  "pass": 1678,
+  "fail": 12,
+  "skipped": 0,
+  "cancelled": 0,
+  "command": "node --test --test-reporter=spec \"tests/*.test.mjs\"",
+  "node": "v24.18.0"
+}

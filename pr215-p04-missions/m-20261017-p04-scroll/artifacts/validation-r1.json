@@ -1,0 +1,72 @@
+﻿{
+    "mission_id":  "m-20261017-p04-scroll",
+    "head":  "db5d9b8b3c5d84cbd130f09a84c8220a37fe4afe",
+    "base":  "32374c01482055f82686172592340eae072b93f7",
+    "pull_request":  "https://github.com/Sovereign-Communication/BigEnergyCo/pull/215",
+    "worktree":  "C:/tmp/pr215-p04",
+    "worktree_clean":  true,
+    "diff_range":  "c55e4e5..db5d9b8b3c5d84cbd130f09a84c8220a37fe4afe",
+    "chrome":  {
+                   "command":  "node scripts/smoke-local.mjs --keep",
+                   "result":  "pass",
+                   "gates":  189,
+                   "report":  "C:/tmp/pr215-p04-missions/m-20261017-p04-scroll/stages/chrome-smoke-final.log",
+                   "paths":  [
+                                 "sizing/simple-mode",
+                                 "sizing/see-details",
+                                 "chat/hero-sizing",
+                                 "chat/nav-sizing"
+                             ],
+                   "preferences":  {
+                                       "no-preference":  "each path remained animated; scroll moved 834px or 2159px with 0px before first frame",
+                                       "reduce":  "each path jumped instantly; displacement was complete before first frame"
+                                   },
+                   "terminal":  "ALL SMOKE GATES PASSED (189 gates); LOCAL BROWSER SMOKE PASSED"
+               },
+    "exact_head_ci":  {
+                          "run_id":  "39031627669",
+                          "head":  "db5d9b8b3c5d84cbd130f09a84c8220a37fe4afe",
+                          "ordinary_jobs":  {
+                                                "quality-evidence":  "success",
+                                                "coverage":  "success",
+                                                "test":  "success",
+                                                "lighthouse":  "success",
+                                                "quality-lab":  "success",
+                                                "web-smoke":  "success"
+                                            },
+                          "jev_complete":  "failure",
+                          "codeql_run_id":  "39031627335",
+                          "codeql":  "success"
+                      },
+    "jev":  {
+                "job_id":  "117394673780",
+                "result":  "failure",
+                "report":  "C:/tmp/pr215-p04-missions/m-20261017-p04-scroll/artifacts/jev-db5d9b8/jev-report.json",
+                "accepted_live_judgment":  true,
+                "provider":  "typesafe",
+                "model":  "jev-1.13.0",
+                "fallback":  false,
+                "secrets_clean":  true,
+                "global_score":  95.93,
+                "p04_score":  94.75,
+                "p04_target":  99,
+                "p04_ratchet":  "met",
+                "p04_facets_short_of_proven":  [
+                                                   "accessibility",
+                                                   "performance",
+                                                   "quality"
+                                               ],
+                "remaining_in_scope_performance_action":  "Run the playtest pass on the real surface: measure the slow interaction, confirm warm-cache paths issue zero redundant network pulls, and make subsequent adjustments instant.",
+                "rerun_allowed":  false
+            },
+    "no_merge_or_deploy":  true,
+    "local_checks":  {
+                         "format_check":  "pass",
+                         "asset_token_check":  "pass; 49 referenced assets",
+                         "byte_budgets":  "pass; 0 regressions, 3 improvements, 0 unmeasured",
+                         "immutable_plan_check":  "pass; hash 6f9c8c7e7d33140fb6ec5ef36848f27d0387a5ab0501985df71dba77b20279cf",
+                         "seo":  "pass",
+                         "targeted_node_tests":  "pass; 111/111",
+                         "full_npm_test":  "Two local Windows privacy-browser failures remained after three freshness failures were fixed; exact-head CI test and web-smoke jobs passed. The local artifact was an existing unmeasured privacy-browser result and the Windows invocation omitted the expected marker."
+                     }
+}

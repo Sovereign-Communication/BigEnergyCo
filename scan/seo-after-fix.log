@@ -1,0 +1,494 @@
+OK   index.html: canonical
+OK   index.html: OG/Twitter complete
+OK   index.html: hreflang present (en + x-default)
+OK   index.html: JSON-LD block 1 parses
+OK   blog/index.html: canonical
+OK   blog/index.html: OG/Twitter complete
+OK   blog/index.html: hreflang present (en + x-default)
+OK   blog/index.html: JSON-LD block 1 parses
+OK   blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage/index.html: canonical
+OK   blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage/index.html: OG/Twitter complete
+OK   blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage/index.html: hreflang present (en + x-default)
+OK   blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage/index.html: BreadcrumbList JSON-LD present
+OK   blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage/index.html: JSON-LD block 1 parses
+OK   blog/off-grid-vs-grid-tie-payback/index.html: canonical
+OK   blog/off-grid-vs-grid-tie-payback/index.html: OG/Twitter complete
+OK   blog/off-grid-vs-grid-tie-payback/index.html: hreflang present (en + x-default)
+OK   blog/off-grid-vs-grid-tie-payback/index.html: BreadcrumbList JSON-LD present
+OK   blog/off-grid-vs-grid-tie-payback/index.html: JSON-LD block 1 parses
+OK   blog/how-to-cut-electricity-bill-with-solar/index.html: canonical
+OK   blog/how-to-cut-electricity-bill-with-solar/index.html: OG/Twitter complete
+OK   blog/how-to-cut-electricity-bill-with-solar/index.html: hreflang present (en + x-default)
+OK   blog/how-to-cut-electricity-bill-with-solar/index.html: BreadcrumbList JSON-LD present
+OK   blog/how-to-cut-electricity-bill-with-solar/index.html: JSON-LD block 1 parses
+OK   blog/is-a-home-battery-worth-it/index.html: canonical
+OK   blog/is-a-home-battery-worth-it/index.html: OG/Twitter complete
+OK   blog/is-a-home-battery-worth-it/index.html: hreflang present (en + x-default)
+OK   blog/is-a-home-battery-worth-it/index.html: BreadcrumbList JSON-LD present
+OK   blog/is-a-home-battery-worth-it/index.html: JSON-LD block 1 parses
+OK   blog/time-of-use-tariffs-battery/index.html: canonical
+OK   blog/time-of-use-tariffs-battery/index.html: OG/Twitter complete
+OK   blog/time-of-use-tariffs-battery/index.html: hreflang present (en + x-default)
+OK   blog/time-of-use-tariffs-battery/index.html: BreadcrumbList JSON-LD present
+OK   blog/time-of-use-tariffs-battery/index.html: JSON-LD block 1 parses
+OK   blog/what-size-solar-system-for-off-grid/index.html: canonical
+OK   blog/what-size-solar-system-for-off-grid/index.html: OG/Twitter complete
+OK   blog/what-size-solar-system-for-off-grid/index.html: hreflang present (en + x-default)
+OK   blog/what-size-solar-system-for-off-grid/index.html: BreadcrumbList JSON-LD present
+OK   blog/what-size-solar-system-for-off-grid/index.html: JSON-LD block 1 parses
+OK   blog/off-grid-battery-bank-sizing/index.html: canonical
+OK   blog/off-grid-battery-bank-sizing/index.html: OG/Twitter complete
+OK   blog/off-grid-battery-bank-sizing/index.html: hreflang present (en + x-default)
+OK   blog/off-grid-battery-bank-sizing/index.html: BreadcrumbList JSON-LD present
+OK   blog/off-grid-battery-bank-sizing/index.html: JSON-LD block 1 parses
+OK   blog/solar-vs-generator-cost/index.html: canonical
+OK   blog/solar-vs-generator-cost/index.html: OG/Twitter complete
+OK   blog/solar-vs-generator-cost/index.html: hreflang present (en + x-default)
+OK   blog/solar-vs-generator-cost/index.html: BreadcrumbList JSON-LD present
+OK   blog/solar-vs-generator-cost/index.html: JSON-LD block 1 parses
+OK   blog/escape-load-shedding/index.html: canonical
+OK   blog/escape-load-shedding/index.html: OG/Twitter complete
+OK   blog/escape-load-shedding/index.html: hreflang present (en + x-default)
+OK   blog/escape-load-shedding/index.html: BreadcrumbList JSON-LD present
+OK   blog/escape-load-shedding/index.html: JSON-LD block 1 parses
+OK   blog/battery-longevity-and-dod-reference/index.html: canonical
+OK   blog/battery-longevity-and-dod-reference/index.html: OG/Twitter complete
+OK   blog/battery-longevity-and-dod-reference/index.html: hreflang present (en + x-default)
+OK   blog/battery-longevity-and-dod-reference/index.html: BreadcrumbList JSON-LD present
+OK   blog/battery-longevity-and-dod-reference/index.html: JSON-LD block 1 parses
+OK   blog/hawaii-2026-hurricane-season-backup-power/index.html: canonical
+OK   blog/hawaii-2026-hurricane-season-backup-power/index.html: OG/Twitter complete
+OK   blog/hawaii-2026-hurricane-season-backup-power/index.html: hreflang present (en + x-default)
+OK   blog/hawaii-2026-hurricane-season-backup-power/index.html: BreadcrumbList JSON-LD present
+OK   blog/hawaii-2026-hurricane-season-backup-power/index.html: JSON-LD block 1 parses
+OK   about/index.html: canonical
+OK   about/index.html: OG/Twitter complete
+OK   about/index.html: hreflang present (en + x-default)
+OK   about/index.html: JSON-LD block 1 parses
+OK   solar-calculator/accra/index.html: canonical
+OK   solar-calculator/accra/index.html: OG/Twitter complete
+OK   solar-calculator/accra/index.html: hreflang present (en + x-default)
+OK   solar-calculator/accra/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/accra/index.html: JSON-LD block 1 parses
+OK   solar-calculator/addis-ababa/index.html: canonical
+OK   solar-calculator/addis-ababa/index.html: OG/Twitter complete
+OK   solar-calculator/addis-ababa/index.html: hreflang present (en + x-default)
+OK   solar-calculator/addis-ababa/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/addis-ababa/index.html: JSON-LD block 1 parses
+OK   solar-calculator/antananarivo/index.html: canonical
+OK   solar-calculator/antananarivo/index.html: OG/Twitter complete
+OK   solar-calculator/antananarivo/index.html: hreflang present (en + x-default)
+OK   solar-calculator/antananarivo/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/antananarivo/index.html: JSON-LD block 1 parses
+OK   solar-calculator/athens/index.html: canonical
+OK   solar-calculator/athens/index.html: OG/Twitter complete
+OK   solar-calculator/athens/index.html: hreflang present (en + x-default)
+OK   solar-calculator/athens/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/athens/index.html: JSON-LD block 1 parses
+OK   solar-calculator/auckland/index.html: canonical
+OK   solar-calculator/auckland/index.html: OG/Twitter complete
+OK   solar-calculator/auckland/index.html: hreflang present (en + x-default)
+OK   solar-calculator/auckland/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/auckland/index.html: JSON-LD block 1 parses
+OK   solar-calculator/bangkok/index.html: canonical
+OK   solar-calculator/bangkok/index.html: OG/Twitter complete
+OK   solar-calculator/bangkok/index.html: hreflang present (en + x-default)
+OK   solar-calculator/bangkok/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/bangkok/index.html: JSON-LD block 1 parses
+OK   solar-calculator/beijing/index.html: canonical
+OK   solar-calculator/beijing/index.html: OG/Twitter complete
+OK   solar-calculator/beijing/index.html: hreflang present (en + x-default)
+OK   solar-calculator/beijing/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/beijing/index.html: JSON-LD block 1 parses
+OK   solar-calculator/berlin/index.html: canonical
+OK   solar-calculator/berlin/index.html: OG/Twitter complete
+OK   solar-calculator/berlin/index.html: hreflang present (en + x-default)
+OK   solar-calculator/berlin/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/berlin/index.html: JSON-LD block 1 parses
+OK   solar-calculator/bogota/index.html: canonical
+OK   solar-calculator/bogota/index.html: OG/Twitter complete
+OK   solar-calculator/bogota/index.html: hreflang present (en + x-default)
+OK   solar-calculator/bogota/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/bogota/index.html: JSON-LD block 1 parses
+OK   solar-calculator/buenos-aires/index.html: canonical
+OK   solar-calculator/buenos-aires/index.html: OG/Twitter complete
+OK   solar-calculator/buenos-aires/index.html: hreflang present (en + x-default)
+OK   solar-calculator/buenos-aires/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/buenos-aires/index.html: JSON-LD block 1 parses
+OK   solar-calculator/cairo/index.html: canonical
+OK   solar-calculator/cairo/index.html: OG/Twitter complete
+OK   solar-calculator/cairo/index.html: hreflang present (en + x-default)
+OK   solar-calculator/cairo/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/cairo/index.html: JSON-LD block 1 parses
+OK   solar-calculator/casablanca/index.html: canonical
+OK   solar-calculator/casablanca/index.html: OG/Twitter complete
+OK   solar-calculator/casablanca/index.html: hreflang present (en + x-default)
+OK   solar-calculator/casablanca/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/casablanca/index.html: JSON-LD block 1 parses
+OK   solar-calculator/chicago/index.html: canonical
+OK   solar-calculator/chicago/index.html: OG/Twitter complete
+OK   solar-calculator/chicago/index.html: hreflang present (en + x-default)
+OK   solar-calculator/chicago/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/chicago/index.html: JSON-LD block 1 parses
+OK   solar-calculator/colombo/index.html: canonical
+OK   solar-calculator/colombo/index.html: OG/Twitter complete
+OK   solar-calculator/colombo/index.html: hreflang present (en + x-default)
+OK   solar-calculator/colombo/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/colombo/index.html: JSON-LD block 1 parses
+OK   solar-calculator/cusco/index.html: canonical
+OK   solar-calculator/cusco/index.html: OG/Twitter complete
+OK   solar-calculator/cusco/index.html: hreflang present (en + x-default)
+OK   solar-calculator/cusco/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/cusco/index.html: JSON-LD block 1 parses
+OK   solar-calculator/dakar/index.html: canonical
+OK   solar-calculator/dakar/index.html: OG/Twitter complete
+OK   solar-calculator/dakar/index.html: hreflang present (en + x-default)
+OK   solar-calculator/dakar/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/dakar/index.html: JSON-LD block 1 parses
+OK   solar-calculator/delhi/index.html: canonical
+OK   solar-calculator/delhi/index.html: OG/Twitter complete
+OK   solar-calculator/delhi/index.html: hreflang present (en + x-default)
+OK   solar-calculator/delhi/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/delhi/index.html: JSON-LD block 1 parses
+OK   solar-calculator/denver/index.html: canonical
+OK   solar-calculator/denver/index.html: OG/Twitter complete
+OK   solar-calculator/denver/index.html: hreflang present (en + x-default)
+OK   solar-calculator/denver/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/denver/index.html: JSON-LD block 1 parses
+OK   solar-calculator/dhaka/index.html: canonical
+OK   solar-calculator/dhaka/index.html: OG/Twitter complete
+OK   solar-calculator/dhaka/index.html: hreflang present (en + x-default)
+OK   solar-calculator/dhaka/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/dhaka/index.html: JSON-LD block 1 parses
+OK   solar-calculator/dubai/index.html: canonical
+OK   solar-calculator/dubai/index.html: OG/Twitter complete
+OK   solar-calculator/dubai/index.html: hreflang present (en + x-default)
+OK   solar-calculator/dubai/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/dubai/index.html: JSON-LD block 1 parses
+OK   solar-calculator/guatemala-city/index.html: canonical
+OK   solar-calculator/guatemala-city/index.html: OG/Twitter complete
+OK   solar-calculator/guatemala-city/index.html: hreflang present (en + x-default)
+OK   solar-calculator/guatemala-city/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/guatemala-city/index.html: JSON-LD block 1 parses
+OK   solar-calculator/havana/index.html: canonical
+OK   solar-calculator/havana/index.html: OG/Twitter complete
+OK   solar-calculator/havana/index.html: hreflang present (en + x-default)
+OK   solar-calculator/havana/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/havana/index.html: JSON-LD block 1 parses
+OK   solar-calculator/ho-chi-minh-city/index.html: canonical
+OK   solar-calculator/ho-chi-minh-city/index.html: OG/Twitter complete
+OK   solar-calculator/ho-chi-minh-city/index.html: hreflang present (en + x-default)
+OK   solar-calculator/ho-chi-minh-city/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/ho-chi-minh-city/index.html: JSON-LD block 1 parses
+OK   solar-calculator/hong-kong/index.html: canonical
+OK   solar-calculator/hong-kong/index.html: OG/Twitter complete
+OK   solar-calculator/hong-kong/index.html: hreflang present (en + x-default)
+OK   solar-calculator/hong-kong/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/hong-kong/index.html: JSON-LD block 1 parses
+OK   solar-calculator/honolulu/index.html: canonical
+OK   solar-calculator/honolulu/index.html: OG/Twitter complete
+OK   solar-calculator/honolulu/index.html: hreflang present (en + x-default)
+OK   solar-calculator/honolulu/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/honolulu/index.html: JSON-LD block 1 parses
+OK   solar-calculator/index.html: canonical
+OK   solar-calculator/index.html: OG/Twitter complete
+OK   solar-calculator/index.html: hreflang present (en + x-default)
+OK   solar-calculator/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/index.html: JSON-LD block 1 parses
+OK   solar-calculator/istanbul/index.html: canonical
+OK   solar-calculator/istanbul/index.html: OG/Twitter complete
+OK   solar-calculator/istanbul/index.html: hreflang present (en + x-default)
+OK   solar-calculator/istanbul/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/istanbul/index.html: JSON-LD block 1 parses
+OK   solar-calculator/jakarta/index.html: canonical
+OK   solar-calculator/jakarta/index.html: OG/Twitter complete
+OK   solar-calculator/jakarta/index.html: hreflang present (en + x-default)
+OK   solar-calculator/jakarta/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/jakarta/index.html: JSON-LD block 1 parses
+OK   solar-calculator/johannesburg/index.html: canonical
+OK   solar-calculator/johannesburg/index.html: OG/Twitter complete
+OK   solar-calculator/johannesburg/index.html: hreflang present (en + x-default)
+OK   solar-calculator/johannesburg/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/johannesburg/index.html: JSON-LD block 1 parses
+OK   solar-calculator/karachi/index.html: canonical
+OK   solar-calculator/karachi/index.html: OG/Twitter complete
+OK   solar-calculator/karachi/index.html: hreflang present (en + x-default)
+OK   solar-calculator/karachi/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/karachi/index.html: JSON-LD block 1 parses
+OK   solar-calculator/kathmandu/index.html: canonical
+OK   solar-calculator/kathmandu/index.html: OG/Twitter complete
+OK   solar-calculator/kathmandu/index.html: hreflang present (en + x-default)
+OK   solar-calculator/kathmandu/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/kathmandu/index.html: JSON-LD block 1 parses
+OK   solar-calculator/kinshasa/index.html: canonical
+OK   solar-calculator/kinshasa/index.html: OG/Twitter complete
+OK   solar-calculator/kinshasa/index.html: hreflang present (en + x-default)
+OK   solar-calculator/kinshasa/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/kinshasa/index.html: JSON-LD block 1 parses
+OK   solar-calculator/la-paz/index.html: canonical
+OK   solar-calculator/la-paz/index.html: OG/Twitter complete
+OK   solar-calculator/la-paz/index.html: hreflang present (en + x-default)
+OK   solar-calculator/la-paz/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/la-paz/index.html: JSON-LD block 1 parses
+OK   solar-calculator/lagos/index.html: canonical
+OK   solar-calculator/lagos/index.html: OG/Twitter complete
+OK   solar-calculator/lagos/index.html: hreflang present (en + x-default)
+OK   solar-calculator/lagos/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/lagos/index.html: JSON-LD block 1 parses
+OK   solar-calculator/lima/index.html: canonical
+OK   solar-calculator/lima/index.html: OG/Twitter complete
+OK   solar-calculator/lima/index.html: hreflang present (en + x-default)
+OK   solar-calculator/lima/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/lima/index.html: JSON-LD block 1 parses
+OK   solar-calculator/london/index.html: canonical
+OK   solar-calculator/london/index.html: OG/Twitter complete
+OK   solar-calculator/london/index.html: hreflang present (en + x-default)
+OK   solar-calculator/london/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/london/index.html: JSON-LD block 1 parses
+OK   solar-calculator/los-angeles/index.html: canonical
+OK   solar-calculator/los-angeles/index.html: OG/Twitter complete
+OK   solar-calculator/los-angeles/index.html: hreflang present (en + x-default)
+OK   solar-calculator/los-angeles/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/los-angeles/index.html: JSON-LD block 1 parses
+OK   solar-calculator/madrid/index.html: canonical
+OK   solar-calculator/madrid/index.html: OG/Twitter complete
+OK   solar-calculator/madrid/index.html: hreflang present (en + x-default)
+OK   solar-calculator/madrid/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/madrid/index.html: JSON-LD block 1 parses
+OK   solar-calculator/manila/index.html: canonical
+OK   solar-calculator/manila/index.html: OG/Twitter complete
+OK   solar-calculator/manila/index.html: hreflang present (en + x-default)
+OK   solar-calculator/manila/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/manila/index.html: JSON-LD block 1 parses
+OK   solar-calculator/mexico-city/index.html: canonical
+OK   solar-calculator/mexico-city/index.html: OG/Twitter complete
+OK   solar-calculator/mexico-city/index.html: hreflang present (en + x-default)
+OK   solar-calculator/mexico-city/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/mexico-city/index.html: JSON-LD block 1 parses
+OK   solar-calculator/miami/index.html: canonical
+OK   solar-calculator/miami/index.html: OG/Twitter complete
+OK   solar-calculator/miami/index.html: hreflang present (en + x-default)
+OK   solar-calculator/miami/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/miami/index.html: JSON-LD block 1 parses
+OK   solar-calculator/mumbai/index.html: canonical
+OK   solar-calculator/mumbai/index.html: OG/Twitter complete
+OK   solar-calculator/mumbai/index.html: hreflang present (en + x-default)
+OK   solar-calculator/mumbai/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/mumbai/index.html: JSON-LD block 1 parses
+OK   solar-calculator/nairobi/index.html: canonical
+OK   solar-calculator/nairobi/index.html: OG/Twitter complete
+OK   solar-calculator/nairobi/index.html: hreflang present (en + x-default)
+OK   solar-calculator/nairobi/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/nairobi/index.html: JSON-LD block 1 parses
+OK   solar-calculator/new-york/index.html: canonical
+OK   solar-calculator/new-york/index.html: OG/Twitter complete
+OK   solar-calculator/new-york/index.html: hreflang present (en + x-default)
+OK   solar-calculator/new-york/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/new-york/index.html: JSON-LD block 1 parses
+OK   solar-calculator/oslo/index.html: canonical
+OK   solar-calculator/oslo/index.html: OG/Twitter complete
+OK   solar-calculator/oslo/index.html: hreflang present (en + x-default)
+OK   solar-calculator/oslo/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/oslo/index.html: JSON-LD block 1 parses
+OK   solar-calculator/panama-city/index.html: canonical
+OK   solar-calculator/panama-city/index.html: OG/Twitter complete
+OK   solar-calculator/panama-city/index.html: hreflang present (en + x-default)
+OK   solar-calculator/panama-city/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/panama-city/index.html: JSON-LD block 1 parses
+OK   solar-calculator/papeete/index.html: canonical
+OK   solar-calculator/papeete/index.html: OG/Twitter complete
+OK   solar-calculator/papeete/index.html: hreflang present (en + x-default)
+OK   solar-calculator/papeete/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/papeete/index.html: JSON-LD block 1 parses
+OK   solar-calculator/paris/index.html: canonical
+OK   solar-calculator/paris/index.html: OG/Twitter complete
+OK   solar-calculator/paris/index.html: hreflang present (en + x-default)
+OK   solar-calculator/paris/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/paris/index.html: JSON-LD block 1 parses
+OK   solar-calculator/perth/index.html: canonical
+OK   solar-calculator/perth/index.html: OG/Twitter complete
+OK   solar-calculator/perth/index.html: hreflang present (en + x-default)
+OK   solar-calculator/perth/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/perth/index.html: JSON-LD block 1 parses
+OK   solar-calculator/phnom-penh/index.html: canonical
+OK   solar-calculator/phnom-penh/index.html: OG/Twitter complete
+OK   solar-calculator/phnom-penh/index.html: hreflang present (en + x-default)
+OK   solar-calculator/phnom-penh/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/phnom-penh/index.html: JSON-LD block 1 parses
+OK   solar-calculator/phoenix/index.html: canonical
+OK   solar-calculator/phoenix/index.html: OG/Twitter complete
+OK   solar-calculator/phoenix/index.html: hreflang present (en + x-default)
+OK   solar-calculator/phoenix/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/phoenix/index.html: JSON-LD block 1 parses
+OK   solar-calculator/port-au-prince/index.html: canonical
+OK   solar-calculator/port-au-prince/index.html: OG/Twitter complete
+OK   solar-calculator/port-au-prince/index.html: hreflang present (en + x-default)
+OK   solar-calculator/port-au-prince/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/port-au-prince/index.html: JSON-LD block 1 parses
+OK   solar-calculator/quito/index.html: canonical
+OK   solar-calculator/quito/index.html: OG/Twitter complete
+OK   solar-calculator/quito/index.html: hreflang present (en + x-default)
+OK   solar-calculator/quito/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/quito/index.html: JSON-LD block 1 parses
+OK   solar-calculator/riyadh/index.html: canonical
+OK   solar-calculator/riyadh/index.html: OG/Twitter complete
+OK   solar-calculator/riyadh/index.html: hreflang present (en + x-default)
+OK   solar-calculator/riyadh/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/riyadh/index.html: JSON-LD block 1 parses
+OK   solar-calculator/rome/index.html: canonical
+OK   solar-calculator/rome/index.html: OG/Twitter complete
+OK   solar-calculator/rome/index.html: hreflang present (en + x-default)
+OK   solar-calculator/rome/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/rome/index.html: JSON-LD block 1 parses
+OK   solar-calculator/san-juan/index.html: canonical
+OK   solar-calculator/san-juan/index.html: OG/Twitter complete
+OK   solar-calculator/san-juan/index.html: hreflang present (en + x-default)
+OK   solar-calculator/san-juan/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/san-juan/index.html: JSON-LD block 1 parses
+OK   solar-calculator/santiago/index.html: canonical
+OK   solar-calculator/santiago/index.html: OG/Twitter complete
+OK   solar-calculator/santiago/index.html: hreflang present (en + x-default)
+OK   solar-calculator/santiago/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/santiago/index.html: JSON-LD block 1 parses
+OK   solar-calculator/santo-domingo/index.html: canonical
+OK   solar-calculator/santo-domingo/index.html: OG/Twitter complete
+OK   solar-calculator/santo-domingo/index.html: hreflang present (en + x-default)
+OK   solar-calculator/santo-domingo/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/santo-domingo/index.html: JSON-LD block 1 parses
+OK   solar-calculator/sao-paulo/index.html: canonical
+OK   solar-calculator/sao-paulo/index.html: OG/Twitter complete
+OK   solar-calculator/sao-paulo/index.html: hreflang present (en + x-default)
+OK   solar-calculator/sao-paulo/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/sao-paulo/index.html: JSON-LD block 1 parses
+OK   solar-calculator/seoul/index.html: canonical
+OK   solar-calculator/seoul/index.html: OG/Twitter complete
+OK   solar-calculator/seoul/index.html: hreflang present (en + x-default)
+OK   solar-calculator/seoul/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/seoul/index.html: JSON-LD block 1 parses
+OK   solar-calculator/singapore/index.html: canonical
+OK   solar-calculator/singapore/index.html: OG/Twitter complete
+OK   solar-calculator/singapore/index.html: hreflang present (en + x-default)
+OK   solar-calculator/singapore/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/singapore/index.html: JSON-LD block 1 parses
+OK   solar-calculator/suva/index.html: canonical
+OK   solar-calculator/suva/index.html: OG/Twitter complete
+OK   solar-calculator/suva/index.html: hreflang present (en + x-default)
+OK   solar-calculator/suva/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/suva/index.html: JSON-LD block 1 parses
+OK   solar-calculator/sydney/index.html: canonical
+OK   solar-calculator/sydney/index.html: OG/Twitter complete
+OK   solar-calculator/sydney/index.html: hreflang present (en + x-default)
+OK   solar-calculator/sydney/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/sydney/index.html: JSON-LD block 1 parses
+OK   solar-calculator/taipei/index.html: canonical
+OK   solar-calculator/taipei/index.html: OG/Twitter complete
+OK   solar-calculator/taipei/index.html: hreflang present (en + x-default)
+OK   solar-calculator/taipei/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/taipei/index.html: JSON-LD block 1 parses
+OK   solar-calculator/tokyo/index.html: canonical
+OK   solar-calculator/tokyo/index.html: OG/Twitter complete
+OK   solar-calculator/tokyo/index.html: hreflang present (en + x-default)
+OK   solar-calculator/tokyo/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/tokyo/index.html: JSON-LD block 1 parses
+OK   solar-calculator/toronto/index.html: canonical
+OK   solar-calculator/toronto/index.html: OG/Twitter complete
+OK   solar-calculator/toronto/index.html: hreflang present (en + x-default)
+OK   solar-calculator/toronto/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/toronto/index.html: JSON-LD block 1 parses
+OK   solar-calculator/warsaw/index.html: canonical
+OK   solar-calculator/warsaw/index.html: OG/Twitter complete
+OK   solar-calculator/warsaw/index.html: hreflang present (en + x-default)
+OK   solar-calculator/warsaw/index.html: BreadcrumbList JSON-LD present
+OK   solar-calculator/warsaw/index.html: JSON-LD block 1 parses
+OK   solar-heatmap/index.html: canonical
+OK   solar-heatmap/index.html: OG/Twitter complete
+OK   solar-heatmap/index.html: hreflang present (en + x-default)
+OK   solar-heatmap/index.html: JSON-LD block 1 parses
+OK   sitemap.xml: every URL has <lastmod>
+OK   sitemap.xml: all lastmod dates within 366 days
+OK   sitemap: https://freeoffgridcalculator.com/ -> index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-heatmap/ -> solar-heatmap/index.html
+OK   sitemap: https://freeoffgridcalculator.com/blog/ -> blog/index.html
+OK   sitemap: https://freeoffgridcalculator.com/blog/how-to-cut-electricity-bill-with-solar/ -> blog/how-to-cut-electricity-bill-with-solar/index.html
+OK   sitemap: https://freeoffgridcalculator.com/blog/off-grid-vs-grid-tie-payback/ -> blog/off-grid-vs-grid-tie-payback/index.html
+OK   sitemap: https://freeoffgridcalculator.com/blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage/ -> blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/ -> solar-calculator/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/honolulu/ -> solar-calculator/honolulu/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/los-angeles/ -> solar-calculator/los-angeles/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/phoenix/ -> solar-calculator/phoenix/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/denver/ -> solar-calculator/denver/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/chicago/ -> solar-calculator/chicago/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/miami/ -> solar-calculator/miami/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/new-york/ -> solar-calculator/new-york/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/toronto/ -> solar-calculator/toronto/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/mexico-city/ -> solar-calculator/mexico-city/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/san-juan/ -> solar-calculator/san-juan/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/santo-domingo/ -> solar-calculator/santo-domingo/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/guatemala-city/ -> solar-calculator/guatemala-city/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/panama-city/ -> solar-calculator/panama-city/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/havana/ -> solar-calculator/havana/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/port-au-prince/ -> solar-calculator/port-au-prince/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/bogota/ -> solar-calculator/bogota/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/lima/ -> solar-calculator/lima/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/cusco/ -> solar-calculator/cusco/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/santiago/ -> solar-calculator/santiago/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/sao-paulo/ -> solar-calculator/sao-paulo/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/buenos-aires/ -> solar-calculator/buenos-aires/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/quito/ -> solar-calculator/quito/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/la-paz/ -> solar-calculator/la-paz/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/london/ -> solar-calculator/london/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/paris/ -> solar-calculator/paris/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/madrid/ -> solar-calculator/madrid/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/rome/ -> solar-calculator/rome/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/berlin/ -> solar-calculator/berlin/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/warsaw/ -> solar-calculator/warsaw/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/athens/ -> solar-calculator/athens/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/oslo/ -> solar-calculator/oslo/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/istanbul/ -> solar-calculator/istanbul/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/casablanca/ -> solar-calculator/casablanca/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/cairo/ -> solar-calculator/cairo/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/accra/ -> solar-calculator/accra/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/lagos/ -> solar-calculator/lagos/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/nairobi/ -> solar-calculator/nairobi/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/johannesburg/ -> solar-calculator/johannesburg/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/dakar/ -> solar-calculator/dakar/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/addis-ababa/ -> solar-calculator/addis-ababa/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/kinshasa/ -> solar-calculator/kinshasa/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/antananarivo/ -> solar-calculator/antananarivo/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/dubai/ -> solar-calculator/dubai/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/riyadh/ -> solar-calculator/riyadh/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/karachi/ -> solar-calculator/karachi/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/delhi/ -> solar-calculator/delhi/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/mumbai/ -> solar-calculator/mumbai/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/colombo/ -> solar-calculator/colombo/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/dhaka/ -> solar-calculator/dhaka/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/kathmandu/ -> solar-calculator/kathmandu/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/bangkok/ -> solar-calculator/bangkok/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/ho-chi-minh-city/ -> solar-calculator/ho-chi-minh-city/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/jakarta/ -> solar-calculator/jakarta/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/phnom-penh/ -> solar-calculator/phnom-penh/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/manila/ -> solar-calculator/manila/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/hong-kong/ -> solar-calculator/hong-kong/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/taipei/ -> solar-calculator/taipei/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/seoul/ -> solar-calculator/seoul/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/tokyo/ -> solar-calculator/tokyo/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/beijing/ -> solar-calculator/beijing/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/singapore/ -> solar-calculator/singapore/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/suva/ -> solar-calculator/suva/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/papeete/ -> solar-calculator/papeete/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/perth/ -> solar-calculator/perth/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/sydney/ -> solar-calculator/sydney/index.html
+OK   sitemap: https://freeoffgridcalculator.com/solar-calculator/auckland/ -> solar-calculator/auckland/index.html
+OK   sitemap: https://freeoffgridcalculator.com/blog/is-a-home-battery-worth-it/ -> blog/is-a-home-battery-worth-it/index.html
+OK   sitemap: https://freeoffgridcalculator.com/blog/time-of-use-tariffs-battery/ -> blog/time-of-use-tariffs-battery/index.html
+OK   sitemap: https://freeoffgridcalculator.com/blog/what-size-solar-system-for-off-grid/ -> blog/what-size-solar-system-for-off-grid/index.html
+OK   sitemap: https://freeoffgridcalculator.com/blog/off-grid-battery-bank-sizing/ -> blog/off-grid-battery-bank-sizing/index.html
+OK   sitemap: https://freeoffgridcalculator.com/blog/solar-vs-generator-cost/ -> blog/solar-vs-generator-cost/index.html
+OK   sitemap: https://freeoffgridcalculator.com/blog/escape-load-shedding/ -> blog/escape-load-shedding/index.html
+OK   sitemap: https://freeoffgridcalculator.com/blog/hawaii-2026-hurricane-season-backup-power/ -> blog/hawaii-2026-hurricane-season-backup-power/index.html
+OK   sitemap: https://freeoffgridcalculator.com/about/ -> about/index.html
+OK   sitemap: https://freeoffgridcalculator.com/blog/battery-longevity-and-dod-reference/ -> blog/battery-longevity-and-dod-reference/index.html
+OK   sitemap: all 82 public pages listed, no stale entries
+OK   robots.txt: sitemap directive present
+OK   index.html: Google Search Console (freeoffgridcalculator.com) tag present
+OK   index.html: legacy pages.dev GSC tag retained

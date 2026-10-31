@@ -1,0 +1,3 @@
+import { readFileSync } from "node:fs";
+const r=JSON.parse(readFileSync("C:/tmp/jev-main-5f1/jev-report.json","utf8"));
+console.log(JSON.stringify({score:r.score,semantic:r.semantic_score,pass:r.pass,facets:Object.entries(r.facets).map(([name,f])=>({name,ordinal:f.ordinal,confidence:f.confidence,level:f.level})),facets_low_confidence:r.facets_low_confidence,blocking_facets:r.blocking_facets,blockers:r.blockers,required_work:r.required_work.map(w=>({axis:w.axis,ordinal:w.ordinal,confidence:w.confidence,work_type:w.work_type,action:w.suggested_next_action}))},null,2));

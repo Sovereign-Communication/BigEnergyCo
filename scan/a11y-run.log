@@ -1,0 +1,23 @@
+a11y matrix (plan Q-07) — 12 cells of 12, tags wcag2a wcag2aa wcag21a wcag21aa wcag22aa best-practice
+stage _pages_a11y · baseline P0.4
+enforcement: regression-blocking from P0 (plan §3.2); absolute (0 violations) from P5 for templates in the new shell and P8 for everything
+
+cell                              violations  detail
+home/arrival/none/ltr             0             (952ms)
+home/arrival/none/rtl             0             (1042ms)
+home/result/none/ltr              0             (7377ms)
+home/result/none/rtl              0             (7207ms)
+home/manual/none/ltr              0             (1169ms)
+home/manual/none/rtl              0             (1011ms)
+heatmap/arrival/none/ltr          0             (1084ms)
+about/arrival/none/ltr            0             (473ms)
+blog-index/arrival/none/ltr       0             (525ms)
+blog-post/arrival/none/ltr        0             (682ms)
+404/arrival/none/ltr              0             (313ms)
+city/arrival/none/ltr             0             (517ms)
+
+report: .quality-evidence/a11y-matrix.json
+matrix: 12 cells, 0 audit errors, 0 regressions (these block)
+  reported: 0 violation types, 0 improvements, 1 unmeasured, 0 over the declared cap (reported, not blocking until P5 (new shell) and P8 (everything))
+not applicable: 18 combinations, recorded in the report
+no regression against the declared bar

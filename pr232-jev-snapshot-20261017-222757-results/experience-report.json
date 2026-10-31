@@ -1,0 +1,1048 @@
+{
+  "plan_item": "P0.4",
+  "metric": "experience",
+  "generated_at": "2026-10-18T09:05:24.453Z",
+  "code_sha": "f3b32094928c47330609a03bbb0074af97c8e2e6",
+  "facet_axes": [
+    "experience",
+    "translation"
+  ],
+  "facet_lines_owner": "one line per axis, composed per axis",
+  "unit": "browser-observed journey outcomes on the staged build",
+  "stage": "_pages_experience",
+  "expectations": {
+    "every_step_attempted": true,
+    "land_invites": true,
+    "start_run_acknowledges_immediately": true,
+    "max_acknowledgement_ms": 2000,
+    "result_becomes_readable": true,
+    "adjust_updates_a_visible_surface": true,
+    "repeat_run_answers": true,
+    "every_error_triggered": true,
+    "every_error_gives_a_next_step": true,
+    "every_empty_state_revealed": true,
+    "empty_states_invite": true,
+    "no_blank_visible_surface": true,
+    "no_raw_dictionary_keys": true,
+    "every_locale_swept": true,
+    "every_locale_surface_matches_its_dictionary": true,
+    "no_unjudged_locale_surfaces": true
+  },
+  "experience_reading": {
+    "ok": true,
+    "page": "index.html",
+    "city": "Honolulu",
+    "pinned_locale": "pinned",
+    "actions": [
+      {
+        "id": "land",
+        "label": "a visitor lands with no city and no results",
+        "kind": "invite",
+        "acknowledged": true,
+        "moved": [
+          "controls"
+        ],
+        "controls": 244,
+        "status": "Choose your location and energy use, then click Size My System. The first run downloads ~2 MB of satellite weather data and caches it in your browser."
+      },
+      {
+        "id": "search_city",
+        "label": "typing a city offers suggestions",
+        "kind": "action",
+        "acknowledged": true,
+        "moved": [
+          "suggestions"
+        ],
+        "ms": 87,
+        "after": 1
+      },
+      {
+        "id": "choose_city",
+        "label": "choosing a suggestion fills the coordinates",
+        "kind": "action",
+        "acknowledged": true,
+        "moved": [
+          "status"
+        ],
+        "ms": 92,
+        "after": "21.31,-157.86"
+      },
+      {
+        "id": "reject_bad_kwh",
+        "label": "an impossible daily kWh is refused, with a way out",
+        "kind": "error",
+        "attempted": true,
+        "acknowledged": true,
+        "moved": [
+          "status"
+        ],
+        "ms": 92,
+        "status": "Daily energy use must be between 0.5 and 500 kWh per day — enter a figure in that range, or tick the appliances you want to power instead."
+      },
+      {
+        "id": "accept_kwh",
+        "label": "a real daily kWh is accepted",
+        "kind": "action",
+        "acknowledged": true,
+        "committed": "12",
+        "status": "Inputs changed — click Size My System to update the estimate.",
+        "ms": null
+      },
+      {
+        "id": "start_run",
+        "label": "clicking Size My System acknowledges immediately",
+        "kind": "action",
+        "acknowledged": true,
+        "moved": [
+          "status",
+          "button"
+        ],
+        "ms": 89,
+        "acknowledged_before_result": true,
+        "note": "the card is timed separately, below"
+      },
+      {
+        "id": "result",
+        "label": "the first result arrives and becomes readable",
+        "kind": "action",
+        "acknowledged": true,
+        "moved": [
+          "status",
+          "results"
+        ],
+        "ms": null,
+        "status": "✅ 5 yr of hourly data (2021–2025) · 1,803 kWh/yr per kW of panel."
+      },
+      {
+        "id": "adjust",
+        "label": "moving the result-stage slider updates the readout",
+        "kind": "action",
+        "acknowledged": true,
+        "moved": [
+          "readout"
+        ],
+        "ms": 92,
+        "after": "🔎 ☀️ 1.3 kW + 🔋 2 kWh LFP ≈ $1,006.00 → ⚡ −49% bill"
+      },
+      {
+        "id": "repeat_run",
+        "label": "clicking Size My System again works from a warm state",
+        "kind": "action",
+        "acknowledged": true,
+        "moved": [
+          "status",
+          "button"
+        ],
+        "ms": 91,
+        "after": "⏳ Fetching five years of satellite weather and searching bill-cutting system sizes…"
+      }
+    ],
+    "errors": [
+      {
+        "id": "invalid_daily_kwh",
+        "label": "a daily kWh the page cannot use",
+        "triggered": true,
+        "status": "Daily energy use must be between 0.5 and 500 kWh per day — enter a figure in that range, or tick the appliances you want to power instead.",
+        "status_at_keystroke": "Inputs changed — click Size My System to update the estimate.",
+        "ms": 92,
+        "next_step": true
+      },
+      {
+        "id": "malformed_share",
+        "label": "a share link that cannot be read",
+        "loaded": true,
+        "hash": "#s=not-a-real-share-payload",
+        "status": "This share link could not be read — it may have been cut short when it was copied. Ignore it and set up your own estimate below.",
+        "acknowledged": true,
+        "ms": 6000,
+        "next_step": true
+      },
+      {
+        "id": "unresolvable_city",
+        "label": "a city the geocoder cannot resolve",
+        "triggered": true,
+        "acknowledged": true,
+        "status": "No match found — check the spelling or pick a suggestion.",
+        "status_before": "This share link could not be read — it may have been cut short when it was copied. Ignore it and set up your own estimate below.",
+        "ms": 9000,
+        "next_step": true
+      }
+    ],
+    "empty_states": [
+      {
+        "id": "appliance_readout",
+        "label": "the appliance readout before anything is ticked",
+        "selector": "#readoutAppliances",
+        "ok": true,
+        "visible": true,
+        "controls": 0,
+        "text": "Tick the things you want to power, and your daily energy shows up here.",
+        "invites": true,
+        "blank_while_visible": false,
+        "raw_key": false
+      },
+      {
+        "id": "kwh_readout",
+        "label": "the kWh readout before anything is entered",
+        "selector": "#readoutKwh",
+        "ok": true,
+        "visible": true,
+        "controls": 0,
+        "text": "Enter a daily kWh figure.",
+        "invites": true,
+        "blank_while_visible": false,
+        "raw_key": false
+      },
+      {
+        "id": "bill_readout",
+        "label": "the bill readout before any bill is entered",
+        "selector": "#readoutBill",
+        "ok": true,
+        "visible": true,
+        "controls": 0,
+        "text": "Enter your monthly bill amount to see the daily energy estimate.",
+        "invites": true,
+        "blank_while_visible": false,
+        "raw_key": false
+      }
+    ],
+    "locales": [
+      {
+        "locale": "en",
+        "phase": "boot",
+        "lang": "en",
+        "dir": "ltr",
+        "beco_lang": "en",
+        "picker": "en",
+        "surfaces": [
+          {
+            "id": "appliance_readout",
+            "key": "readoutAppliancesEmpty",
+            "exists": true,
+            "text": "",
+            "visible": false,
+            "raw_key": false
+          },
+          {
+            "id": "kwh_readout",
+            "key": "readoutKwhEmpty",
+            "exists": true,
+            "text": "",
+            "visible": false,
+            "raw_key": false
+          },
+          {
+            "id": "bill_readout",
+            "key": "readoutBillIncomplete",
+            "exists": true,
+            "text": "Enter your monthly bill amount to see the daily energy estimate.",
+            "visible": false,
+            "raw_key": false
+          },
+          {
+            "id": "use_case_blurb",
+            "key": "useCaseBillCutBlurb",
+            "exists": true,
+            "text": "Grid-tied solar, with a battery only if it earns its place. Measured as the share of your bill the system removes over 20 years.",
+            "visible": false,
+            "raw_key": false
+          }
+        ],
+        "leaks": [],
+        "ready": true
+      },
+      {
+        "locale": "es",
+        "phase": "boot",
+        "lang": "es",
+        "dir": "ltr",
+        "beco_lang": "es",
+        "picker": "es",
+        "surfaces": [
+          {
+            "id": "appliance_readout",
+            "key": "readoutAppliancesEmpty",
+            "exists": true,
+            "text": "",
+            "visible": false,
+            "raw_key": false
+          },
+          {
+            "id": "kwh_readout",
+            "key": "readoutKwhEmpty",
+            "exists": true,
+            "text": "",
+            "visible": false,
+            "raw_key": false
+          },
+          {
+            "id": "bill_readout",
+            "key": "readoutBillIncomplete",
+            "exists": true,
+            "text": "Introduce tu factura mensual para ver la estimación diaria.",
+            "visible": false,
+            "raw_key": false
+          },
+          {
+            "id": "use_case_blurb",
+            "key": "useCaseBillCutBlurb",
+            "exists": true,
+            "text": "Solar conectado a la red, con batería solo si compensa. Se mide como la parte de tu factura que el sistema elimina en 20 años.",
+            "visible": false,
+            "raw_key": false
+          }
+        ],
+        "leaks": [],
+        "ready": true
+      },
+      {
+        "locale": "pt",
+        "phase": "boot",
+        "lang": "pt",
+        "dir": "ltr",
+        "beco_lang": "pt",
+        "picker": "pt",
+        "surfaces": [
+          {
+            "id": "appliance_readout",
+            "key": "readoutAppliancesEmpty",
+            "exists": true,
+            "text": "",
+            "visible": false,
+            "raw_key": false
+          },
+          {
+            "id": "kwh_readout",
+            "key": "readoutKwhEmpty",
+            "exists": true,
+            "text": "",
+            "visible": false,
+            "raw_key": false
+          },
+          {
+            "id": "bill_readout",
+            "key": "readoutBillIncomplete",
+            "exists": true,
+            "text": "Informe sua conta mensal para ver a estimativa diária.",
+            "visible": false,
+            "raw_key": false
+          },
+          {
+            "id": "use_case_blurb",
+            "key": "useCaseBillCutBlurb",
+            "exists": true,
+            "text": "Solar ligado à rede, com bateria só quando ela se paga. Medido como a parcela da sua conta que o sistema elimina em 20 anos.",
+            "visible": false,
+            "raw_key": false
+          }
+        ],
+        "leaks": [],
+        "ready": true
+      },
+      {
+        "locale": "fr",
+        "phase": "boot",
+        "lang": "fr",
+        "dir": "ltr",
+        "beco_lang": "fr",
+        "picker": "fr",
+        "surfaces": [
+          {
+            "id": "appliance_readout",
+            "key": "readoutAppliancesEmpty",
+            "exists": true,
+            "text": "",
+            "visible": false,
+            "raw_key": false
+          },
+          {
+            "id": "kwh_readout",
+            "key": "readoutKwhEmpty",
+            "exists": true,
+            "text": "",
+            "visible": false,
+            "raw_key": false
+          },
+          {
+            "id": "bill_readout",
+            "key": "readoutBillIncomplete",
+            "exists": true,
+            "text": "Entrez votre facture mensuelle pour voir l'estimation quotidienne.",
+            "visible": false,
+            "raw_key": false
+          },
+          {
+            "id": "use_case_blurb",
+            "key": "useCaseBillCutBlurb",
+            "exists": true,
+            "text": "Solaire raccordé au réseau, avec une batterie seulement si elle le mérite. Mesuré comme la part de votre facture que le système supprime sur 20 ans.",
+            "visible": false,
+            "raw_key": false
+          }
+        ],
+        "leaks": [],
+        "ready": true
+      },
+      {
+        "locale": "de",
+        "phase": "boot",
+        "lang": "de",
+        "dir": "ltr",
+        "beco_lang": "de",
+        "picker": "de",
+        "surfaces": [
+          {
+            "id": "appliance_readout",
+            "key": "readoutAppliancesEmpty",
+            "exists": true,
+            "text": "",
+            "visible": false,
+            "raw_key": false
+          },
+          {
+            "id": "kwh_readout",
+            "key": "readoutKwhEmpty",
+            "exists": true,
+            "text": "",
+            "visible": false,
+            "raw_key": false
+          },
+          {
+            "id": "bill_readout",
+            "key": "readoutBillIncomplete",
+            "exists": true,
+            "text": "Gib deine Monatsrechnung ein, um die Tages-Schätzung zu sehen.",
+            "visible": false,
+            "raw_key": false
+          },
+          {
+            "id": "use_case_blurb",
+            "key": "useCaseBillCutBlurb",
+            "exists": true,
+            "text": "Netzgebundene Solaranlage, mit Batterie nur, wenn sie sich lohnt. Gemessen als Anteil deiner Rechnung, den das System über 20 Jahre einspart.",
+            "visible": false,
+            "raw_key": false
+          }
+        ],
+        "leaks": [],
+        "ready": true
+      },
+      {
+        "locale": "ar",
+        "phase": "boot",
+        "lang": "ar",
+        "dir": "rtl",
+        "beco_lang": "ar",
+        "picker": "ar",
+        "surfaces": [
+          {
+            "id": "appliance_readout",
+            "key": "readoutAppliancesEmpty",
+            "exists": true,
+            "text": "",
+            "visible": false,
+            "raw_key": false
+          },
+          {
+            "id": "kwh_readout",
+            "key": "readoutKwhEmpty",
+            "exists": true,
+            "text": "",
+            "visible": false,
+            "raw_key": false
+          },
+          {
+            "id": "bill_readout",
+            "key": "readoutBillIncomplete",
+            "exists": true,
+            "text": "أدخل فاتورتك الشهرية لرؤية التقدير اليومي.",
+            "visible": false,
+            "raw_key": false
+          },
+          {
+            "id": "use_case_blurb",
+            "key": "useCaseBillCutBlurb",
+            "exists": true,
+            "text": "طاقة شمسية مرتبطة بالشبكة، مع بطارية فقط إذا استحقت. يُقاس كنسبة فاتورتك التي يزيلها النظام على مدى 20 عامًا.",
+            "visible": false,
+            "raw_key": false
+          }
+        ],
+        "leaks": [],
+        "ready": true
+      },
+      {
+        "locale": "en",
+        "phase": "after_rerun",
+        "lang": "en",
+        "dir": "ltr",
+        "beco_lang": "en",
+        "picker": "en",
+        "surfaces": [
+          {
+            "id": "appliance_readout",
+            "key": "readoutAppliancesEmpty",
+            "exists": true,
+            "text": "Tick the things you want to power, and your daily energy shows up here.",
+            "visible": true,
+            "raw_key": false
+          },
+          {
+            "id": "kwh_readout",
+            "key": "readoutKwhEmpty",
+            "exists": true,
+            "text": "Enter a daily kWh figure.",
+            "visible": true,
+            "raw_key": false
+          },
+          {
+            "id": "bill_readout",
+            "key": "readoutBillIncomplete",
+            "exists": true,
+            "text": "Enter your monthly bill amount to see the daily energy estimate.",
+            "visible": true,
+            "raw_key": false
+          },
+          {
+            "id": "use_case_blurb",
+            "key": "useCaseBillCutBlurb",
+            "exists": true,
+            "text": "Grid-tied solar, with a battery only if it earns its place. Measured as the share of your bill the system removes over 20 years.",
+            "visible": true,
+            "raw_key": false
+          }
+        ],
+        "leaks": [],
+        "switched": "switched",
+        "run_acknowledged": true,
+        "run_ack_ms": 93
+      },
+      {
+        "locale": "es",
+        "phase": "after_rerun",
+        "lang": "es",
+        "dir": "ltr",
+        "beco_lang": "es",
+        "picker": "es",
+        "surfaces": [
+          {
+            "id": "appliance_readout",
+            "key": "readoutAppliancesEmpty",
+            "exists": true,
+            "text": "Marca los electrodomésticos que quieres alimentar y tu energía diaria aparecerá aquí.",
+            "visible": true,
+            "raw_key": false
+          },
+          {
+            "id": "kwh_readout",
+            "key": "readoutKwhEmpty",
+            "exists": true,
+            "text": "Introduce tu consumo diario en kWh para ver la estimación.",
+            "visible": true,
+            "raw_key": false
+          },
+          {
+            "id": "bill_readout",
+            "key": "readoutBillIncomplete",
+            "exists": true,
+            "text": "Introduce tu factura mensual para ver la estimación diaria.",
+            "visible": true,
+            "raw_key": false
+          },
+          {
+            "id": "use_case_blurb",
+            "key": "useCaseBillCutBlurb",
+            "exists": true,
+            "text": "Solar conectado a la red, con batería solo si compensa. Se mide como la parte de tu factura que el sistema elimina en 20 años.",
+            "visible": true,
+            "raw_key": false
+          }
+        ],
+        "leaks": [],
+        "switched": "switched",
+        "run_acknowledged": true,
+        "run_ack_ms": 92
+      },
+      {
+        "locale": "pt",
+        "phase": "after_rerun",
+        "lang": "pt",
+        "dir": "ltr",
+        "beco_lang": "pt",
+        "picker": "pt",
+        "surfaces": [
+          {
+            "id": "appliance_readout",
+            "key": "readoutAppliancesEmpty",
+            "exists": true,
+            "text": "Marque os eletrodomésticos que deseja alimentar e sua energia diária aparecerá aqui.",
+            "visible": true,
+            "raw_key": false
+          },
+          {
+            "id": "kwh_readout",
+            "key": "readoutKwhEmpty",
+            "exists": true,
+            "text": "Informe seu consumo diário em kWh para ver a estimativa.",
+            "visible": true,
+            "raw_key": false
+          },
+          {
+            "id": "bill_readout",
+            "key": "readoutBillIncomplete",
+            "exists": true,
+            "text": "Informe sua conta mensal para ver a estimativa diária.",
+            "visible": true,
+            "raw_key": false
+          },
+          {
+            "id": "use_case_blurb",
+            "key": "useCaseBillCutBlurb",
+            "exists": true,
+            "text": "Solar ligado à rede, com bateria só quando ela se paga. Medido como a parcela da sua conta que o sistema elimina em 20 anos.",
+            "visible": true,
+            "raw_key": false
+          }
+        ],
+        "leaks": [],
+        "switched": "switched",
+        "run_acknowledged": true,
+        "run_ack_ms": 90
+      },
+      {
+        "locale": "fr",
+        "phase": "after_rerun",
+        "lang": "fr",
+        "dir": "ltr",
+        "beco_lang": "fr",
+        "picker": "fr",
+        "surfaces": [
+          {
+            "id": "appliance_readout",
+            "key": "readoutAppliancesEmpty",
+            "exists": true,
+            "text": "Cochez les appareils que vous voulez alimenter et votre énergie quotidienne apparaîtra ici.",
+            "visible": true,
+            "raw_key": false
+          },
+          {
+            "id": "kwh_readout",
+            "key": "readoutKwhEmpty",
+            "exists": true,
+            "text": "Entrez votre consommation quotidienne en kWh pour voir l'estimation.",
+            "visible": true,
+            "raw_key": false
+          },
+          {
+            "id": "bill_readout",
+            "key": "readoutBillIncomplete",
+            "exists": true,
+            "text": "Entrez votre facture mensuelle pour voir l'estimation quotidienne.",
+            "visible": true,
+            "raw_key": false
+          },
+          {
+            "id": "use_case_blurb",
+            "key": "useCaseBillCutBlurb",
+            "exists": true,
+            "text": "Solaire raccordé au réseau, avec une batterie seulement si elle le mérite. Mesuré comme la part de votre facture que le système supprime sur 20 ans.",
+            "visible": true,
+            "raw_key": false
+          }
+        ],
+        "leaks": [],
+        "switched": "switched",
+        "run_acknowledged": true,
+        "run_ack_ms": 93
+      },
+      {
+        "locale": "de",
+        "phase": "after_rerun",
+        "lang": "de",
+        "dir": "ltr",
+        "beco_lang": "de",
+        "picker": "de",
+        "surfaces": [
+          {
+            "id": "appliance_readout",
+            "key": "readoutAppliancesEmpty",
+            "exists": true,
+            "text": "Wähle die Geräte, die du versorgen willst — dein Tagesverbrauch erscheint hier.",
+            "visible": true,
+            "raw_key": false
+          },
+          {
+            "id": "kwh_readout",
+            "key": "readoutKwhEmpty",
+            "exists": true,
+            "text": "Gib einen Tagesverbrauch in kWh ein.",
+            "visible": true,
+            "raw_key": false
+          },
+          {
+            "id": "bill_readout",
+            "key": "readoutBillIncomplete",
+            "exists": true,
+            "text": "Gib deine Monatsrechnung ein, um die Tages-Schätzung zu sehen.",
+            "visible": true,
+            "raw_key": false
+          },
+          {
+            "id": "use_case_blurb",
+            "key": "useCaseBillCutBlurb",
+            "exists": true,
+            "text": "Netzgebundene Solaranlage, mit Batterie nur, wenn sie sich lohnt. Gemessen als Anteil deiner Rechnung, den das System über 20 Jahre einspart.",
+            "visible": true,
+            "raw_key": false
+          }
+        ],
+        "leaks": [],
+        "switched": "switched",
+        "run_acknowledged": true,
+        "run_ack_ms": 94
+      },
+      {
+        "locale": "ar",
+        "phase": "after_rerun",
+        "lang": "ar",
+        "dir": "rtl",
+        "beco_lang": "ar",
+        "picker": "ar",
+        "surfaces": [
+          {
+            "id": "appliance_readout",
+            "key": "readoutAppliancesEmpty",
+            "exists": true,
+            "text": "اختر الأجهزة التي تريد تشغيلها وستظهر طاقتك اليومية هنا.",
+            "visible": true,
+            "raw_key": false
+          },
+          {
+            "id": "kwh_readout",
+            "key": "readoutKwhEmpty",
+            "exists": true,
+            "text": "أدخل استهلاكك اليومي بالكيلوواط ساعة لرؤية التقدير.",
+            "visible": true,
+            "raw_key": false
+          },
+          {
+            "id": "bill_readout",
+            "key": "readoutBillIncomplete",
+            "exists": true,
+            "text": "أدخل فاتورتك الشهرية لرؤية التقدير اليومي.",
+            "visible": true,
+            "raw_key": false
+          },
+          {
+            "id": "use_case_blurb",
+            "key": "useCaseBillCutBlurb",
+            "exists": true,
+            "text": "طاقة شمسية مرتبطة بالشبكة، مع بطارية فقط إذا استحقت. يُقاس كنسبة فاتورتك التي يزيلها النظام على مدى 20 عامًا.",
+            "visible": true,
+            "raw_key": false
+          }
+        ],
+        "leaks": [],
+        "switched": "switched",
+        "run_acknowledged": true,
+        "run_ack_ms": 92
+      },
+      {
+        "locale": "en",
+        "phase": "after_switch",
+        "lang": "en",
+        "dir": "ltr",
+        "beco_lang": "en",
+        "picker": "en",
+        "surfaces": [
+          {
+            "id": "appliance_readout",
+            "key": "readoutAppliancesEmpty",
+            "exists": true,
+            "text": "اختر الأجهزة التي تريد تشغيلها وستظهر طاقتك اليومية هنا.",
+            "visible": false,
+            "raw_key": false
+          },
+          {
+            "id": "kwh_readout",
+            "key": "readoutKwhEmpty",
+            "exists": true,
+            "text": "أدخل استهلاكك اليومي بالكيلوواط ساعة لرؤية التقدير.",
+            "visible": false,
+            "raw_key": false
+          },
+          {
+            "id": "bill_readout",
+            "key": "readoutBillIncomplete",
+            "exists": true,
+            "text": "Enter your monthly bill amount to see the daily energy estimate.",
+            "visible": true,
+            "raw_key": false
+          },
+          {
+            "id": "use_case_blurb",
+            "key": "useCaseBillCutBlurb",
+            "exists": true,
+            "text": "Grid-tied solar, with a battery only if it earns its place. Measured as the share of your bill the system removes over 20 years.",
+            "visible": true,
+            "raw_key": false
+          }
+        ],
+        "leaks": [],
+        "switched": "switched"
+      },
+      {
+        "locale": "es",
+        "phase": "after_switch",
+        "lang": "es",
+        "dir": "ltr",
+        "beco_lang": "es",
+        "picker": "es",
+        "surfaces": [
+          {
+            "id": "appliance_readout",
+            "key": "readoutAppliancesEmpty",
+            "exists": true,
+            "text": "اختر الأجهزة التي تريد تشغيلها وستظهر طاقتك اليومية هنا.",
+            "visible": false,
+            "raw_key": false
+          },
+          {
+            "id": "kwh_readout",
+            "key": "readoutKwhEmpty",
+            "exists": true,
+            "text": "أدخل استهلاكك اليومي بالكيلوواط ساعة لرؤية التقدير.",
+            "visible": false,
+            "raw_key": false
+          },
+          {
+            "id": "bill_readout",
+            "key": "readoutBillIncomplete",
+            "exists": true,
+            "text": "Introduce tu factura mensual para ver la estimación diaria.",
+            "visible": true,
+            "raw_key": false
+          },
+          {
+            "id": "use_case_blurb",
+            "key": "useCaseBillCutBlurb",
+            "exists": true,
+            "text": "Solar conectado a la red, con batería solo si compensa. Se mide como la parte de tu factura que el sistema elimina en 20 años.",
+            "visible": true,
+            "raw_key": false
+          }
+        ],
+        "leaks": [],
+        "switched": "switched"
+      },
+      {
+        "locale": "pt",
+        "phase": "after_switch",
+        "lang": "pt",
+        "dir": "ltr",
+        "beco_lang": "pt",
+        "picker": "pt",
+        "surfaces": [
+          {
+            "id": "appliance_readout",
+            "key": "readoutAppliancesEmpty",
+            "exists": true,
+            "text": "اختر الأجهزة التي تريد تشغيلها وستظهر طاقتك اليومية هنا.",
+            "visible": false,
+            "raw_key": false
+          },
+          {
+            "id": "kwh_readout",
+            "key": "readoutKwhEmpty",
+            "exists": true,
+            "text": "أدخل استهلاكك اليومي بالكيلوواط ساعة لرؤية التقدير.",
+            "visible": false,
+            "raw_key": false
+          },
+          {
+            "id": "bill_readout",
+            "key": "readoutBillIncomplete",
+            "exists": true,
+            "text": "Informe sua conta mensal para ver a estimativa diária.",
+            "visible": true,
+            "raw_key": false
+          },
+          {
+            "id": "use_case_blurb",
+            "key": "useCaseBillCutBlurb",
+            "exists": true,
+            "text": "Solar ligado à rede, com bateria só quando ela se paga. Medido como a parcela da sua conta que o sistema elimina em 20 anos.",
+            "visible": true,
+            "raw_key": false
+          }
+        ],
+        "leaks": [],
+        "switched": "switched"
+      },
+      {
+        "locale": "fr",
+        "phase": "after_switch",
+        "lang": "fr",
+        "dir": "ltr",
+        "beco_lang": "fr",
+        "picker": "fr",
+        "surfaces": [
+          {
+            "id": "appliance_readout",
+            "key": "readoutAppliancesEmpty",
+            "exists": true,
+            "text": "اختر الأجهزة التي تريد تشغيلها وستظهر طاقتك اليومية هنا.",
+            "visible": false,
+            "raw_key": false
+          },
+          {
+            "id": "kwh_readout",
+            "key": "readoutKwhEmpty",
+            "exists": true,
+            "text": "أدخل استهلاكك اليومي بالكيلوواط ساعة لرؤية التقدير.",
+            "visible": false,
+            "raw_key": false
+          },
+          {
+            "id": "bill_readout",
+            "key": "readoutBillIncomplete",
+            "exists": true,
+            "text": "Entrez votre facture mensuelle pour voir l'estimation quotidienne.",
+            "visible": true,
+            "raw_key": false
+          },
+          {
+            "id": "use_case_blurb",
+            "key": "useCaseBillCutBlurb",
+            "exists": true,
+            "text": "Solaire raccordé au réseau, avec une batterie seulement si elle le mérite. Mesuré comme la part de votre facture que le système supprime sur 20 ans.",
+            "visible": true,
+            "raw_key": false
+          }
+        ],
+        "leaks": [],
+        "switched": "switched"
+      },
+      {
+        "locale": "de",
+        "phase": "after_switch",
+        "lang": "de",
+        "dir": "ltr",
+        "beco_lang": "de",
+        "picker": "de",
+        "surfaces": [
+          {
+            "id": "appliance_readout",
+            "key": "readoutAppliancesEmpty",
+            "exists": true,
+            "text": "اختر الأجهزة التي تريد تشغيلها وستظهر طاقتك اليومية هنا.",
+            "visible": false,
+            "raw_key": false
+          },
+          {
+            "id": "kwh_readout",
+            "key": "readoutKwhEmpty",
+            "exists": true,
+            "text": "أدخل استهلاكك اليومي بالكيلوواط ساعة لرؤية التقدير.",
+            "visible": false,
+            "raw_key": false
+          },
+          {
+            "id": "bill_readout",
+            "key": "readoutBillIncomplete",
+            "exists": true,
+            "text": "Gib deine Monatsrechnung ein, um die Tages-Schätzung zu sehen.",
+            "visible": true,
+            "raw_key": false
+          },
+          {
+            "id": "use_case_blurb",
+            "key": "useCaseBillCutBlurb",
+            "exists": true,
+            "text": "Netzgebundene Solaranlage, mit Batterie nur, wenn sie sich lohnt. Gemessen als Anteil deiner Rechnung, den das System über 20 Jahre einspart.",
+            "visible": true,
+            "raw_key": false
+          }
+        ],
+        "leaks": [],
+        "switched": "switched"
+      },
+      {
+        "locale": "ar",
+        "phase": "after_switch",
+        "lang": "ar",
+        "dir": "rtl",
+        "beco_lang": "ar",
+        "picker": "ar",
+        "surfaces": [
+          {
+            "id": "appliance_readout",
+            "key": "readoutAppliancesEmpty",
+            "exists": true,
+            "text": "اختر الأجهزة التي تريد تشغيلها وستظهر طاقتك اليومية هنا.",
+            "visible": false,
+            "raw_key": false
+          },
+          {
+            "id": "kwh_readout",
+            "key": "readoutKwhEmpty",
+            "exists": true,
+            "text": "أدخل استهلاكك اليومي بالكيلوواط ساعة لرؤية التقدير.",
+            "visible": false,
+            "raw_key": false
+          },
+          {
+            "id": "bill_readout",
+            "key": "readoutBillIncomplete",
+            "exists": true,
+            "text": "أدخل فاتورتك الشهرية لرؤية التقدير اليومي.",
+            "visible": true,
+            "raw_key": false
+          },
+          {
+            "id": "use_case_blurb",
+            "key": "useCaseBillCutBlurb",
+            "exists": true,
+            "text": "طاقة شمسية مرتبطة بالشبكة، مع بطارية فقط إذا استحقت. يُقاس كنسبة فاتورتك التي يزيلها النظام على مدى 20 عامًا.",
+            "visible": true,
+            "raw_key": false
+          }
+        ],
+        "leaks": [],
+        "switched": "switched"
+      }
+    ],
+    "key_leaks": [],
+    "at": {
+      "ran": true,
+      "violations": [],
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "incomplete": 2
+    }
+  },
+  "regressions": [],
+  "holes": [],
+  "notes": [
+    "first result rendered and became readable; status: \"✅ 5 yr of hourly data (2021–2025) · 1,803 kWh/yr per kW of panel.\"",
+    "a second run from a warm state answered in 91ms",
+    "invalid_daily_kwh: \"Daily energy use must be between 0.5 and 500 kWh per day — enter a fig\"",
+    "unresolvable_city: \"No match found — check the spelling or pick a suggestion.\"",
+    "malformed_share: \"This share link could not be read — it may have been cut short when it\"",
+    "3 empty surface(s) read on screen; all invite, none blank",
+    "no dictionary key is painted anywhere on the page",
+    "36/36 runtime-painted surface readings match 6 locales x 3 moments (0 raw key(s) anywhere in those pages)",
+    "AT run: axe reported 0 violation(s) (0 critical, 0 serious, 0 moderate, 0 minor; 2 incomplete)"
+  ],
+  "scope_limit": "one unthrottled Chrome, one city, nine first-run steps, three provoked errors, three empty surfaces, and all six locales at three re-entry points (first paint, after a re-run, after a language switch). What the locale sweep covers is the four JS-painted surfaces and every dictionary key on the page — not the prose: an ERROR'S next step is still judged in English verbs only, and no translated sentence is back-read for meaning here. Screen-reader and keyboard-only journeys are NOT walked: this gate drives the DOM through CDP and can only observe what a sighted mouse user would see. No device matrix, no throttling, no placeholder-interpolation check.",
+  "enforcement": "blocking from P0: a step that did not acknowledge, an error that gave no next step, an empty state that did not invite or that showed a raw dictionary key, a visible dictionary key anywhere on the page, and a step or error or surface that could not be exercised at all",
+  "facet_line": "WALKED, 1 Chrome, 1 city: 9/9 steps acknowledge (slowest 92ms); 3/3 errors give a next step; 3 empty states invite; 0 raw keys on 19 pages, 36/36 surfaces match the dictionary, 6 locales x 3 moments. Ack = whether moved. AT run: axe 0 violation(s) (0 critical, 0 serious)",
+  "facet_lines": {
+    "experience": "WALKED, 1 Chrome, 1 city: 9/9 steps acknowledge (slowest 92ms); 3/3 errors give a next step; 3 empty states invite; 0 raw keys on 19 pages, 36/36 surfaces match the dictionary, 6 locales x 3 moments. Ack = whether moved. AT run: axe 0 violation(s) (0 critical, 0 serious)",
+    "translation": "RUNTIME, 6 locales x 3 re-entry points: 0 raw keys on 19 pages, 36/36 JS-painted surfaces show their own locale's dictionary value. Parity both ways + placeholders: scripts/check-i18n.mjs. Not done: back-reading translated strings for meaning (native judgement)."
+  }
+}

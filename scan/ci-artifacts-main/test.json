@@ -1,0 +1,15 @@
+{
+  "job": "test",
+  "conclusion": "success",
+  "steps": {
+    "seo": "success",
+    "prettier": "success",
+    "unit_tests": "success"
+  },
+  "measurements": {
+    "tests_total": 1662,
+    "tests_passed": 1662,
+    "tests_failed": 0,
+    "tests_skipped": 0
+  }
+}

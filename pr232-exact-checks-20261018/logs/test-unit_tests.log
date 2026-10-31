@@ -1,0 +1,8 @@
+npm.cmd : run-tests: 1699/1701 recorded in jev-artifacts/test-measurement.json
+At C:\tmp\pr232-run-exact-checks-20261018.ps1:22 char:5
++     & $Executable @Arguments *> $log
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (run-tests: 1699...easurement.json:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+

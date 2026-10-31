@@ -1,0 +1,1 @@
+﻿Correction to the disposition above: the current-main workflow checks are not all green yet. The required non-Jev jobs and local preflight pass; main's own Jev gate currently fails on the advisor and translation facets (95.64 overall, 17/21 proven), as documented in this mission audit. Those open plan gaps are unrelated to the Blacksmith pilot.

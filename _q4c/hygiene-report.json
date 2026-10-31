@@ -1,0 +1,23 @@
+{
+  "metric": "code_hygiene",
+  "plan_item": "P0.4",
+  "plan_ref": "docs/plan/MASTER_PLAN.md §8 P0.4, quality axis (pack: quality_gap)",
+  "generated_at": "2026-10-28T20:00:49.370Z",
+  "code_sha": "fb7dc49f7ff651f1b8c26eacdcb978921a97eb58",
+  "window_lines": 8,
+  "method": "under-reporting by design: a name is dead only when no other tracked source mentions it (comments and strings count as mentions), default exports are counted unmeasured rather than assumed clean, and duplicate windows exclude import/export declarations so module skeletons are not reported as logic",
+  "ok": true,
+  "counts": {
+    "modules_scanned": 59,
+    "exports_checked": 340,
+    "default_exports_unmeasured": 0,
+    "dead_files": 0,
+    "unreferenced_exports": 0,
+    "dup_regions": 0,
+    "shared_windows": 0,
+    "logic_lines": 25757
+  },
+  "dead_files": [],
+  "unreferenced_exports": [],
+  "dup_regions": []
+}

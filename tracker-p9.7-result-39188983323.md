@@ -1,0 +1,9 @@
+## P9.7 exact-snapshot verification — 2026-10-19
+
+- Candidate: `d94a9055fc0abaf790c01e2e93ae644043e7f884`, tree `f52a03c364093ca7ab629d6c05b05a55504ef210`.
+- Release workflow run: https://github.com/Sovereign-Communication/BigEnergyCo/actions/runs/39188983323. The workflow ran on the exact SHA with Node 22. Required jobs `test`, `web-smoke`, `quality-lab`, `lighthouse`, `quality-evidence`, and `coverage` all succeeded. `jev-complete` was skipped because this was a `workflow_dispatch` run.
+- The ten workflow-produced `jev-results-*` JSON artifacts were transferred to the Oracle runner and their SHA-256 hashes matched. `build-jev-evidence.mjs` accepted them as `ci-generated`; tests, formatting, SEO, smoke, CI, and legacy gates were all recorded green.
+- One live call was accepted from pinned model `jev-1.13.0`. Scoped P9.7 result: **97/100**, below the unchanged **99** minimum; scoped verdict **FAIL**. Ratchet **met** against `P9.4-baseline-2` (21 facets compared, zero regressions). The live judgment leaves `docs` and `quality` at ordinal 85 (“confident — solid with minor gaps”); `seo` is proven at 100. Its required-work result is `release_gap`, recommending protected release/merge verification and a clean-tree gate.
+- Status: the candidate does **not** meet the 99 bar. The required CI checks exposed no failing candidate behavior. No second Jev call was made. The temporary validation tag has been removed. PR #232 and the hash-pinned plan remain unchanged.
+
+The remote validator wrote its report; the local Windows collector then failed to print a Unicode checkmark under CP1252. I read the saved JSON report for the recorded accepted model, score, ratchet, and failing verdict, and did not retry the live call.

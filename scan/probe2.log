@@ -1,0 +1,10 @@
+file:///C:/tmp/gate-freshness/scripts/probe-production.mjs:246
+  target.verified_scope = smoke.ok
+                          ^
+
+ReferenceError: smoke is not defined
+    at probeBrand (file:///C:/tmp/gate-freshness/scripts/probe-production.mjs:246:27)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async file:///C:/tmp/gate-freshness/scripts/probe-production.mjs:257:33
+
+Node.js v24.18.0

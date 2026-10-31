@@ -1,0 +1,27 @@
+origin/a7-audit-score-refresh	merged-PR-head	PR #338 head == remote tip
+origin/ci-refresh-coverage-baseline	merged-PR-head	PR #264 head == remote tip
+origin/codex/chat-escalation-ui-state	patch-equivalent	git cherry: 0 unlanded
+origin/codex/final-burndown-plan	ancestor	codex/final-burndown-plan tip in origin/main history
+origin/codex/install-auth-unification-20261020	merged-PR-head	PR #312 head == remote tip
+origin/codex/issue-297-shared-lifecycle-phase	merged-PR-head	PR #307 head == remote tip
+origin/docs/jev-gate-policy-v1	patch-equivalent	git cherry: 0 unlanded
+origin/feat/ev-burndown-unification	merged-PR-head	PR #241 head == remote tip
+origin/fix/d12-baseline-repoint	merged-PR-head	PR #210 head == remote tip
+origin/fix/free-byok-filter	merged-PR-head	PR #267 head == remote tip
+origin/fix/issue-198-gui-cancellation	ancestor	fix/issue-198-gui-cancellation tip in origin/main history
+origin/fix/issue-207-request-lifecycle	merged-PR-head	PR #221 head == remote tip
+origin/fix/issue-207-simple-queries-landed	merged-PR-head	PR #321 head == remote tip
+origin/fix/verify-effective-meta	merged-PR-head	PR #268 head == remote tip
+origin/fix/web-allowlist-and-search	merged-PR-head	PR #323 head == remote tip
+origin/fix/web-search-subject-relevance	merged-PR-head	PR #341 head == remote tip
+origin/freebuff/resume-codex-harness-wip-8e0878f7-d659-46b2-8db2-bbeb612ee5f2	merged-PR-head	PR #209 head == remote tip
+origin/gui-dogfood-result-feedback	patch-equivalent	git cherry: 0 unlanded
+origin/gui-driver-empty-goal	patch-equivalent	git cherry: 0 unlanded
+origin/gui-driver-restart-feedback	merged-PR-head	PR #263 head == remote tip
+origin/security/explicit-workspace-default	merged-PR-head	PR #269 head == remote tip
+origin/step2/a1-chat-escalation-ui-state	merged-PR-head	PR #320 head == remote tip
+feat/ev6-fireworks-source	superseded	EV6/7 shipped files present in origin/main
+feat/ev8-fireworks-probe	superseded	EV-8 shipped (fireworks_probe.py + PR #304)
+origin/feat/ev7-fireworks-lane	superseded	EV files shipped in origin/main
+origin/wip/stash-hv1-typed-integrations	sha-duplicate	tip==5966d9b9fe6b94e7030cf6f0ea160bf0b3039649 (recorded stash SHA)
+origin/wip/stash-hv4-waist-composition	sha-duplicate	tip==9c617277411ee23317aef5abae69a56d4dbd6b56 (recorded stash SHA)

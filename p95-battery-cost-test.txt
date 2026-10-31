@@ -1,0 +1,14 @@
+test("the cost comparison exposes assumptions instead of promised savings", () => {
+  const start = html.indexOf(
+    "<h2>6. Build a cost comparison from stated inputs</h2>",
+  );
+  const end = html.indexOf("<h2>7.", start);
+  assert.ok(start >= 0 && end > start);
+  const cost = html.slice(start, end);
+  assert.match(cost, /installed-price source, date, shipping, and tax/);
+  assert.match(cost, /replacement, labor, recycling, and discount assumptions/);
+  assert.doesNotMatch(
+    cost,
+    /\$2,375|\$3,135|\$17,000|saves \$1,990|5\.4&times;/i,
+  );
+});

@@ -1,0 +1,101 @@
+=== Treystu 2026-10-23T14:37:45Z
+## Car 5's four confirmed items resolved — one real defect, three fixtures
+
+**Merged:** #297 (squash `b899b46`). The wiring-noise battery's four confirmed items all pointed at `tests/`, and three of them were fixtures whose prescription cannot mean anything. The fourth was pointing at a real defect one line away from where it pointed.
+
+| item | where | verdict |
+| --- | --- | --- |
+| `tx.objectStore` (0.71) | `tests/weather-persistence.test.mjs` IndexedDB double | **real defect in the code it stands for** — fixed |
+| `hangingFetch` (0.86) | `tests/nasa-timeout.test.mjs:10` | exonerated: the stub exists to hang |
+| `sleep` (0.74) | `tests/ci-resilience.test.mjs:162` `noSleep` | exonerated: already returns a promise |
+| `open` (0.71) | `makeCachesMock` / `p.indexOf(">")` helpers | exonerated: no promise contract |
+
+### The defect: every cold fetch leaked an open IndexedDB connection
+
+`idbPut` and `idbDelete` in `assets/js/sizing/nasa.js` did:
+
+```js
+await idbReq(tx.complete !== undefined ? tx.complete : tx);
+```
+
+`IDBTransaction` is not a request. It has no `complete` property and never fires `onsuccess`; it completes through `oncomplete`. In a browser the left side was always `undefined`, so `idbReq(tx)` attached handlers the transaction never calls, and the promise stayed pending forever. The write still landed — `put` is queued synchronously and both call sites are fire-and-forget `.catch()` — so nothing looked broken. What never ran was the `db.close()` after the await: **one open connection leaked per cold fetch**, and a browser that exhausts its connection budget refuses the next upgrade.
+
+Two more leaks were in the same three functions: `idbGet`, `idbPut` and `idbDelete` all returned early when the object store was missing, before their `db.close()`, and `idbDelete`'s handle was `const`-scoped inside the `try`, so a `finally` could not have closed it.
+
+The fix is `txDone(tx)` on `oncomplete`/`onerror`/`onabort`, plus one `finally { db.close() }` per function so every exit closes — success, early return and failure alike. Semantics are otherwise unchanged: best-effort, fire-and-forget, `fromCache` on restore.
+
+### Why nine green tests missed it
+
+The double exposed `complete: Promise.resolve()`, which `idbReq` waits on just as fruitlessly. **The mock agreed with the bug**, so the suite certified a path that never completed. It now models the platform: no `complete`, `oncomplete` fired on the microtask after the write. That single change is what makes the defect visible — and it is the general lesson for the rest of this car: a double that is more forgiving than the platform certifies whatever the code does.
+
+Three tests now count connections (`idbOpen()` opens a fresh request every call, so opens-minus-closes is the only witness):
+
+- `a compact write closes the connection it opened`;
+- `a storeless database is closed, not abandoned on the early return`;
+- the existing stale-window test additionally asserts `closes() === opens()`, which covers `idbDelete`.
+
+All three fail on the unfixed tree with `every opened connection must be closed, or the browser leaks one per fetch`.
+
+### What is left in this car
+
+The **15 ambiguous production items** (p_broken 0.43–0.66: `focusFor`, `updateRankings`, `computeFocusSystem`, `purchasePaths`, `bodyWithToken`, `verifyTurnstile`, `pickBest`, `buildIntakeBrief`, `idbGet`, `sizeForTier`, `$`, `createMapProviderRegistry`, `billForKwh`, `setupCitySearch`, `populatePrintSheet`) are **not** dispositioned here. Two of those names — `setupCitySearch` and `populatePrintSheet` — are already answered on #198 and #196 respectively, and `bodyWithToken` is exercised by the executed advisor scenarios. The rest need a facet-seam read each, which is a later pass; this comment should not be read as closing them.
+
+CI green on `b899b46`: 1,881/1,881, `jev-complete` (scoped P0.6) and `web-smoke` included. Asset tokens moved `20261023f → 20261023g` (`sw.js` `beco-v145 → beco-v146`) because `nasa.js` is a served asset.
+
+=== Treystu 2026-10-23T16:28:54Z
+## Car 5 closed: one contract violation, fourteen guards named, and two already answered elsewhere
+
+**Merged:** #301 (squash `c48cf8a`). Suite **1,902/1,902** (up 3); stamp `20261023j → 20261023k`, `sw.js` `beco-v149 → beco-v150`.
+
+The 15 ambiguous production items sat at `p_broken` 0.30–0.70 — all below the 0.95 gate, so each was a suspect and the code decided. **One was a real defect; fourteen are already guarded**, and the guard is named rather than asserted. Three of them had prior verdicts and are confirmed here rather than re-derived.
+
+### The one real defect: `createMapProviderRegistry`
+
+```js
+      if (!provider) return null;
+      active = provider;                    // installed here
+      return provider.init(options);        // init can reject
+```
+
+A blocked leaflet CDN is the concrete case — it is *why* the map is optional. With `active` set before the await, a rejected init left the provider installed: `onClick`, `drawRectangle` and `drawPolygon` reached a map that was never created, and `drawRectangle` returned the provider's result as though the map existed. `active = provider` now happens after the await resolves.
+
+The single shipped caller (the roof-area map in `ui.js`) calls `cleanup()` in its `catch`, so no visitor-visible behaviour changes — which is why this is recorded as a contract violation rather than a shipped bug. The invariant belongs to the registry; the next caller should not have to rediscover the compensation. Failing-first proof: on the unfixed tree `drawRectangle` returns `{ok:true}` after a rejected init; on the fixed tree it returns `null` and the provider sees no call but its own `init`.
+
+### Per-item verdicts
+
+| item | p_broken | verdict |
+| --- | --- | --- |
+| `map-provider.js::createMapProviderRegistry` | 0.44 | **fixed** — installs only after a successful init (#301) |
+| `run.js::focusFor` | 0.66 | no defect: every caller passes an engine-solved entry; an unknown chemistry falls back to the LFP parameters; `battNameplateKwh` divides by a constant DoD from `CHEMISTRIES` |
+| `heatmap.js::updateRankings` | 0.63 | no defect: `if (!r) return` on a missing manifest key; list text renders through `esc()`; the numeric fields come from the build-generated `heatmap-rankings.json`, which always emits `high`/`low` or `best`/`worst` per combination |
+| `run.js::computeFocusSystem` | 0.63 | no defect: null/undefined, `Number.isFinite`, both-zero and off-grid-degenerate guards run before any simulation; the chemistry override is validated against `CHEMISTRIES` |
+| `ui.js::purchasePaths` | 0.61 | no defect: null, `solvable === false` and non-finite `annualGridSpendUsd` all return `null`; cached on priced identity. The negative-saving bug is in the comment as history, not in the code |
+| `location-picker.js::setupCitySearch` | 0.55 | **answered on #198** — generation-stamped at every async landing site, with query-text equality as a second gate; covered by `tests/location-picker.test.mjs` |
+| `ui.js::populatePrintSheet` | 0.53 | **answered on #196** — the `innerHTML` sink exists but every interpolated field is a literal, a validated number, or one of the seven hash fields whitelisted in `restoreFromShare`; the permissive codec is pinned by car 1's tests |
+| `chat.js::bodyWithToken` | 0.51 | no defect: a token is requested per attempt (never cached — a replayed token is what the server must reject); every failure returns the tokenless payload, which the worker refuses once Turnstile is provisioned. Covered by the executed advisor scenarios |
+| `worker/turnstile.mjs::verifyTurnstile` | 0.50 | no defect: every path returns an explicit `{ok:false, reason}` — missing token, missing secret, transport throw, unparseable body, `success !== true` — and the module's contract says any non-ok result means reject |
+| `run.js::pickBest` | 0.50 | no defect and already covered: filters non-solvable and non-finite entries, returns `null` on an empty pool, guards the sodium-vs-LFP margin against a zero denominator (`tests/consistency.test.mjs:492–502`) |
+| `chat.js::buildIntakeBrief` | 0.49 | no defect: select-bounded values plus `.trim()`ed free text, sent as the user's own message, which the system prompt already treats as untrusted data — no sink between the DOM read and the request body |
+| `nasa.js::idbGet` | 0.49 | **fixed in #297** — the connection closes on every exit including the missing-store early return; the record shape (`Float32Array`, equal non-zero lengths) is validated before use |
+| `engine.js::sizeForTier` | 0.48 | no defect: `pvMax <= 0 || battMax <= 0` returns `null` before the search; the required `maxUnmetHoursPerYear` is supplied by the sole caller (`sizeAllTiers` over `RELIABILITY_TIERS`); omitting it fails closed to "no system", never to a system that ignores the constraint |
+| `charts.js::$` | 0.48 | no defect: the injected `$` is set by `initCharts` inside the same `preloadRunModules().then` that assigns the module reference, so no chart call can be reached before `_$` exists — it would throw on `_charts` first |
+| `ui.js::billForKwh` | 0.43 | no defect, and the asymmetry with its inverse is deliberate: `kwhForBill` guards `rate <= 0` because dividing by a zero tariff is undefined, while multiplying by zero correctly yields the fixed charge — a real bill, not an error |
+
+### Result
+
+Car 5's acceptance is met: the 4 confirmed-broken items closed in #297, the 15 ambiguous items are all dispositioned here, and the one that was real is fixed with a test that fails on the unfixed tree. Nothing here touches #292, #253, #156, or car 2's unrecoverable 27.
+
+Plan item: P0.6.
+
+=== Treystu 2026-10-23T20:59:38Z
+## Driving comment — burndown prep 2026-10-23
+
+**Scope:** 20 functions prescribed return-promise/delegate-up. **Do NOT touch the 51 excluded as no-change** — the granularity pass determined those are correct as-is.
+
+**What remains:** Apply the 20 wiring refactors. No behavior change expected.
+
+**Verification:** All existing tests must pass unchanged (proves no behavior change). 
+
+**Next step:** Lane applies the 20. ~200 LoC estimated.
+
+**Dependencies:** None — parallelizable.

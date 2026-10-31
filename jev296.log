@@ -1,0 +1,346 @@
+﻿2026-10-23T13:52:58.1120662Z Current runner version: '2.338.0'
+2026-10-23T13:52:58.1147757Z ##[group]Runner Image Provisioner
+2026-10-23T13:52:58.1148947Z Hosted Compute Agent
+2026-10-23T13:52:58.1149632Z Version: 20261012.601
+2026-10-23T13:52:58.1150416Z Commit: f3dc54e1fb89da6852db922499a0233137369e1d
+2026-10-23T13:52:58.1151192Z Build Date: 2026-10-12T17:48:21Z
+2026-10-23T13:52:58.1151951Z Worker ID: {545d6a5d-04b3-4dd4-9a79-03586b0ed857}
+2026-10-23T13:52:58.1152721Z Region: westus2
+2026-10-23T13:52:58.1153321Z Cloud: Azure
+2026-10-23T13:52:58.1154001Z ##[endgroup]
+2026-10-23T13:52:58.1156184Z ##[group]Operating System
+2026-10-23T13:52:58.1156976Z Ubuntu
+2026-10-23T13:52:58.1157535Z 24.04.5
+2026-10-23T13:52:58.1158096Z LTS
+2026-10-23T13:52:58.1158917Z ##[endgroup]
+2026-10-23T13:52:58.1159561Z ##[group]Runner Image
+2026-10-23T13:52:58.1160234Z Image: ubuntu-24.04
+2026-10-23T13:52:58.1160851Z Version: 20261012.334.1
+2026-10-23T13:52:58.1162294Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261012.334/images/ubuntu/Ubuntu2404-Readme.md
+2026-10-23T13:52:58.1163969Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261012.334
+2026-10-23T13:52:58.1165040Z ##[endgroup]
+2026-10-23T13:52:58.1166258Z ##[group]GITHUB_TOKEN Permissions
+2026-10-23T13:52:58.1168643Z Contents: read
+2026-10-23T13:52:58.1169352Z Metadata: read
+2026-10-23T13:52:58.1169925Z ##[endgroup]
+2026-10-23T13:52:58.1172249Z Secret source: Actions
+2026-10-23T13:52:58.1173246Z Cache mode: write
+2026-10-23T13:52:58.1174072Z Prepare workflow directory
+2026-10-23T13:52:58.1584624Z Prepare all required actions
+2026-10-23T13:52:58.1636172Z Getting action download info
+2026-10-23T13:52:58.5496616Z Download action repository 'actions/checkout@v7' (SHA:3d3c42e5aac5ba805825da76410c181273ba90b1)
+2026-10-23T13:52:58.6904585Z Download action repository 'actions/setup-node@v7' (SHA:949feb2413d6458794dcd2491c4babbbce0c15c1)
+2026-10-23T13:52:58.9470906Z Download action repository 'actions/download-artifact@v8' (SHA:9000827ccba6bdab643e8b6fd33ac0654aef8333)
+2026-10-23T13:52:59.1570577Z Download action repository 'actions/upload-artifact@v7' (SHA:cf430e030ddbb5b0abf93d22962f4752f3646cd9)
+2026-10-23T13:52:59.5331782Z Complete job name: jev-complete
+2026-10-23T13:52:59.6330629Z ##[group]Run actions/checkout@v7
+2026-10-23T13:52:59.6331790Z with:
+2026-10-23T13:52:59.6332421Z   ref: refs/pull/296/merge
+2026-10-23T13:52:59.6333133Z   repository: Sovereign-Communication/BigEnergyCo
+2026-10-23T13:52:59.6337405Z   token: ***
+2026-10-23T13:52:59.6338038Z   ssh-strict: true
+2026-10-23T13:52:59.6338836Z   ssh-user: git
+2026-10-23T13:52:59.6339461Z   persist-credentials: true
+2026-10-23T13:52:59.6340088Z   clean: true
+2026-10-23T13:52:59.6340668Z   sparse-checkout-cone-mode: true
+2026-10-23T13:52:59.6341420Z   fetch-depth: 1
+2026-10-23T13:52:59.6341975Z   fetch-tags: false
+2026-10-23T13:52:59.6342562Z   show-progress: true
+2026-10-23T13:52:59.6343163Z   lfs: false
+2026-10-23T13:52:59.6343705Z   submodules: false
+2026-10-23T13:52:59.6344336Z   set-safe-directory: true
+2026-10-23T13:52:59.6345069Z   allow-unsafe-pr-checkout: false
+2026-10-23T13:52:59.6346145Z ##[endgroup]
+2026-10-23T13:52:59.7504033Z Syncing repository: Sovereign-Communication/BigEnergyCo
+2026-10-23T13:52:59.7507206Z ##[group]Getting Git version info
+2026-10-23T13:52:59.7508718Z Working directory is '/home/runner/work/BigEnergyCo/BigEnergyCo'
+2026-10-23T13:52:59.7510731Z [command]/usr/bin/git version
+2026-10-23T13:52:59.7590031Z git version 2.55.0
+2026-10-23T13:52:59.7617149Z ##[endgroup]
+2026-10-23T13:52:59.7629628Z Temporarily overriding HOME='/home/runner/work/_temp/337be5ae-048e-49f7-9fbd-3cde436f5394' before making global git config changes
+2026-10-23T13:52:59.7632339Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-23T13:52:59.7640320Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/BigEnergyCo/BigEnergyCo
+2026-10-23T13:52:59.7700705Z Deleting the contents of '/home/runner/work/BigEnergyCo/BigEnergyCo'
+2026-10-23T13:52:59.7713383Z ##[group]Determining repository object format
+2026-10-23T13:53:00.0114133Z ##[endgroup]
+2026-10-23T13:53:00.0115579Z ##[group]Initializing the repository
+2026-10-23T13:53:00.0203259Z [command]/usr/bin/git init /home/runner/work/BigEnergyCo/BigEnergyCo
+2026-10-23T13:53:00.0350683Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-10-23T13:53:00.0352865Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-10-23T13:53:00.0354887Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-10-23T13:53:00.0356224Z hint: call:
+2026-10-23T13:53:00.0356963Z hint:
+2026-10-23T13:53:00.0357882Z hint: 	git config --global init.defaultBranch <name>
+2026-10-23T13:53:00.0359318Z hint:
+2026-10-23T13:53:00.0360360Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-10-23T13:53:00.0362006Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-10-23T13:53:00.0363299Z hint:
+2026-10-23T13:53:00.0364141Z hint: 	git branch -m <name>
+2026-10-23T13:53:00.0364993Z hint:
+2026-10-23T13:53:00.0366092Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-10-23T13:53:00.0367934Z Initialized empty Git repository in /home/runner/work/BigEnergyCo/BigEnergyCo/.git/
+2026-10-23T13:53:00.0371547Z [command]/usr/bin/git remote add origin https://github.com/Sovereign-Communication/BigEnergyCo
+2026-10-23T13:53:00.0437497Z ##[endgroup]
+2026-10-23T13:53:00.0439102Z ##[group]Disabling automatic garbage collection
+2026-10-23T13:53:00.0441679Z [command]/usr/bin/git config --local gc.auto 0
+2026-10-23T13:53:00.0491487Z ##[endgroup]
+2026-10-23T13:53:00.0492374Z ##[group]Setting up auth
+2026-10-23T13:53:00.0493101Z Removing SSH command configuration
+2026-10-23T13:53:00.0498071Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-23T13:53:00.0549660Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-23T13:53:00.0965596Z Removing HTTP extra header
+2026-10-23T13:53:00.0972714Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-23T13:53:00.1018806Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-23T13:53:00.1254798Z Removing includeIf entries pointing to credentials config files
+2026-10-23T13:53:00.1261642Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-23T13:53:00.1304774Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-23T13:53:00.1554727Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-b1817888-2da2-4aa1-825f-4ac6db269c3a.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-23T13:53:00.1610575Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/BigEnergyCo/BigEnergyCo/.git.path /home/runner/work/_temp/git-credentials-b1817888-2da2-4aa1-825f-4ac6db269c3a.config
+2026-10-23T13:53:00.1664539Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/BigEnergyCo/BigEnergyCo/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-b1817888-2da2-4aa1-825f-4ac6db269c3a.config
+2026-10-23T13:53:00.1716974Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-b1817888-2da2-4aa1-825f-4ac6db269c3a.config
+2026-10-23T13:53:00.1769029Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-b1817888-2da2-4aa1-825f-4ac6db269c3a.config
+2026-10-23T13:53:00.1814169Z ##[endgroup]
+2026-10-23T13:53:00.1815185Z ##[group]Fetching the repository
+2026-10-23T13:53:00.1828577Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +refs/pull/296/merge:refs/remotes/pull/296/merge
+2026-10-23T13:53:01.1152150Z From https://github.com/Sovereign-Communication/BigEnergyCo
+2026-10-23T13:53:01.1160770Z  * [new ref]         refs/pull/296/merge -> pull/296/merge
+2026-10-23T13:53:01.1166369Z ##[endgroup]
+2026-10-23T13:53:01.1169073Z ##[group]Determining the checkout info
+2026-10-23T13:53:01.1171600Z ##[endgroup]
+2026-10-23T13:53:01.1173536Z [command]/usr/bin/git sparse-checkout disable
+2026-10-23T13:53:01.1265047Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-23T13:53:01.1309998Z ##[group]Checking out the ref
+2026-10-23T13:53:01.1314528Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/296/merge
+2026-10-23T13:53:01.2389782Z Note: switching to 'refs/remotes/pull/296/merge'.
+2026-10-23T13:53:01.2391200Z 
+2026-10-23T13:53:01.2392221Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-10-23T13:53:01.2395161Z changes and commit them, and you can discard any commits you make in this
+2026-10-23T13:53:01.2398058Z state without impacting any branches by switching back to a branch.
+2026-10-23T13:53:01.2399589Z 
+2026-10-23T13:53:01.2400336Z If you want to create a new branch to retain commits you create, you may
+2026-10-23T13:53:01.2402620Z do so (now or later) by using -c with the switch command. Example:
+2026-10-23T13:53:01.2403784Z 
+2026-10-23T13:53:01.2404248Z   git switch -c <new-branch-name>
+2026-10-23T13:53:01.2405016Z 
+2026-10-23T13:53:01.2405478Z Or undo this operation with:
+2026-10-23T13:53:01.2406171Z 
+2026-10-23T13:53:01.2406594Z   git switch -
+2026-10-23T13:53:01.2407167Z 
+2026-10-23T13:53:01.2408083Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-10-23T13:53:01.2409975Z 
+2026-10-23T13:53:01.2411640Z HEAD is now at 764d3ca Merge 5b2f8d55ea6893e3246a626dbc95434f4ad4d166 into 14144bd1f9b6ff6784c675314203d30add5cd18d
+2026-10-23T13:53:01.2416492Z ##[endgroup]
+2026-10-23T13:53:01.2464925Z [command]/usr/bin/git log -1 --format=%H
+2026-10-23T13:53:01.2499566Z 764d3cae3f41822833e2eb4c35718c045c093b7a
+2026-10-23T13:53:01.2902918Z ##[group]Run actions/setup-node@v7
+2026-10-23T13:53:01.2904031Z with:
+2026-10-23T13:53:01.2904770Z   node-version: 22
+2026-10-23T13:53:01.2905615Z   check-latest: false
+2026-10-23T13:53:01.2915708Z   token: ***
+2026-10-23T13:53:01.2916571Z   package-manager-cache: true
+2026-10-23T13:53:01.2917576Z ##[endgroup]
+2026-10-23T13:53:01.4263145Z Found in cache @ /opt/hostedtoolcache/node/22.23.3/x64
+2026-10-23T13:53:01.5435419Z ##[group]Environment details
+2026-10-23T13:53:01.9212234Z node: v22.23.3
+2026-10-23T13:53:01.9214167Z npm: 10.9.9
+2026-10-23T13:53:01.9215691Z yarn: 1.22.22
+2026-10-23T13:53:01.9218717Z ##[endgroup]
+2026-10-23T13:53:01.9511795Z ##[group]Run actions/download-artifact@v8
+2026-10-23T13:53:01.9512937Z with:
+2026-10-23T13:53:01.9513721Z   pattern: jev-results-*
+2026-10-23T13:53:01.9514755Z   path: /home/runner/work/_temp/jev-artifacts
+2026-10-23T13:53:01.9515918Z   merge-multiple: true
+2026-10-23T13:53:01.9516949Z   repository: Sovereign-Communication/BigEnergyCo
+2026-10-23T13:53:01.9518153Z   run-id: 39963663600
+2026-10-23T13:53:01.9519187Z   skip-decompress: false
+2026-10-23T13:53:01.9520114Z   digest-mismatch: error
+2026-10-23T13:53:01.9521008Z ##[endgroup]
+2026-10-23T13:53:02.4046270Z Found 15 artifact(s)
+2026-10-23T13:53:02.4059838Z Filtering artifacts by pattern 'jev-results-*'
+2026-10-23T13:53:02.4063589Z Preparing to download the following artifacts:
+2026-10-23T13:53:02.4065895Z - jev-results-lighthouse-report (ID: 12506610620, Size: 5999, Expected Digest: sha256:803cfdf7a8220bbe1fb188b61b0c70b14314012f5a164df07255b2a33e3ac3e5)
+2026-10-23T13:53:02.4080625Z - jev-results-resilience-report (ID: 12506387143, Size: 2854, Expected Digest: sha256:606e9b7500cfc407ad7bfe69275fb452caa4cc33f5a14a560bec98fa8560d081)
+2026-10-23T13:53:02.4082031Z - jev-results-a11y-controls (ID: 12506303398, Size: 1311, Expected Digest: sha256:4b0a45b70017a99ffb968342ad96c34d90ce1e2b1a0f18af7cabfbf6ac92300a)
+2026-10-23T13:53:02.4083776Z - jev-results-quality-lab (ID: 12506302023, Size: 228, Expected Digest: sha256:6d421914375b54f633c2f48292711271a7624483013217e329f327df56eb1cd6)
+2026-10-23T13:53:02.4085102Z - jev-results-byte-budgets (ID: 12506147759, Size: 3463, Expected Digest: sha256:3e3b5b78dc4b0e18959ad0f5b5a20d6f9b4735c4e996b78cc0dc7d38812e4fe2)
+2026-10-23T13:53:02.4087238Z - jev-results-web-smoke (ID: 12505878416, Size: 287, Expected Digest: sha256:f86dddc77d7a24f3f5807c30085170402ee44a88bdb05a28820d3adfd12aab21)
+2026-10-23T13:53:02.4089534Z - jev-results-test (ID: 12505807549, Size: 271, Expected Digest: sha256:4fc35c072d02b3120e931625c1ebe789e5c12ffce4306f46e29f065280168db6)
+2026-10-23T13:53:02.4091816Z - jev-results-usecases-smoke-report (ID: 12505784787, Size: 2058, Expected Digest: sha256:0cea72ab166fc4ae4e3a32a91f8f53123c5937f89209406139763027d7836651)
+2026-10-23T13:53:02.4094174Z - jev-results-experience-report (ID: 12505768620, Size: 182816, Expected Digest: sha256:4192b1bb6ac3e8b2ecdfd17dfa028ee1ab121fe77f5862fe8c8cc12689ab2dfc)
+2026-10-23T13:53:02.4096446Z - jev-results-coverage (ID: 12505753556, Size: 210, Expected Digest: sha256:3035b499a32d386f7d5bf1b21415bbdcc79b864814fdbe1b37b4230406a6bbce)
+2026-10-23T13:53:02.4097904Z - jev-results-quality-evidence (ID: 12505667709, Size: 235, Expected Digest: sha256:729bfb13ffdf6801770086c897ae484cc1f46c19b8f7f0112185d648691cece1)
+2026-10-23T13:53:02.4099958Z - jev-results-lighthouse (ID: 12505648440, Size: 215, Expected Digest: sha256:7f9e6fd4a4092c5baace52ccd94028165f01d3b6a685c90890cd62d6a9b0b601)
+2026-10-23T13:53:02.4101394Z - jev-results-privacy-browser (ID: 12505634015, Size: 788, Expected Digest: sha256:afcc7badd943fa4180cc79b218c6869fe741c169f611e44a528e81a17e223e86)
+2026-10-23T13:53:02.4102821Z - jev-results-a11y-matrix (ID: 12505239287, Size: 1697, Expected Digest: sha256:9d2559c113b99259378fa331a6f8e1ca8da620082d3973a715e141bffe64ba2d)
+2026-10-23T13:53:02.4104198Z - jev-results-hygiene (ID: 12505229732, Size: 657, Expected Digest: sha256:cb584fc9b4e540dbc93d226ddddea1020483b8533dae6ffe4fb207e56923de2b)
+2026-10-23T13:53:02.9306709Z Redirecting to blob download url: https://productionresultssa9.blob.core.windows.net/actions-results/5632f788-64f8-8beb-a4ea-dd82568be6a1/workflow-job-run-360354d6-620e-5846-b891-1adb123bef7c/artifacts/da05e2d1a9196749b155ff0cc55b92a46db7bbfe1ce38c6f405a854199b840f2.zip
+2026-10-23T13:53:02.9310666Z Starting download of artifact to: /home/runner/work/_temp/jev-artifacts
+2026-10-23T13:53:02.9327982Z Redirecting to blob download url: https://productionresultssa9.blob.core.windows.net/actions-results/5632f788-64f8-8beb-a4ea-dd82568be6a1/workflow-job-run-702aa51c-29a5-5746-8ee2-178ddefeab53/artifacts/62c32c719382451d5fbda729e4972479f65da514941cf0eefa764ca1b30d32ce.zip
+2026-10-23T13:53:02.9330971Z Starting download of artifact to: /home/runner/work/_temp/jev-artifacts
+2026-10-23T13:53:02.9357691Z Redirecting to blob download url: https://productionresultssa9.blob.core.windows.net/actions-results/5632f788-64f8-8beb-a4ea-dd82568be6a1/workflow-job-run-7a9cc71d-9622-5c01-a3bd-3cc4f389abbf/artifacts/10f124856e049339df818e4f9aa8aadd39544de141e4b7f3a28281749a9676f9.zip
+2026-10-23T13:53:02.9360866Z Starting download of artifact to: /home/runner/work/_temp/jev-artifacts
+2026-10-23T13:53:02.9366712Z Redirecting to blob download url: https://productionresultssa9.blob.core.windows.net/actions-results/5632f788-64f8-8beb-a4ea-dd82568be6a1/workflow-job-run-702aa51c-29a5-5746-8ee2-178ddefeab53/artifacts/b2e8b18259fa7e10e3db02cd7b5ef0b8aa9f79180f99f0b99b5fe60ccd626bd2.zip
+2026-10-23T13:53:02.9369808Z Starting download of artifact to: /home/runner/work/_temp/jev-artifacts
+2026-10-23T13:53:02.9397660Z Redirecting to blob download url: https://productionresultssa9.blob.core.windows.net/actions-results/5632f788-64f8-8beb-a4ea-dd82568be6a1/workflow-job-run-54749c6b-5bc2-518b-9301-c2cd1789dafa/artifacts/323cdc2586e375e4739af959f6dd1a9a42f944c0471a4c7252f5e5007d50fa7c.zip
+2026-10-23T13:53:02.9401034Z Starting download of artifact to: /home/runner/work/_temp/jev-artifacts
+2026-10-23T13:53:02.9425585Z Redirecting to blob download url: https://productionresultssa9.blob.core.windows.net/actions-results/5632f788-64f8-8beb-a4ea-dd82568be6a1/workflow-job-run-702aa51c-29a5-5746-8ee2-178ddefeab53/artifacts/be463a882f10652b64809e40f54dd9022d3808c1cf4cee97a0be07da45b1ff5f.zip
+2026-10-23T13:53:02.9428726Z Starting download of artifact to: /home/runner/work/_temp/jev-artifacts
+2026-10-23T13:53:02.9442177Z Redirecting to blob download url: https://productionresultssa9.blob.core.windows.net/actions-results/5632f788-64f8-8beb-a4ea-dd82568be6a1/workflow-job-run-702aa51c-29a5-5746-8ee2-178ddefeab53/artifacts/38470edb3869623c8c61fb89a88809bf0a97a3c9315788246c296dcdfc8655d7.zip
+2026-10-23T13:53:02.9448101Z Starting download of artifact to: /home/runner/work/_temp/jev-artifacts
+2026-10-23T13:53:02.9457346Z Redirecting to blob download url: https://productionresultssa9.blob.core.windows.net/actions-results/5632f788-64f8-8beb-a4ea-dd82568be6a1/workflow-job-run-702aa51c-29a5-5746-8ee2-178ddefeab53/artifacts/23b8224e301f64ff3459fa01f2f4b3fcf9ab8b8228f1fc635b81022585c584a0.zip
+2026-10-23T13:53:02.9460514Z Starting download of artifact to: /home/runner/work/_temp/jev-artifacts
+2026-10-23T13:53:02.9470130Z Redirecting to blob download url: https://productionresultssa9.blob.core.windows.net/actions-results/5632f788-64f8-8beb-a4ea-dd82568be6a1/workflow-job-run-98314c3b-814d-5880-8a16-b84711fd6226/artifacts/6f131187555ac8a3532b1e864687c952332e7f18e73864304603efee202d4adf.zip
+2026-10-23T13:53:02.9472757Z Starting download of artifact to: /home/runner/work/_temp/jev-artifacts
+2026-10-23T13:53:02.9487353Z Redirecting to blob download url: https://productionresultssa9.blob.core.windows.net/actions-results/5632f788-64f8-8beb-a4ea-dd82568be6a1/workflow-job-run-702aa51c-29a5-5746-8ee2-178ddefeab53/artifacts/644a89e432459920077e09ec6c7489bedf3fb6ca596731a1405f88a0ffc9b2fc.zip
+2026-10-23T13:53:02.9490469Z Starting download of artifact to: /home/runner/work/_temp/jev-artifacts
+2026-10-23T13:53:02.9523806Z Redirecting to blob download url: https://productionresultssa9.blob.core.windows.net/actions-results/5632f788-64f8-8beb-a4ea-dd82568be6a1/workflow-job-run-7a9cc71d-9622-5c01-a3bd-3cc4f389abbf/artifacts/37361026aca3a52e31ada0ff7e754db4a33c753f699ae885b0b3db0fbd35f4d8.zip
+2026-10-23T13:53:02.9525285Z Starting download of artifact to: /home/runner/work/_temp/jev-artifacts
+2026-10-23T13:53:02.9682310Z Redirecting to blob download url: https://productionresultssa9.blob.core.windows.net/actions-results/5632f788-64f8-8beb-a4ea-dd82568be6a1/workflow-job-run-360354d6-620e-5846-b891-1adb123bef7c/artifacts/20894254180d7670770093fdd4461118e8b46736acdac84e8c11aa98fa4f60dd.zip
+2026-10-23T13:53:02.9684638Z Starting download of artifact to: /home/runner/work/_temp/jev-artifacts
+2026-10-23T13:53:02.9698584Z Redirecting to blob download url: https://productionresultssa9.blob.core.windows.net/actions-results/5632f788-64f8-8beb-a4ea-dd82568be6a1/workflow-job-run-98314c3b-814d-5880-8a16-b84711fd6226/artifacts/6c469ab4bc807bfae6ff2caab5db0e6d03f69e507c17061091cd77599b8b857a.zip
+2026-10-23T13:53:02.9700879Z Starting download of artifact to: /home/runner/work/_temp/jev-artifacts
+2026-10-23T13:53:02.9749723Z Redirecting to blob download url: https://productionresultssa9.blob.core.windows.net/actions-results/5632f788-64f8-8beb-a4ea-dd82568be6a1/workflow-job-run-702aa51c-29a5-5746-8ee2-178ddefeab53/artifacts/b854953c7bedd7a70ced9456e3f437800d81fdc37ee3fce984298fbae37fc12a.zip
+2026-10-23T13:53:02.9751455Z Starting download of artifact to: /home/runner/work/_temp/jev-artifacts
+2026-10-23T13:53:02.9769567Z Redirecting to blob download url: https://productionresultssa9.blob.core.windows.net/actions-results/5632f788-64f8-8beb-a4ea-dd82568be6a1/workflow-job-run-0e2bd85e-ca4a-566a-b233-5feaf979e690/artifacts/35a011663dd60d43cb5fcd7fa8f7c69a94fe410ed3949c8c0644f2f21326d9ba.zip
+2026-10-23T13:53:02.9771386Z Starting download of artifact to: /home/runner/work/_temp/jev-artifacts
+2026-10-23T13:53:03.2291090Z (node:2567) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
+2026-10-23T13:53:03.2293479Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-23T13:53:03.2425550Z SHA256 digest of downloaded artifact is 606e9b7500cfc407ad7bfe69275fb452caa4cc33f5a14a560bec98fa8560d081
+2026-10-23T13:53:03.2427015Z Artifact download completed successfully.
+2026-10-23T13:53:03.2428904Z SHA256 digest of downloaded artifact is 4b0a45b70017a99ffb968342ad96c34d90ce1e2b1a0f18af7cabfbf6ac92300a
+2026-10-23T13:53:03.2430297Z Artifact download completed successfully.
+2026-10-23T13:53:03.2431918Z SHA256 digest of downloaded artifact is 6d421914375b54f633c2f48292711271a7624483013217e329f327df56eb1cd6
+2026-10-23T13:53:03.2433290Z Artifact download completed successfully.
+2026-10-23T13:53:03.2435011Z SHA256 digest of downloaded artifact is 7f9e6fd4a4092c5baace52ccd94028165f01d3b6a685c90890cd62d6a9b0b601
+2026-10-23T13:53:03.2436439Z Artifact download completed successfully.
+2026-10-23T13:53:03.2437914Z SHA256 digest of downloaded artifact is 3035b499a32d386f7d5bf1b21415bbdcc79b864814fdbe1b37b4230406a6bbce
+2026-10-23T13:53:03.2439173Z Artifact download completed successfully.
+2026-10-23T13:53:03.2439962Z SHA256 digest of downloaded artifact is f86dddc77d7a24f3f5807c30085170402ee44a88bdb05a28820d3adfd12aab21
+2026-10-23T13:53:03.2440643Z Artifact download completed successfully.
+2026-10-23T13:53:03.2512606Z SHA256 digest of downloaded artifact is 3e3b5b78dc4b0e18959ad0f5b5a20d6f9b4735c4e996b78cc0dc7d38812e4fe2
+2026-10-23T13:53:03.2513874Z Artifact download completed successfully.
+2026-10-23T13:53:03.2515150Z SHA256 digest of downloaded artifact is 0cea72ab166fc4ae4e3a32a91f8f53123c5937f89209406139763027d7836651
+2026-10-23T13:53:03.2516247Z Artifact download completed successfully.
+2026-10-23T13:53:03.2530976Z SHA256 digest of downloaded artifact is 803cfdf7a8220bbe1fb188b61b0c70b14314012f5a164df07255b2a33e3ac3e5
+2026-10-23T13:53:03.2532273Z Artifact download completed successfully.
+2026-10-23T13:53:03.2534143Z SHA256 digest of downloaded artifact is cb584fc9b4e540dbc93d226ddddea1020483b8533dae6ffe4fb207e56923de2b
+2026-10-23T13:53:03.2535377Z Artifact download completed successfully.
+2026-10-23T13:53:03.2537031Z SHA256 digest of downloaded artifact is afcc7badd943fa4180cc79b218c6869fe741c169f611e44a528e81a17e223e86
+2026-10-23T13:53:03.2537878Z Artifact download completed successfully.
+2026-10-23T13:53:03.2587191Z SHA256 digest of downloaded artifact is 9d2559c113b99259378fa331a6f8e1ca8da620082d3973a715e141bffe64ba2d
+2026-10-23T13:53:03.2588281Z Artifact download completed successfully.
+2026-10-23T13:53:03.2630334Z SHA256 digest of downloaded artifact is 4fc35c072d02b3120e931625c1ebe789e5c12ffce4306f46e29f065280168db6
+2026-10-23T13:53:03.2631537Z Artifact download completed successfully.
+2026-10-23T13:53:03.2710039Z SHA256 digest of downloaded artifact is 729bfb13ffdf6801770086c897ae484cc1f46c19b8f7f0112185d648691cece1
+2026-10-23T13:53:03.2711519Z Artifact download completed successfully.
+2026-10-23T13:53:03.4626275Z SHA256 digest of downloaded artifact is 4192b1bb6ac3e8b2ecdfd17dfa028ee1ab121fe77f5862fe8c8cc12689ab2dfc
+2026-10-23T13:53:03.4627636Z Artifact download completed successfully.
+2026-10-23T13:53:03.4628724Z Total of 15 artifact(s) downloaded
+2026-10-23T13:53:03.4632851Z Download artifact has finished successfully
+2026-10-23T13:53:03.4790968Z ##[group]Run node scripts/build-jev-evidence.mjs \
+2026-10-23T13:53:03.4791574Z [36;1mnode scripts/build-jev-evidence.mjs \[0m
+2026-10-23T13:53:03.4792093Z [36;1m  --artifacts "$RUNNER_TEMP/jev-artifacts" \[0m
+2026-10-23T13:53:03.4792623Z [36;1m  --prose evidence/advisor-and-release.json \[0m
+2026-10-23T13:53:03.4793138Z [36;1m  --out "$RUNNER_TEMP/jev-evidence.json" \[0m
+2026-10-23T13:53:03.4793673Z [36;1m  --sha "5b2f8d55ea6893e3246a626dbc95434f4ad4d166" \[0m
+2026-10-23T13:53:03.4794356Z [36;1m  --run-id "39963663600" \[0m
+2026-10-23T13:53:03.4794761Z [36;1m  --run-attempt "1" \[0m
+2026-10-23T13:53:03.4795147Z [36;1m  --ref "refs/pull/296/merge" \[0m
+2026-10-23T13:53:03.4795549Z [36;1m  --event "pull_request" \[0m
+2026-10-23T13:53:03.4796022Z [36;1m  --repository "Sovereign-Communication/BigEnergyCo"[0m
+2026-10-23T13:53:03.5126532Z shell: /usr/bin/bash -e {0}
+2026-10-23T13:53:03.5127175Z ##[endgroup]
+2026-10-23T13:53:03.5778771Z evidence: /home/runner/work/_temp/jev-evidence.json (ci-generated)
+2026-10-23T13:53:03.5779939Z required jobs: test web-smoke quality-lab lighthouse quality-evidence coverage
+2026-10-23T13:53:03.5781476Z records: tests_green=true prettier_clean=true seo_green=true hygiene_clean=true smoke_green=true ci_green=true legacy_gates_green=true
+2026-10-23T13:53:03.5898242Z ##[group]Run FILES="$(gh api "repos/Sovereign-Communication/BigEnergyCo/pulls/296/files" --paginate -q '.[].filename' | jq -R . | jq -cs .)"
+2026-10-23T13:53:03.5899792Z [36;1mFILES="$(gh api "repos/Sovereign-Communication/BigEnergyCo/pulls/296/files" --paginate -q '.[].filename' | jq -R . | jq -cs .)"[0m
+2026-10-23T13:53:03.5900593Z [36;1mecho "files=$FILES" >> "$GITHUB_OUTPUT"[0m
+2026-10-23T13:53:03.5969097Z shell: /usr/bin/bash -e {0}
+2026-10-23T13:53:03.5969500Z env:
+2026-10-23T13:53:03.5972587Z   GH_TOKEN: ***
+2026-10-23T13:53:03.5972932Z ##[endgroup]
+2026-10-23T13:53:04.4164663Z ##[group]Run SCOPE="$(node -e '
+2026-10-23T13:53:04.4165096Z [36;1mSCOPE="$(node -e '[0m
+2026-10-23T13:53:04.4165593Z [36;1m  const { resolveCiScope } = await import("./scripts/lib/jev-scope.mjs");[0m
+2026-10-23T13:53:04.4166117Z [36;1m  let files = [];[0m
+2026-10-23T13:53:04.4166656Z [36;1m  try { files = JSON.parse(process.env.PR_FILES || "[]").map(f => f.filename || f); } catch {}[0m
+2026-10-23T13:53:04.4167348Z [36;1m  const r = resolveCiScope({ title: process.env.PR_TITLE || "", files });[0m
+2026-10-23T13:53:04.4167978Z [36;1m  if (!r.scope) {[0m
+2026-10-23T13:53:04.4168907Z [36;1m    process.stderr.write(r.error + "\n");[0m
+2026-10-23T13:53:04.4169728Z [36;1m    process.exit(1);[0m
+2026-10-23T13:53:04.4170250Z [36;1m  }[0m
+2026-10-23T13:53:04.4170561Z [36;1m  if (r.how !== "explicit") {[0m
+2026-10-23T13:53:04.4171090Z [36;1m    process.stderr.write(`scope inferred (${r.how}): ${r.inferenceReason}\n`);[0m
+2026-10-23T13:53:04.4171633Z [36;1m  }[0m
+2026-10-23T13:53:04.4172003Z [36;1m  process.stdout.write(r.scope);[0m
+2026-10-23T13:53:04.4172417Z [36;1m' --input-type=module)"[0m
+2026-10-23T13:53:04.4172842Z [36;1mecho "scope=$SCOPE" >> "$GITHUB_OUTPUT"[0m
+2026-10-23T13:53:04.4173265Z [36;1mecho "judging the facets of $SCOPE"[0m
+2026-10-23T13:53:04.4237443Z shell: /usr/bin/bash -e {0}
+2026-10-23T13:53:04.4237806Z env:
+2026-10-23T13:53:04.4238271Z   PR_TITLE: test(audit): pin car 1's guards and record what each item actually was (#196)
+2026-10-23T13:53:04.4239062Z   PR_FILES: ["tests/audit-car1-guards.test.mjs"]
+2026-10-23T13:53:04.4239482Z ##[endgroup]
+2026-10-23T13:53:04.4635024Z could not determine scope from title or changed files. Add a plan item ID to the title (e.g. "(P9.7)"), or ensure the PR touches recognizable paths (blog/, docs/plan/).
+2026-10-23T13:53:04.4682469Z ##[error]Process completed with exit code 1.
+2026-10-23T13:53:04.4786809Z ##[group]Run actions/upload-artifact@v7
+2026-10-23T13:53:04.4801139Z with:
+2026-10-23T13:53:04.4801502Z   name: jev-complete-report
+2026-10-23T13:53:04.4802103Z   path: /home/runner/work/_temp/jev-report.json
+/home/runner/work/_temp/jev-evidence.json
+
+2026-10-23T13:53:04.4802705Z   if-no-files-found: warn
+2026-10-23T13:53:04.4803047Z   retention-days: 30
+2026-10-23T13:53:04.4803378Z   compression-level: 6
+2026-10-23T13:53:04.4803708Z   overwrite: false
+2026-10-23T13:53:04.4804033Z   include-hidden-files: false
+2026-10-23T13:53:04.4804391Z   archive: true
+2026-10-23T13:53:04.4804696Z ##[endgroup]
+2026-10-23T13:53:04.6420520Z Multiple search paths detected. Calculating the least common ancestor of all paths
+2026-10-23T13:53:04.6510290Z The least common ancestor is /home/runner/work/_temp. This will be the root directory of the artifact
+2026-10-23T13:53:04.6540259Z With the provided path, there will be 1 file uploaded
+2026-10-23T13:53:04.6599651Z Artifact name is valid!
+2026-10-23T13:53:04.6629803Z Root directory input is valid!
+2026-10-23T13:53:05.0043730Z Uploading artifact: jev-complete-report.zip
+2026-10-23T13:53:05.0085181Z Beginning upload of artifact content to blob storage
+2026-10-23T13:53:05.3348254Z Uploaded bytes 8374
+2026-10-23T13:53:05.4496537Z Finished uploading artifact content to blob storage!
+2026-10-23T13:53:05.4498821Z SHA256 digest of uploaded artifact is 36e69827c96bda1340b22626335f135c77a4134cb4941633c65373e1eb1595fd
+2026-10-23T13:53:05.4500394Z Finalizing artifact upload
+2026-10-23T13:53:06.0557686Z Artifact jev-complete-report successfully finalized. Artifact ID 12506940316
+2026-10-23T13:53:06.0559729Z Artifact jev-complete-report has been successfully uploaded! Final size is 8374 bytes. Artifact ID is 12506940316
+2026-10-23T13:53:06.0562734Z Artifact download URL: https://github.com/Sovereign-Communication/BigEnergyCo/actions/runs/39963663600/artifacts/12506940316
+2026-10-23T13:53:06.0761237Z Post job cleanup.
+2026-10-23T13:53:06.1651207Z [command]/usr/bin/git version
+2026-10-23T13:53:06.1700765Z git version 2.55.0
+2026-10-23T13:53:06.1741771Z Temporarily overriding HOME='/home/runner/work/_temp/a0d4cc38-182c-4f8d-b67c-4c3d278f6be7' before making global git config changes
+2026-10-23T13:53:06.1743500Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-23T13:53:06.1748030Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/BigEnergyCo/BigEnergyCo
+2026-10-23T13:53:06.1787103Z Removing SSH command configuration
+2026-10-23T13:53:06.1795705Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-23T13:53:06.1850097Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-23T13:53:06.2127969Z Removing HTTP extra header
+2026-10-23T13:53:06.2129969Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-23T13:53:06.2173944Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-23T13:53:06.2434503Z Removing includeIf entries pointing to credentials config files
+2026-10-23T13:53:06.2442585Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-23T13:53:06.2477802Z includeif.gitdir:/home/runner/work/BigEnergyCo/BigEnergyCo/.git.path
+2026-10-23T13:53:06.2479519Z includeif.gitdir:/home/runner/work/BigEnergyCo/BigEnergyCo/.git/worktrees/*.path
+2026-10-23T13:53:06.2480456Z includeif.gitdir:/github/workspace/.git.path
+2026-10-23T13:53:06.2481600Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-23T13:53:06.2489071Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/BigEnergyCo/BigEnergyCo/.git.path
+2026-10-23T13:53:06.2523531Z /home/runner/work/_temp/git-credentials-b1817888-2da2-4aa1-825f-4ac6db269c3a.config
+2026-10-23T13:53:06.2536231Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/BigEnergyCo/BigEnergyCo/.git.path \/home\/runner\/work\/_temp\/git\-credentials\-b1817888\-2da2\-4aa1\-825f\-4ac6db269c3a\.config
+2026-10-23T13:53:06.2598294Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/BigEnergyCo/BigEnergyCo/.git/worktrees/*.path
+2026-10-23T13:53:06.2635385Z /home/runner/work/_temp/git-credentials-b1817888-2da2-4aa1-825f-4ac6db269c3a.config
+2026-10-23T13:53:06.2649403Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/BigEnergyCo/BigEnergyCo/.git/worktrees/*.path \/home\/runner\/work\/_temp\/git\-credentials\-b1817888\-2da2\-4aa1\-825f\-4ac6db269c3a\.config
+2026-10-23T13:53:06.2692595Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+2026-10-23T13:53:06.2722690Z /github/runner_temp/git-credentials-b1817888-2da2-4aa1-825f-4ac6db269c3a.config
+2026-10-23T13:53:06.2732143Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path \/github\/runner_temp\/git\-credentials\-b1817888\-2da2\-4aa1\-825f\-4ac6db269c3a\.config
+2026-10-23T13:53:06.2772202Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-23T13:53:06.2799020Z /github/runner_temp/git-credentials-b1817888-2da2-4aa1-825f-4ac6db269c3a.config
+2026-10-23T13:53:06.2808940Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-b1817888\-2da2\-4aa1\-825f\-4ac6db269c3a\.config
+2026-10-23T13:53:06.2848987Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-23T13:53:06.3086095Z Removing credentials config '/home/runner/work/_temp/git-credentials-b1817888-2da2-4aa1-825f-4ac6db269c3a.config'
+2026-10-23T13:53:06.3249536Z Cleaning up orphan processes

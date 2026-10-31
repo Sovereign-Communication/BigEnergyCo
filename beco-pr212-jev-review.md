@@ -1,0 +1,5 @@
+﻿Jev Gate Policy v1 review for exact head 39d2986 (run 39766849768): the scoped P9.5 report scored 94.07; all hard gates passed and there are no blocking facets. It requested broader i18n, provenance, advisor, resilience, and translation evidence. I investigated those findings against this diff: this PR changes one English article, its sitemap entry, a test, and the P9.5 evidence row; it does not change localization, advisor, runtime, or privacy behavior. The remaining flags are known site-wide gaps and are not regressions from this correction.
+
+The new prices and arithmetic were checked against the supplier product pages on 2026-10-22: [REPT 280Ah cell listing](https://www.docanpower.com/rept-280ah-prismatic-cell) and [S3 DIY box listing](https://www.docanpower.com/s3-diy-box-jk-bms-v19). The post labels these as a dated single-supplier snapshot and excludes freight and tax. No actual risk was found in this scoped correction under policy v1.
+
+This is partial P9.5 only; the complete blog audit remains open.

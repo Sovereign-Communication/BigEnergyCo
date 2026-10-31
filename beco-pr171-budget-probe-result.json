@@ -1,0 +1,30 @@
+{
+  "passed": true,
+  "scope": "local allowlisted build; real worker; Jev endpoint fixture only",
+  "cap": {
+    "requested": 6012,
+    "afterCommit": 6012
+  },
+  "observations": [
+    {
+      "cut": 87,
+      "preview": 6012,
+      "settled": {
+        "value": 6012,
+        "min": 299,
+        "max": 6022,
+        "step": 1
+      }
+    },
+    {
+      "cut": 121,
+      "preview": 6012,
+      "settled": {
+        "value": 6012,
+        "min": 299,
+        "max": 6022,
+        "step": 1
+      }
+    }
+  ]
+}

@@ -1,0 +1,895 @@
+{
+  "source_branch": "codex/issue287-terminology-20261023",
+  "source_commit": "b8c0a23",
+  "locale_sha256": "6bc12ac10e5156dccb687a453bb37e79a3c741fcb91add5fd0cba955329fb9e8",
+  "model": "jev-1.14.0",
+  "generated_at": "2026-10-23T09:22:10.645Z",
+  "controls_passed": 1,
+  "controls_total": 18,
+  "samples_passed": 4,
+  "samples_total": 36,
+  "scope": "one bilingual semantic sample; 0.95/0.05 diagnostic cutoffs; not native review, naturalness proof, or a changed release gate",
+  "results": [
+    {
+      "kind": "sample",
+      "locale": "es",
+      "key": "firstRunNote",
+      "source": "Choose your location and energy use, then click Size My System. The first run downloads ~2 MB of satellite weather data and caches it in your browser.",
+      "translated": "Elige tu ubicación y tu consumo, y pulsa Dimensionar mi sistema. La primera ejecución descarga ~2 MB de datos satelitales y luego los guarda en tu navegador.",
+      "probability": 0.92
+    },
+    {
+      "kind": "sample",
+      "locale": "es",
+      "key": "cumCostTitleBattery",
+      "source": "What does the battery change about your 20-year cost? (cumulative cost)",
+      "translated": "¿Cómo cambia la batería tu coste a 20 años? (coste acumulado)",
+      "probability": 0.96
+    },
+    {
+      "kind": "sample",
+      "locale": "es",
+      "key": "infeasibleNeedsBatteryTitle",
+      "source": "Solar-only can't reach 100% off-grid",
+      "translated": "Solo solar no puede alcanzar el 100% fuera de la red",
+      "probability": 0.98
+    },
+    {
+      "kind": "sample",
+      "locale": "es",
+      "key": "infeasibleNeedsPanelsTitle",
+      "source": "Battery-only can't run off-grid",
+      "translated": "Solo batería no puede funcionar fuera de la red",
+      "probability": 0.43
+    },
+    {
+      "kind": "sample",
+      "locale": "es",
+      "key": "reserveLabel",
+      "source": "Emergency reserve held in the battery",
+      "translated": "Reserva de emergencia guardada en la batería",
+      "probability": 0.97
+    },
+    {
+      "kind": "sample",
+      "locale": "es",
+      "key": "resultEstimateDisclaimer",
+      "source": "Output is an automated educational estimate. It is not engineering, not a stamped design, not a quote, and not a safety certification. It may be wrong. Have any real system reviewed by a licensed electrician or engineer before you build or energize it.",
+      "translated": "El resultado es una estimación educativa automatizada. No es un trabajo de ingeniería, un diseño visado, un presupuesto ni una certificación de seguridad. Puede ser incorrecto. Antes de construir o energizar un sistema real, pide a un electricista o ingeniero autorizado que lo revise.",
+      "probability": 0.97
+    },
+    {
+      "kind": "positive",
+      "locale": "es",
+      "key": "chemLabel",
+      "source": "Battery chemistry:",
+      "translated": "Química de la batería:",
+      "probability": 0.94
+    },
+    {
+      "kind": "wrong_year",
+      "locale": "es",
+      "key": "cumCostTitleBattery",
+      "source": "What does the battery change about your 20-year cost? (cumulative cost)",
+      "translated": "¿Cómo cambia la batería tu coste a 200 años? (coste acumulado)",
+      "probability": 0.02
+    },
+    {
+      "kind": "wrong_component",
+      "locale": "es",
+      "key": "infeasibleNeedsPanelsTitle",
+      "source": "Battery-only can't run off-grid",
+      "translated": "Solo solar no puede alcanzar el 100% fuera de la red",
+      "probability": 0.06
+    },
+    {
+      "kind": "sample",
+      "locale": "pt",
+      "key": "firstRunNote",
+      "source": "Choose your location and energy use, then click Size My System. The first run downloads ~2 MB of satellite weather data and caches it in your browser.",
+      "translated": "Escolha sua localização e seu consumo e clique em Dimensionar meu sistema. A primeira execução baixa ~2 MB de dados de clima por satélite e depois os guarda no navegador.",
+      "probability": 0.92
+    },
+    {
+      "kind": "sample",
+      "locale": "pt",
+      "key": "cumCostTitleBattery",
+      "source": "What does the battery change about your 20-year cost? (cumulative cost)",
+      "translated": "Como a bateria muda seu custo em 20 anos? (custo acumulado)",
+      "probability": 0.9
+    },
+    {
+      "kind": "sample",
+      "locale": "pt",
+      "key": "infeasibleNeedsBatteryTitle",
+      "source": "Solar-only can't reach 100% off-grid",
+      "translated": "Só solar não alcança 100% fora da rede",
+      "probability": 0.89
+    },
+    {
+      "kind": "sample",
+      "locale": "pt",
+      "key": "infeasibleNeedsPanelsTitle",
+      "source": "Battery-only can't run off-grid",
+      "translated": "Só bateria não pode funcionar fora da rede",
+      "probability": 0.9
+    },
+    {
+      "kind": "sample",
+      "locale": "pt",
+      "key": "reserveLabel",
+      "source": "Emergency reserve held in the battery",
+      "translated": "Reserva de emergência guardada na bateria",
+      "probability": 0.86
+    },
+    {
+      "kind": "sample",
+      "locale": "pt",
+      "key": "resultEstimateDisclaimer",
+      "source": "Output is an automated educational estimate. It is not engineering, not a stamped design, not a quote, and not a safety certification. It may be wrong. Have any real system reviewed by a licensed electrician or engineer before you build or energize it.",
+      "translated": "O resultado é uma estimativa educativa automatizada. Não é engenharia, projeto assinado, orçamento nem certificação de segurança. Pode estar errado. Antes de construir ou energizar um sistema real, peça a um eletricista ou engenheiro habilitado que o revise.",
+      "probability": 0.88
+    },
+    {
+      "kind": "positive",
+      "locale": "pt",
+      "key": "chemLabel",
+      "source": "Battery chemistry:",
+      "translated": "Química da bateria:",
+      "probability": 0.64
+    },
+    {
+      "kind": "wrong_year",
+      "locale": "pt",
+      "key": "cumCostTitleBattery",
+      "source": "What does the battery change about your 20-year cost? (cumulative cost)",
+      "translated": "Como a bateria muda seu custo em 200 anos? (custo acumulado)",
+      "probability": 0.23
+    },
+    {
+      "kind": "wrong_component",
+      "locale": "pt",
+      "key": "infeasibleNeedsPanelsTitle",
+      "source": "Battery-only can't run off-grid",
+      "translated": "Só solar não alcança 100% fora da rede",
+      "probability": 0.25
+    },
+    {
+      "kind": "sample",
+      "locale": "fr",
+      "key": "firstRunNote",
+      "source": "Choose your location and energy use, then click Size My System. The first run downloads ~2 MB of satellite weather data and caches it in your browser.",
+      "translated": "Choisissez votre lieu et votre consommation, puis cliquez sur Dimensionner. Le premier lancement télécharge ~2 Mo de données météo satellite et les met ensuite en cache.",
+      "probability": 0.65
+    },
+    {
+      "kind": "sample",
+      "locale": "fr",
+      "key": "cumCostTitleBattery",
+      "source": "What does the battery change about your 20-year cost? (cumulative cost)",
+      "translated": "Quel effet la batterie a-t-elle sur le coût sur 20 ans ? (coût cumulé)",
+      "probability": 0.72
+    },
+    {
+      "kind": "sample",
+      "locale": "fr",
+      "key": "infeasibleNeedsBatteryTitle",
+      "source": "Solar-only can't reach 100% off-grid",
+      "translated": "Le solaire seul ne peut pas atteindre 100% hors réseau",
+      "probability": 0.87
+    },
+    {
+      "kind": "sample",
+      "locale": "fr",
+      "key": "infeasibleNeedsPanelsTitle",
+      "source": "Battery-only can't run off-grid",
+      "translated": "La batterie seule ne peut pas fonctionner hors réseau",
+      "probability": 0.77
+    },
+    {
+      "kind": "sample",
+      "locale": "fr",
+      "key": "reserveLabel",
+      "source": "Emergency reserve held in the battery",
+      "translated": "Réserve d'urgence conservée dans la batterie",
+      "probability": 0.83
+    },
+    {
+      "kind": "sample",
+      "locale": "fr",
+      "key": "resultEstimateDisclaimer",
+      "source": "Output is an automated educational estimate. It is not engineering, not a stamped design, not a quote, and not a safety certification. It may be wrong. Have any real system reviewed by a licensed electrician or engineer before you build or energize it.",
+      "translated": "Le résultat est une estimation pédagogique automatisée. Ce n’est ni une étude d’ingénierie, ni un plan signé, ni un devis, ni une certification de sécurité. Il peut être erroné. Avant de construire ou de mettre sous tension un système réel, faites-le vérifier par un ingénieur ou un électricien agréé.",
+      "probability": 0.72
+    },
+    {
+      "kind": "positive",
+      "locale": "fr",
+      "key": "chemLabel",
+      "source": "Battery chemistry:",
+      "translated": "Chimie de la batterie :",
+      "probability": 0.66
+    },
+    {
+      "kind": "wrong_year",
+      "locale": "fr",
+      "key": "cumCostTitleBattery",
+      "source": "What does the battery change about your 20-year cost? (cumulative cost)",
+      "translated": "Quel effet la batterie a-t-elle sur le coût sur 200 ans ? (coût cumulé)",
+      "probability": 0.54
+    },
+    {
+      "kind": "wrong_component",
+      "locale": "fr",
+      "key": "infeasibleNeedsPanelsTitle",
+      "source": "Battery-only can't run off-grid",
+      "translated": "Le solaire seul ne peut pas atteindre 100% hors réseau",
+      "probability": 0.59
+    },
+    {
+      "kind": "sample",
+      "locale": "de",
+      "key": "firstRunNote",
+      "source": "Choose your location and energy use, then click Size My System. The first run downloads ~2 MB of satellite weather data and caches it in your browser.",
+      "translated": "Wählen Sie Standort und Verbrauch und klicken Sie auf System dimensionieren. Beim ersten Start werden Satelliten-Wetterdaten geladen und im Browser gespeichert.",
+      "probability": 0.64
+    },
+    {
+      "kind": "sample",
+      "locale": "de",
+      "key": "cumCostTitleBattery",
+      "source": "What does the battery change about your 20-year cost? (cumulative cost)",
+      "translated": "Wie verändert die Batterie deine Kosten über 20 Jahre? (kumulierte Kosten)",
+      "probability": 0.65
+    },
+    {
+      "kind": "sample",
+      "locale": "de",
+      "key": "infeasibleNeedsBatteryTitle",
+      "source": "Solar-only can't reach 100% off-grid",
+      "translated": "Nur Solar erreicht 100% netzunabhängig nicht",
+      "probability": 0.6
+    },
+    {
+      "kind": "sample",
+      "locale": "de",
+      "key": "infeasibleNeedsPanelsTitle",
+      "source": "Battery-only can't run off-grid",
+      "translated": "Nur Batterie kann netzunabhängig nicht laufen",
+      "probability": 0.61
+    },
+    {
+      "kind": "sample",
+      "locale": "de",
+      "key": "reserveLabel",
+      "source": "Emergency reserve held in the battery",
+      "translated": "Notfall-Reservestand in der Batterie",
+      "probability": 0.52
+    },
+    {
+      "kind": "sample",
+      "locale": "de",
+      "key": "resultEstimateDisclaimer",
+      "source": "Output is an automated educational estimate. It is not engineering, not a stamped design, not a quote, and not a safety certification. It may be wrong. Have any real system reviewed by a licensed electrician or engineer before you build or energize it.",
+      "translated": "Die Ausgabe ist eine automatisierte Lernschätzung. Sie ist weder Ingenieurarbeit noch ein genehmigter Entwurf, ein Angebot oder eine Sicherheitszertifizierung. Sie kann falsch sein. Lassen Sie ein reales System vor dem Bau oder Einschalten von einem zugelassenen Elektriker oder Ingenieur prüfen.",
+      "probability": 0.64
+    },
+    {
+      "kind": "positive",
+      "locale": "de",
+      "key": "chemLabel",
+      "source": "Battery chemistry:",
+      "translated": "Batteriechemie:",
+      "probability": 0.64
+    },
+    {
+      "kind": "wrong_year",
+      "locale": "de",
+      "key": "cumCostTitleBattery",
+      "source": "What does the battery change about your 20-year cost? (cumulative cost)",
+      "translated": "Wie verändert die Batterie deine Kosten über 200 Jahre? (kumulierte Kosten)",
+      "probability": 0.79
+    },
+    {
+      "kind": "wrong_component",
+      "locale": "de",
+      "key": "infeasibleNeedsPanelsTitle",
+      "source": "Battery-only can't run off-grid",
+      "translated": "Nur Solar erreicht 100% netzunabhängig nicht",
+      "probability": 0.72
+    },
+    {
+      "kind": "sample",
+      "locale": "nl",
+      "key": "firstRunNote",
+      "source": "Choose your location and energy use, then click Size My System. The first run downloads ~2 MB of satellite weather data and caches it in your browser.",
+      "translated": "Kies uw locatie en energieverbruik en klik daarna op Systeem dimensioneren. De eerste berekening downloadt ~2 MB aan satellietweergegevens en slaat deze op in uw browser.",
+      "probability": 0.75
+    },
+    {
+      "kind": "sample",
+      "locale": "nl",
+      "key": "cumCostTitleBattery",
+      "source": "What does the battery change about your 20-year cost? (cumulative cost)",
+      "translated": "Wat verandert de accu aan uw kosten over 20 jaar? (cumulatieve kosten)",
+      "probability": 0.7
+    },
+    {
+      "kind": "sample",
+      "locale": "nl",
+      "key": "infeasibleNeedsBatteryTitle",
+      "source": "Solar-only can't reach 100% off-grid",
+      "translated": "Alleen zonne-energie kan 100% off-grid niet halen",
+      "probability": 0.73
+    },
+    {
+      "kind": "sample",
+      "locale": "nl",
+      "key": "infeasibleNeedsPanelsTitle",
+      "source": "Battery-only can't run off-grid",
+      "translated": "Alleen een accu kan niet off-grid draaien",
+      "probability": 0.75
+    },
+    {
+      "kind": "sample",
+      "locale": "nl",
+      "key": "reserveLabel",
+      "source": "Emergency reserve held in the battery",
+      "translated": "Noodreserve aangehouden in de accu",
+      "probability": 0.79
+    },
+    {
+      "kind": "sample",
+      "locale": "nl",
+      "key": "resultEstimateDisclaimer",
+      "source": "Output is an automated educational estimate. It is not engineering, not a stamped design, not a quote, and not a safety certification. It may be wrong. Have any real system reviewed by a licensed electrician or engineer before you build or energize it.",
+      "translated": "De uitvoer is een geautomatiseerde educatieve schatting. Het is geen technisch ontwerp, geen gewaarmerkt plan, geen offerte en geen veiligheidscertificaat. De uitkomst kan onjuist zijn. Laat elk echt systeem vóór de bouw of ingebruikname controleren door een erkende elektricien of engineer.",
+      "probability": 0.83
+    },
+    {
+      "kind": "positive",
+      "locale": "nl",
+      "key": "chemLabel",
+      "source": "Battery chemistry:",
+      "translated": "Accuchemie:",
+      "probability": 0.78
+    },
+    {
+      "kind": "wrong_year",
+      "locale": "nl",
+      "key": "cumCostTitleBattery",
+      "source": "What does the battery change about your 20-year cost? (cumulative cost)",
+      "translated": "Wat verandert de accu aan uw kosten over 200 jaar? (cumulatieve kosten)",
+      "probability": 0.8
+    },
+    {
+      "kind": "wrong_component",
+      "locale": "nl",
+      "key": "infeasibleNeedsPanelsTitle",
+      "source": "Battery-only can't run off-grid",
+      "translated": "Alleen zonne-energie kan 100% off-grid niet halen",
+      "probability": 0.73
+    },
+    {
+      "kind": "sample",
+      "locale": "ar",
+      "key": "firstRunNote",
+      "source": "Choose your location and energy use, then click Size My System. The first run downloads ~2 MB of satellite weather data and caches it in your browser.",
+      "translated": "اختر موقعك واستهلاكك ثم اضغط صمّم نظامك. أول تشغيل يُنزّل حوالي 2 ميغابايت من بيانات الطقس الساتلية ثم يخزّنها في متصفحك.",
+      "probability": 0.67
+    },
+    {
+      "kind": "sample",
+      "locale": "ar",
+      "key": "cumCostTitleBattery",
+      "source": "What does the battery change about your 20-year cost? (cumulative cost)",
+      "translated": "كيف تغير البطارية تكلفتك على مدى 20 عامًا؟ (التكلفة التراكمية)",
+      "probability": 0.69
+    },
+    {
+      "kind": "sample",
+      "locale": "ar",
+      "key": "infeasibleNeedsBatteryTitle",
+      "source": "Solar-only can't reach 100% off-grid",
+      "translated": "الطاقة الشمسية وحدها لا تبلغ 100% خارج الشبكة",
+      "probability": 0.65
+    },
+    {
+      "kind": "sample",
+      "locale": "ar",
+      "key": "infeasibleNeedsPanelsTitle",
+      "source": "Battery-only can't run off-grid",
+      "translated": "البطارية وحدها لا تعمل خارج الشبكة",
+      "probability": 0.67
+    },
+    {
+      "kind": "sample",
+      "locale": "ar",
+      "key": "reserveLabel",
+      "source": "Emergency reserve held in the battery",
+      "translated": "هامش طوارئ محفوظ في البطارية",
+      "probability": 0.61
+    },
+    {
+      "kind": "sample",
+      "locale": "ar",
+      "key": "resultEstimateDisclaimer",
+      "source": "Output is an automated educational estimate. It is not engineering, not a stamped design, not a quote, and not a safety certification. It may be wrong. Have any real system reviewed by a licensed electrician or engineer before you build or energize it.",
+      "translated": "المخرجات تقدير تعليمي آلي. وهي ليست عملًا هندسيًا ولا تصميمًا مختومًا ولا عرض سعر ولا شهادة سلامة. وقد تكون خاطئة. اطلب من كهربائي أو مهندس مرخّص مراجعة أي نظام فعلي قبل بنائه أو تشغيله.",
+      "probability": 0.67
+    },
+    {
+      "kind": "positive",
+      "locale": "ar",
+      "key": "chemLabel",
+      "source": "Battery chemistry:",
+      "translated": "نوع البطارية:",
+      "probability": 0.57
+    },
+    {
+      "kind": "wrong_year",
+      "locale": "ar",
+      "key": "cumCostTitleBattery",
+      "source": "What does the battery change about your 20-year cost? (cumulative cost)",
+      "translated": "كيف تغير البطارية تكلفتك على مدى 200 عامًا؟ (التكلفة التراكمية)",
+      "probability": 0.63
+    },
+    {
+      "kind": "wrong_component",
+      "locale": "ar",
+      "key": "infeasibleNeedsPanelsTitle",
+      "source": "Battery-only can't run off-grid",
+      "translated": "الطاقة الشمسية وحدها لا تبلغ 100% خارج الشبكة",
+      "probability": 0.58
+    }
+  ],
+  "usage": {
+    "input_tokens": 11703,
+    "output_tokens": 1020
+  },
+  "direct_pair_variant": {
+    "model": "jev-1.14.0",
+    "controls_passed": 16,
+    "controls_total": 18,
+    "samples_passed": 9,
+    "samples_total": 36,
+    "results": [
+      {
+        "kind": "sample",
+        "locale": "es",
+        "key": "firstRunNote",
+        "source": "Choose your location and energy use, then click Size My System. The first run downloads ~2 MB of satellite weather data and caches it in your browser.",
+        "translated": "Elige tu ubicación y tu consumo, y pulsa Dimensionar mi sistema. La primera ejecución descarga ~2 MB de datos satelitales y luego los guarda en tu navegador.",
+        "probability": 0.4
+      },
+      {
+        "kind": "sample",
+        "locale": "es",
+        "key": "cumCostTitleBattery",
+        "source": "What does the battery change about your 20-year cost? (cumulative cost)",
+        "translated": "¿Cómo cambia la batería tu coste a 20 años? (coste acumulado)",
+        "probability": 0.95
+      },
+      {
+        "kind": "sample",
+        "locale": "es",
+        "key": "infeasibleNeedsBatteryTitle",
+        "source": "Solar-only can't reach 100% off-grid",
+        "translated": "Solo solar no puede alcanzar el 100% fuera de la red",
+        "probability": 0.95
+      },
+      {
+        "kind": "sample",
+        "locale": "es",
+        "key": "infeasibleNeedsPanelsTitle",
+        "source": "Battery-only can't run off-grid",
+        "translated": "Solo batería no puede funcionar fuera de la red",
+        "probability": 0.92
+      },
+      {
+        "kind": "sample",
+        "locale": "es",
+        "key": "reserveLabel",
+        "source": "Emergency reserve held in the battery",
+        "translated": "Reserva de emergencia guardada en la batería",
+        "probability": 0.9
+      },
+      {
+        "kind": "sample",
+        "locale": "es",
+        "key": "resultEstimateDisclaimer",
+        "source": "Output is an automated educational estimate. It is not engineering, not a stamped design, not a quote, and not a safety certification. It may be wrong. Have any real system reviewed by a licensed electrician or engineer before you build or energize it.",
+        "translated": "El resultado es una estimación educativa automatizada. No es un trabajo de ingeniería, un diseño visado, un presupuesto ni una certificación de seguridad. Puede ser incorrecto. Antes de construir o energizar un sistema real, pide a un electricista o ingeniero autorizado que lo revise.",
+        "probability": 0.93
+      },
+      {
+        "kind": "positive",
+        "locale": "es",
+        "key": "chemLabel",
+        "source": "Battery chemistry:",
+        "translated": "Química de la batería:",
+        "probability": 0.98
+      },
+      {
+        "kind": "wrong_year",
+        "locale": "es",
+        "key": "cumCostTitleBattery",
+        "source": "What does the battery change about your 20-year cost? (cumulative cost)",
+        "translated": "¿Cómo cambia la batería tu coste a 200 años? (coste acumulado)",
+        "probability": 0.01
+      },
+      {
+        "kind": "wrong_component",
+        "locale": "es",
+        "key": "infeasibleNeedsPanelsTitle",
+        "source": "Battery-only can't run off-grid",
+        "translated": "Solo solar no puede alcanzar el 100% fuera de la red",
+        "probability": 0.01
+      },
+      {
+        "kind": "sample",
+        "locale": "pt",
+        "key": "firstRunNote",
+        "source": "Choose your location and energy use, then click Size My System. The first run downloads ~2 MB of satellite weather data and caches it in your browser.",
+        "translated": "Escolha sua localização e seu consumo e clique em Dimensionar meu sistema. A primeira execução baixa ~2 MB de dados de clima por satélite e depois os guarda no navegador.",
+        "probability": 0.93
+      },
+      {
+        "kind": "sample",
+        "locale": "pt",
+        "key": "cumCostTitleBattery",
+        "source": "What does the battery change about your 20-year cost? (cumulative cost)",
+        "translated": "Como a bateria muda seu custo em 20 anos? (custo acumulado)",
+        "probability": 0.96
+      },
+      {
+        "kind": "sample",
+        "locale": "pt",
+        "key": "infeasibleNeedsBatteryTitle",
+        "source": "Solar-only can't reach 100% off-grid",
+        "translated": "Só solar não alcança 100% fora da rede",
+        "probability": 0.95
+      },
+      {
+        "kind": "sample",
+        "locale": "pt",
+        "key": "infeasibleNeedsPanelsTitle",
+        "source": "Battery-only can't run off-grid",
+        "translated": "Só bateria não pode funcionar fora da rede",
+        "probability": 0.86
+      },
+      {
+        "kind": "sample",
+        "locale": "pt",
+        "key": "reserveLabel",
+        "source": "Emergency reserve held in the battery",
+        "translated": "Reserva de emergência guardada na bateria",
+        "probability": 0.94
+      },
+      {
+        "kind": "sample",
+        "locale": "pt",
+        "key": "resultEstimateDisclaimer",
+        "source": "Output is an automated educational estimate. It is not engineering, not a stamped design, not a quote, and not a safety certification. It may be wrong. Have any real system reviewed by a licensed electrician or engineer before you build or energize it.",
+        "translated": "O resultado é uma estimativa educativa automatizada. Não é engenharia, projeto assinado, orçamento nem certificação de segurança. Pode estar errado. Antes de construir ou energizar um sistema real, peça a um eletricista ou engenheiro habilitado que o revise.",
+        "probability": 0.82
+      },
+      {
+        "kind": "positive",
+        "locale": "pt",
+        "key": "chemLabel",
+        "source": "Battery chemistry:",
+        "translated": "Química da bateria:",
+        "probability": 0.98
+      },
+      {
+        "kind": "wrong_year",
+        "locale": "pt",
+        "key": "cumCostTitleBattery",
+        "source": "What does the battery change about your 20-year cost? (cumulative cost)",
+        "translated": "Como a bateria muda seu custo em 200 anos? (custo acumulado)",
+        "probability": 0.01
+      },
+      {
+        "kind": "wrong_component",
+        "locale": "pt",
+        "key": "infeasibleNeedsPanelsTitle",
+        "source": "Battery-only can't run off-grid",
+        "translated": "Só solar não alcança 100% fora da rede",
+        "probability": 0.02
+      },
+      {
+        "kind": "sample",
+        "locale": "fr",
+        "key": "firstRunNote",
+        "source": "Choose your location and energy use, then click Size My System. The first run downloads ~2 MB of satellite weather data and caches it in your browser.",
+        "translated": "Choisissez votre lieu et votre consommation, puis cliquez sur Dimensionner. Le premier lancement télécharge ~2 Mo de données météo satellite et les met ensuite en cache.",
+        "probability": 0.25
+      },
+      {
+        "kind": "sample",
+        "locale": "fr",
+        "key": "cumCostTitleBattery",
+        "source": "What does the battery change about your 20-year cost? (cumulative cost)",
+        "translated": "Quel effet la batterie a-t-elle sur le coût sur 20 ans ? (coût cumulé)",
+        "probability": 0.94
+      },
+      {
+        "kind": "sample",
+        "locale": "fr",
+        "key": "infeasibleNeedsBatteryTitle",
+        "source": "Solar-only can't reach 100% off-grid",
+        "translated": "Le solaire seul ne peut pas atteindre 100% hors réseau",
+        "probability": 0.96
+      },
+      {
+        "kind": "sample",
+        "locale": "fr",
+        "key": "infeasibleNeedsPanelsTitle",
+        "source": "Battery-only can't run off-grid",
+        "translated": "La batterie seule ne peut pas fonctionner hors réseau",
+        "probability": 0.95
+      },
+      {
+        "kind": "sample",
+        "locale": "fr",
+        "key": "reserveLabel",
+        "source": "Emergency reserve held in the battery",
+        "translated": "Réserve d'urgence conservée dans la batterie",
+        "probability": 0.9
+      },
+      {
+        "kind": "sample",
+        "locale": "fr",
+        "key": "resultEstimateDisclaimer",
+        "source": "Output is an automated educational estimate. It is not engineering, not a stamped design, not a quote, and not a safety certification. It may be wrong. Have any real system reviewed by a licensed electrician or engineer before you build or energize it.",
+        "translated": "Le résultat est une estimation pédagogique automatisée. Ce n’est ni une étude d’ingénierie, ni un plan signé, ni un devis, ni une certification de sécurité. Il peut être erroné. Avant de construire ou de mettre sous tension un système réel, faites-le vérifier par un ingénieur ou un électricien agréé.",
+        "probability": 0.93
+      },
+      {
+        "kind": "positive",
+        "locale": "fr",
+        "key": "chemLabel",
+        "source": "Battery chemistry:",
+        "translated": "Chimie de la batterie :",
+        "probability": 0.98
+      },
+      {
+        "kind": "wrong_year",
+        "locale": "fr",
+        "key": "cumCostTitleBattery",
+        "source": "What does the battery change about your 20-year cost? (cumulative cost)",
+        "translated": "Quel effet la batterie a-t-elle sur le coût sur 200 ans ? (coût cumulé)",
+        "probability": 0.02
+      },
+      {
+        "kind": "wrong_component",
+        "locale": "fr",
+        "key": "infeasibleNeedsPanelsTitle",
+        "source": "Battery-only can't run off-grid",
+        "translated": "Le solaire seul ne peut pas atteindre 100% hors réseau",
+        "probability": 0.02
+      },
+      {
+        "kind": "sample",
+        "locale": "de",
+        "key": "firstRunNote",
+        "source": "Choose your location and energy use, then click Size My System. The first run downloads ~2 MB of satellite weather data and caches it in your browser.",
+        "translated": "Wählen Sie Standort und Verbrauch und klicken Sie auf System dimensionieren. Beim ersten Start werden Satelliten-Wetterdaten geladen und im Browser gespeichert.",
+        "probability": 0.07
+      },
+      {
+        "kind": "sample",
+        "locale": "de",
+        "key": "cumCostTitleBattery",
+        "source": "What does the battery change about your 20-year cost? (cumulative cost)",
+        "translated": "Wie verändert die Batterie deine Kosten über 20 Jahre? (kumulierte Kosten)",
+        "probability": 0.97
+      },
+      {
+        "kind": "sample",
+        "locale": "de",
+        "key": "infeasibleNeedsBatteryTitle",
+        "source": "Solar-only can't reach 100% off-grid",
+        "translated": "Nur Solar erreicht 100% netzunabhängig nicht",
+        "probability": 0.85
+      },
+      {
+        "kind": "sample",
+        "locale": "de",
+        "key": "infeasibleNeedsPanelsTitle",
+        "source": "Battery-only can't run off-grid",
+        "translated": "Nur Batterie kann netzunabhängig nicht laufen",
+        "probability": 0.7
+      },
+      {
+        "kind": "sample",
+        "locale": "de",
+        "key": "reserveLabel",
+        "source": "Emergency reserve held in the battery",
+        "translated": "Notfall-Reservestand in der Batterie",
+        "probability": 0.84
+      },
+      {
+        "kind": "sample",
+        "locale": "de",
+        "key": "resultEstimateDisclaimer",
+        "source": "Output is an automated educational estimate. It is not engineering, not a stamped design, not a quote, and not a safety certification. It may be wrong. Have any real system reviewed by a licensed electrician or engineer before you build or energize it.",
+        "translated": "Die Ausgabe ist eine automatisierte Lernschätzung. Sie ist weder Ingenieurarbeit noch ein genehmigter Entwurf, ein Angebot oder eine Sicherheitszertifizierung. Sie kann falsch sein. Lassen Sie ein reales System vor dem Bau oder Einschalten von einem zugelassenen Elektriker oder Ingenieur prüfen.",
+        "probability": 0.81
+      },
+      {
+        "kind": "positive",
+        "locale": "de",
+        "key": "chemLabel",
+        "source": "Battery chemistry:",
+        "translated": "Batteriechemie:",
+        "probability": 0.99
+      },
+      {
+        "kind": "wrong_year",
+        "locale": "de",
+        "key": "cumCostTitleBattery",
+        "source": "What does the battery change about your 20-year cost? (cumulative cost)",
+        "translated": "Wie verändert die Batterie deine Kosten über 200 Jahre? (kumulierte Kosten)",
+        "probability": 0.01
+      },
+      {
+        "kind": "wrong_component",
+        "locale": "de",
+        "key": "infeasibleNeedsPanelsTitle",
+        "source": "Battery-only can't run off-grid",
+        "translated": "Nur Solar erreicht 100% netzunabhängig nicht",
+        "probability": 0.02
+      },
+      {
+        "kind": "sample",
+        "locale": "nl",
+        "key": "firstRunNote",
+        "source": "Choose your location and energy use, then click Size My System. The first run downloads ~2 MB of satellite weather data and caches it in your browser.",
+        "translated": "Kies uw locatie en energieverbruik en klik daarna op Systeem dimensioneren. De eerste berekening downloadt ~2 MB aan satellietweergegevens en slaat deze op in uw browser.",
+        "probability": 0.84
+      },
+      {
+        "kind": "sample",
+        "locale": "nl",
+        "key": "cumCostTitleBattery",
+        "source": "What does the battery change about your 20-year cost? (cumulative cost)",
+        "translated": "Wat verandert de accu aan uw kosten over 20 jaar? (cumulatieve kosten)",
+        "probability": 0.96
+      },
+      {
+        "kind": "sample",
+        "locale": "nl",
+        "key": "infeasibleNeedsBatteryTitle",
+        "source": "Solar-only can't reach 100% off-grid",
+        "translated": "Alleen zonne-energie kan 100% off-grid niet halen",
+        "probability": 0.89
+      },
+      {
+        "kind": "sample",
+        "locale": "nl",
+        "key": "infeasibleNeedsPanelsTitle",
+        "source": "Battery-only can't run off-grid",
+        "translated": "Alleen een accu kan niet off-grid draaien",
+        "probability": 0.82
+      },
+      {
+        "kind": "sample",
+        "locale": "nl",
+        "key": "reserveLabel",
+        "source": "Emergency reserve held in the battery",
+        "translated": "Noodreserve aangehouden in de accu",
+        "probability": 0.85
+      },
+      {
+        "kind": "sample",
+        "locale": "nl",
+        "key": "resultEstimateDisclaimer",
+        "source": "Output is an automated educational estimate. It is not engineering, not a stamped design, not a quote, and not a safety certification. It may be wrong. Have any real system reviewed by a licensed electrician or engineer before you build or energize it.",
+        "translated": "De uitvoer is een geautomatiseerde educatieve schatting. Het is geen technisch ontwerp, geen gewaarmerkt plan, geen offerte en geen veiligheidscertificaat. De uitkomst kan onjuist zijn. Laat elk echt systeem vóór de bouw of ingebruikname controleren door een erkende elektricien of engineer.",
+        "probability": 0.87
+      },
+      {
+        "kind": "positive",
+        "locale": "nl",
+        "key": "chemLabel",
+        "source": "Battery chemistry:",
+        "translated": "Accuchemie:",
+        "probability": 0.83
+      },
+      {
+        "kind": "wrong_year",
+        "locale": "nl",
+        "key": "cumCostTitleBattery",
+        "source": "What does the battery change about your 20-year cost? (cumulative cost)",
+        "translated": "Wat verandert de accu aan uw kosten over 200 jaar? (cumulatieve kosten)",
+        "probability": 0.01
+      },
+      {
+        "kind": "wrong_component",
+        "locale": "nl",
+        "key": "infeasibleNeedsPanelsTitle",
+        "source": "Battery-only can't run off-grid",
+        "translated": "Alleen zonne-energie kan 100% off-grid niet halen",
+        "probability": 0.02
+      },
+      {
+        "kind": "sample",
+        "locale": "ar",
+        "key": "firstRunNote",
+        "source": "Choose your location and energy use, then click Size My System. The first run downloads ~2 MB of satellite weather data and caches it in your browser.",
+        "translated": "اختر موقعك واستهلاكك ثم اضغط صمّم نظامك. أول تشغيل يُنزّل حوالي 2 ميغابايت من بيانات الطقس الساتلية ثم يخزّنها في متصفحك.",
+        "probability": 0.84
+      },
+      {
+        "kind": "sample",
+        "locale": "ar",
+        "key": "cumCostTitleBattery",
+        "source": "What does the battery change about your 20-year cost? (cumulative cost)",
+        "translated": "كيف تغير البطارية تكلفتك على مدى 20 عامًا؟ (التكلفة التراكمية)",
+        "probability": 0.96
+      },
+      {
+        "kind": "sample",
+        "locale": "ar",
+        "key": "infeasibleNeedsBatteryTitle",
+        "source": "Solar-only can't reach 100% off-grid",
+        "translated": "الطاقة الشمسية وحدها لا تبلغ 100% خارج الشبكة",
+        "probability": 0.79
+      },
+      {
+        "kind": "sample",
+        "locale": "ar",
+        "key": "infeasibleNeedsPanelsTitle",
+        "source": "Battery-only can't run off-grid",
+        "translated": "البطارية وحدها لا تعمل خارج الشبكة",
+        "probability": 0.88
+      },
+      {
+        "kind": "sample",
+        "locale": "ar",
+        "key": "reserveLabel",
+        "source": "Emergency reserve held in the battery",
+        "translated": "هامش طوارئ محفوظ في البطارية",
+        "probability": 0.87
+      },
+      {
+        "kind": "sample",
+        "locale": "ar",
+        "key": "resultEstimateDisclaimer",
+        "source": "Output is an automated educational estimate. It is not engineering, not a stamped design, not a quote, and not a safety certification. It may be wrong. Have any real system reviewed by a licensed electrician or engineer before you build or energize it.",
+        "translated": "المخرجات تقدير تعليمي آلي. وهي ليست عملًا هندسيًا ولا تصميمًا مختومًا ولا عرض سعر ولا شهادة سلامة. وقد تكون خاطئة. اطلب من كهربائي أو مهندس مرخّص مراجعة أي نظام فعلي قبل بنائه أو تشغيله.",
+        "probability": 0.78
+      },
+      {
+        "kind": "positive",
+        "locale": "ar",
+        "key": "chemLabel",
+        "source": "Battery chemistry:",
+        "translated": "نوع البطارية:",
+        "probability": 0.21
+      },
+      {
+        "kind": "wrong_year",
+        "locale": "ar",
+        "key": "cumCostTitleBattery",
+        "source": "What does the battery change about your 20-year cost? (cumulative cost)",
+        "translated": "كيف تغير البطارية تكلفتك على مدى 200 عامًا؟ (التكلفة التراكمية)",
+        "probability": 0.01
+      },
+      {
+        "kind": "wrong_component",
+        "locale": "ar",
+        "key": "infeasibleNeedsPanelsTitle",
+        "source": "Battery-only can't run off-grid",
+        "translated": "الطاقة الشمسية وحدها لا تبلغ 100% خارج الشبكة",
+        "probability": 0.02
+      }
+    ],
+    "usage": {
+      "input_tokens": 10805,
+      "output_tokens": 1020
+    }
+  }
+}

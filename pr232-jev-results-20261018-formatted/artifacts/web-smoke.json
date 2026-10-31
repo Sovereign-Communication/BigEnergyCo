@@ -1,0 +1,19 @@
+{
+    "job":  "web-smoke",
+    "conclusion":  "failure",
+    "steps":  {
+                  "smoke":  "failure",
+                  "byte-stage":  "success",
+                  "byte-budgets":  "success",
+                  "privacyBrowser":  "success",
+                  "resilience-stage":  "success",
+                  "resilienceBrowser":  "success",
+                  "experience-stage":  "success",
+                  "experienceBrowser":  "success"
+              },
+    "measurements":  {
+                         "smoke_gates_total":  169,
+                         "smoke_gates_failed":  1,
+                         "smoke_gates_passed":  168
+                     }
+}

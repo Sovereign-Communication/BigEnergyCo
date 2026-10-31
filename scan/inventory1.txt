@@ -1,0 +1,94 @@
+### module-scope numeric constants (scripts)
+  scripts/check-i18n.mjs:405:const PROSE_CEILING = 422;
+  scripts/download-city-catalog.mjs:46:const MIN_POPULATION = 10_000;
+  scripts/generate-heatmap-data.mjs:91:  const R = 6371,
+  scripts/lib/budgets.mjs:31:export const FETCH_TIMEOUT_MS = 30_000;
+  scripts/lib/budgets.mjs:34:export const SMOKE_ATTEMPT_TIMEOUT_MS = 15 * 60_000;
+  scripts/lib/budgets.mjs:37:export const VERIFY_BUDGET_MS = 15 * 60_000;
+  scripts/lib/budgets.mjs:40:export const BUDGET_SLACK_MS = 2 * 60_000;
+  scripts/lib/budgets.mjs:43:export const PROMOTE_TIMEOUT_MS = 20 * 60_000;
+  scripts/lib/budgets.mjs:46:export const JOB_TIMEOUT_MINUTES = 25;
+  scripts/lib/budgets.mjs:71:export const VERIFY_RETRY_DELAY_MS = 5000;
+  scripts/lib/byte-budgets.mjs:25:const KB = 1024;
+  scripts/lib/byte-budgets.mjs:44:export const REGRESSION_TOLERANCE_BYTES = 256;
+  scripts/lib/gates.mjs:544:const MIN_PROSE_WORDS = 2;
+  scripts/lib/jev-complete.mjs:29:export const COMPLETE_MIN_SCORE = 99.0;
+  scripts/lib/jev-complete.mjs:30:export const COMPLETE_SCORE_MAX = 100.0;
+  scripts/lib/jev-complete.mjs:35:export const COMPLETE_EXIT_FACET_INDEX = 4;
+  scripts/lib/jev-complete.mjs:815:export const COMPLETE_FACET_CLIP = 280; // per-axis proof-line clip
+  scripts/lib/jev-complete.mjs:816:export const COMPLETE_STATE_PER_AXIS_CHARS = 300; // 280 + "axis: " + newline
+  scripts/lib/jev-complete.mjs:825:export const COMPLETE_STATE_BASE_CHARS = 6000;
+  scripts/lib/jev-evidence.mjs:18:export const EVIDENCE_VERSION = 1;
+  scripts/lib/jev-live.mjs:15:const JEV_TIMEOUT_MS = 15000;
+  scripts/lib/lighthouse-budgets.mjs:126:export const LIGHTHOUSE_FLOOR_SLACK = 1;
+  scripts/lib/seo.mjs:3:const TITLE_MAX = 60;
+  scripts/lib/seo.mjs:4:const DESCRIPTION_MIN = 70;
+  scripts/lib/seo.mjs:5:const DESCRIPTION_MAX = 155;
+  scripts/lib/stuck-runs.mjs:40:export const DEFAULT_MIN_QUEUED_MS = 20 * 60 * 1000;
+  scripts/lib/stuck-runs.mjs:41:export const DEFAULT_CAP = 3;
+  scripts/lib/stuck-runs.mjs:42:export const DEFAULT_BAILOUT_ABOVE = 8;
+  scripts/lib/visual-budgets.mjs:39:export const PIXEL_THRESHOLD = 0.001;
+  scripts/lib/worker-bridge.mjs:40:const BRIDGE_READ_CAP = 1_000_000;
+  scripts/smoke/actions.mjs:7:export const RUN_TIMEOUT_MS = 180000;
+  scripts/smoke/deadline.js:8:const SMOKE_RUN_DEADLINE_MS = 100;
+  scripts/smoke/runtime.mjs:96:  const DEBUG_PORT = 19222;
+  scripts/swap-strategy-test.mjs:67:const DAILY_KWH = 10;
+  scripts/swap-strategy-test.mjs:68:const CUT = 0.8;
+  scripts/verify-staging.mjs:91:const CONCURRENCY = 8;
+  scripts/verify-staging.mjs:104:const TRANSIENT_ATTEMPTS = 3;
+  scripts/verify-staging.mjs:115:const MAX_RETRY_NOTES = 6;
+
+### object-literal numeric fields in budget libs
+  scripts/lib/byte-budgets.mjs:36:  requests_before_interaction: 10,
+  scripts/lib/byte-budgets.mjs:37:  web_fonts: 0,
+  scripts/lib/experience-budgets.mjs:111:  max_acknowledgement_ms: 2000,
+  scripts/lib/experience-budgets.mjs:761:    ms: 0,
+  scripts/lib/lighthouse-budgets.mjs:109:  performance: 99,
+  scripts/lib/lighthouse-budgets.mjs:110:  accessibility: 100,
+  scripts/lib/lighthouse-budgets.mjs:112:  seo: 100,
+  scripts/lib/lighthouse-budgets.mjs:122:  tbt_ms: 100,
+  scripts/lib/lighthouse-budgets.mjs:136:    runs: 3,
+  scripts/lib/lighthouse-budgets.mjs:142:    runs: 3,
+  scripts/lib/lighthouse-budgets.mjs:148:    runs: 3,
+  scripts/lib/lighthouse-budgets.mjs:154:    runs: 3,
+  scripts/lib/lighthouse-budgets.mjs:160:    runs: 3,
+  scripts/lib/lighthouse-budgets.mjs:166:    runs: 3,
+  scripts/lib/lighthouse-budgets.mjs:172:    runs: 3,
+  scripts/lib/lighthouse-budgets.mjs:178:    runs: 3,
+  scripts/lib/lighthouse-budgets.mjs:184:    runs: 3,
+  scripts/lib/lighthouse-budgets.mjs:190:    runs: 3,
+  scripts/lib/lighthouse-budgets.mjs:306:      n: 21,
+  scripts/lib/lighthouse-budgets.mjs:311:      min: 61,
+  scripts/lib/lighthouse-budgets.mjs:312:      median: 69,
+  scripts/lib/lighthouse-budgets.mjs:313:      max: 73,
+  scripts/lib/lighthouse-budgets.mjs:318:      n: 21,
+  scripts/lib/lighthouse-budgets.mjs:323:      min: 40,
+  scripts/lib/lighthouse-budgets.mjs:324:      median: 65,
+  scripts/lib/lighthouse-budgets.mjs:325:      max: 76,
+  scripts/lib/lighthouse-budgets.mjs:345:      n: 9,
+  scripts/lib/lighthouse-budgets.mjs:355:      n: 9,
+  scripts/lib/lighthouse-budgets.mjs:366:      n: 9,
+  scripts/lib/performance-budgets.mjs:53:    adjustments: 3,
+  scripts/lib/performance-budgets.mjs:77:    modules: 42,
+  scripts/lib/performance-budgets.mjs:91:    max: 15000,
+  scripts/lib/performance-budgets.mjs:99:    max: 2000,
+  scripts/lib/performance-budgets.mjs:106:    max: 200,
+  scripts/lib/performance-budgets.mjs:112:    max: 20000,
+  scripts/lib/performance-budgets.mjs:119:    max: 20000,
+  scripts/lib/performance-budgets.mjs:129:  warm_window_nasa_max: 0,
+  scripts/lib/performance-budgets.mjs:130:  warm_reload_nasa_max: 0,
+  scripts/lib/performance-budgets.mjs:134:  adjustments_required: 3,
+  scripts/lib/resilience-budgets.mjs:45:    run_reply_deadline_ms: 180000,
+  scripts/lib/resilience-budgets.mjs:53:    weather_fetch_ms: 45000,
+  scripts/lib/resilience-budgets.mjs:60:    city_lookup_ms: 12000,
+  scripts/lib/resilience-budgets.mjs:62:    country_fetch_ms: 8000,
+  scripts/lib/resilience-budgets.mjs:64:    jev_probe_ms: 3500,
+  scripts/lib/resilience-budgets.mjs:81:    multiplier: 1,
+  scripts/lib/resilience-budgets.mjs:93:    multiplier: 2,
+  scripts/lib/resilience-budgets.mjs:102:    multiplier: 1,
+  scripts/lib/resilience-budgets.mjs:111:    multiplier: 1,
+  scripts/lib/resilience-budgets.mjs:138:  min_intercepted_per_mode: 1,
+  scripts/lib/resilience-budgets.mjs:150:  fixture_shortens_exactly_one_timer: 1,
+  scripts/lib/resilience-budgets.mjs:151:  fixture_swallows_exactly_one_message: 1,
+  scripts/lib/visual-budgets.mjs:93:    measured_runs: 3,
+  scripts/lib/visual-budgets.mjs:95:    stable_cells_for_comparison: 27,

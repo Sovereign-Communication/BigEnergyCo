@@ -1,0 +1,11 @@
+import { execFileSync } from "node:child_process";
+import { writeFileSync } from "node:fs";
+const base = execFileSync("git", ["show", "HEAD:docs/plan/LEDGER.jsonl"], { encoding: "utf8" });
+const old = execFileSync("git", ["show", "mission-backup/272-pre-5f1:docs/plan/LEDGER.jsonl"], { encoding: "utf8" });
+const eol = base.includes("\r\n") ? "\r\n" : "\n";
+const rows = old.trimEnd().split(/\r?\n/).slice(-2).map(JSON.parse);
+rows[0].evidence.sha = execFileSync("git", ["rev-parse", "HEAD^"], { encoding: "utf8" }).trim();
+rows[1].evidence.sha = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
+const out = base.replace(/(?:\r?\n)*$/g, "") + eol + rows.map((row) => JSON.stringify(row)).join(eol) + eol;
+writeFileSync("docs/plan/LEDGER.jsonl", out);
+console.log(JSON.stringify(rows.map(({ summary, evidence }) => ({ summary, sha: evidence.sha, full_test: evidence.full_test }))));

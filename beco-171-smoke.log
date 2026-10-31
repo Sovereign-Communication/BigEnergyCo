@@ -1,0 +1,593 @@
+
+> bigenergyco@1.0.0 smoke:local
+> node scripts/smoke-local.mjs
+
+Staging 409 manifest files into C:\tmp\beco-171\_pages_smoke/ ...
+Deployable files:
+  404.html
+  _headers
+  _redirects
+  about/index.html
+  assets/apple-touch-icon.png
+  assets/data/heatmap-grid.json
+  assets/data/heatmap-grid.min.json
+  assets/data/heatmap-rankings.json
+  assets/data/provenance.json
+  assets/favicon-48.png
+  assets/icon-192.png
+  assets/icon-512.png
+  assets/icon-maskable-512.png
+  assets/icon.svg
+  assets/img/heatmap/b-grid-u0.6a5a06e2f634.png
+  assets/img/heatmap/b-grid-u1.97473d7c3adb.png
+  assets/img/heatmap/b-grid-u2.97473d7c3adb.png
+  assets/img/heatmap/b-grid-u3.97473d7c3adb.png
+  assets/img/heatmap/b-real-u0.7fb3d99d1ec1.png
+  assets/img/heatmap/b-real-u1.fc5b46ce303e.png
+  assets/img/heatmap/b-real-u2.fc5b46ce303e.png
+  assets/img/heatmap/b-real-u3.fc5b46ce303e.png
+  assets/img/heatmap/cost-grid.ef7c4d70a563.png
+  assets/img/heatmap/cost-real.92beea92d8ba.png
+  assets/img/heatmap/manifest.json
+  assets/img/heatmap/p-grid-u0.87683c14639e.png
+  assets/img/heatmap/p-grid-u1.87683c14639e.png
+  assets/img/heatmap/p-grid-u2.87683c14639e.png
+  assets/img/heatmap/p-grid-u3.87683c14639e.png
+  assets/img/heatmap/p-real-u0.ab5865e9cc79.png
+  assets/img/heatmap/p-real-u1.ab5865e9cc79.png
+  assets/img/heatmap/p-real-u2.ab5865e9cc79.png
+  assets/img/heatmap/p-real-u3.ab5865e9cc79.png
+  assets/js/cf-beacon.js
+  assets/js/chat.js
+  assets/js/heatmap-palette.js
+  assets/js/heatmap.js
+  assets/js/shared/budget-targets.js
+  assets/js/shared/content.js
+  assets/js/shared/coords.js
+  assets/js/shared/cut-targets.js
+  assets/js/shared/dom.js
+  assets/js/shared/escape.js
+  assets/js/shared/home-copy.js
+  assets/js/shared/i18n.js
+  assets/js/shared/interpolate.js
+  assets/js/shared/jargon-dict.js
+  assets/js/shared/locales.js
+  assets/js/shared/simple-mode.js
+  assets/js/shared/simple-view.js
+  assets/js/sizing/appliances.js
+  assets/js/sizing/bom.js
+  assets/js/sizing/budget-span.js
+  assets/js/sizing/charts.js
+  assets/js/sizing/chem-model.js
+  assets/js/sizing/cities.js
+  assets/js/sizing/city-data/AD.json
+  assets/js/sizing/city-data/AE.json
+  assets/js/sizing/city-data/AF.json
+  assets/js/sizing/city-data/AG.json
+  assets/js/sizing/city-data/AL.json
+  assets/js/sizing/city-data/AM.json
+  assets/js/sizing/city-data/AO.json
+  assets/js/sizing/city-data/AR.json
+  assets/js/sizing/city-data/AS.json
+  assets/js/sizing/city-data/AT.json
+  assets/js/sizing/city-data/AU.json
+  assets/js/sizing/city-data/AW.json
+  assets/js/sizing/city-data/AX.json
+  assets/js/sizing/city-data/AZ.json
+  assets/js/sizing/city-data/BA.json
+  assets/js/sizing/city-data/BB.json
+  assets/js/sizing/city-data/BD.json
+  assets/js/sizing/city-data/BE.json
+  assets/js/sizing/city-data/BF.json
+  assets/js/sizing/city-data/BG.json
+  assets/js/sizing/city-data/BH.json
+  assets/js/sizing/city-data/BI.json
+  assets/js/sizing/city-data/BJ.json
+  assets/js/sizing/city-data/BM.json
+  assets/js/sizing/city-data/BN.json
+  assets/js/sizing/city-data/BO.json
+  assets/js/sizing/city-data/BQ.json
+  assets/js/sizing/city-data/BR.json
+  assets/js/sizing/city-data/BS.json
+  assets/js/sizing/city-data/BT.json
+  assets/js/sizing/city-data/BW.json
+  assets/js/sizing/city-data/BY.json
+  assets/js/sizing/city-data/BZ.json
+  assets/js/sizing/city-data/CA.json
+  assets/js/sizing/city-data/CD.json
+  assets/js/sizing/city-data/CF.json
+  assets/js/sizing/city-data/CG.json
+  assets/js/sizing/city-data/CH.json
+  assets/js/sizing/city-data/CI.json
+  assets/js/sizing/city-data/CK.json
+  assets/js/sizing/city-data/CL.json
+  assets/js/sizing/city-data/CM.json
+  assets/js/sizing/city-data/CN.json
+  assets/js/sizing/city-data/CO.json
+  assets/js/sizing/city-data/CR.json
+  assets/js/sizing/city-data/CU.json
+  assets/js/sizing/city-data/CV.json
+  assets/js/sizing/city-data/CW.json
+  assets/js/sizing/city-data/CY.json
+  assets/js/sizing/city-data/CZ.json
+  assets/js/sizing/city-data/DE.json
+  assets/js/sizing/city-data/DJ.json
+  assets/js/sizing/city-data/DK.json
+  assets/js/sizing/city-data/DM.json
+  assets/js/sizing/city-data/DO.json
+  assets/js/sizing/city-data/DZ.json
+  assets/js/sizing/city-data/EC.json
+  assets/js/sizing/city-data/EE.json
+  assets/js/sizing/city-data/EG.json
+  assets/js/sizing/city-data/EH.json
+  assets/js/sizing/city-data/ER.json
+  assets/js/sizing/city-data/ES.json
+  assets/js/sizing/city-data/ET.json
+  assets/js/sizing/city-data/FI.json
+  assets/js/sizing/city-data/FJ.json
+  assets/js/sizing/city-data/FM.json
+  assets/js/sizing/city-data/FO.json
+  assets/js/sizing/city-data/FR.json
+  assets/js/sizing/city-data/GA.json
+  assets/js/sizing/city-data/GB.json
+  assets/js/sizing/city-data/GE.json
+  assets/js/sizing/city-data/GF.json
+  assets/js/sizing/city-data/GG.json
+  assets/js/sizing/city-data/GH.json
+  assets/js/sizing/city-data/GI.json
+  assets/js/sizing/city-data/GL.json
+  assets/js/sizing/city-data/GM.json
+  assets/js/sizing/city-data/GN.json
+  assets/js/sizing/city-data/GP.json
+  assets/js/sizing/city-data/GQ.json
+  assets/js/sizing/city-data/GR.json
+  assets/js/sizing/city-data/GT.json
+  assets/js/sizing/city-data/GU.json
+  assets/js/sizing/city-data/GW.json
+  assets/js/sizing/city-data/GY.json
+  assets/js/sizing/city-data/HK.json
+  assets/js/sizing/city-data/HN.json
+  assets/js/sizing/city-data/HR.json
+  assets/js/sizing/city-data/HT.json
+  assets/js/sizing/city-data/HU.json
+  assets/js/sizing/city-data/ID.json
+  assets/js/sizing/city-data/IE.json
+  assets/js/sizing/city-data/IL.json
+  assets/js/sizing/city-data/IM.json
+  assets/js/sizing/city-data/IN.json
+  assets/js/sizing/city-data/IQ.json
+  assets/js/sizing/city-data/IR.json
+  assets/js/sizing/city-data/IS.json
+  assets/js/sizing/city-data/IT.json
+  assets/js/sizing/city-data/JE.json
+  assets/js/sizing/city-data/JM.json
+  assets/js/sizing/city-data/JO.json
+  assets/js/sizing/city-data/JP.json
+  assets/js/sizing/city-data/KE.json
+  assets/js/sizing/city-data/KG.json
+  assets/js/sizing/city-data/KH.json
+  assets/js/sizing/city-data/KI.json
+  assets/js/sizing/city-data/KM.json
+  assets/js/sizing/city-data/KN.json
+  assets/js/sizing/city-data/KP.json
+  assets/js/sizing/city-data/KR.json
+  assets/js/sizing/city-data/KW.json
+  assets/js/sizing/city-data/KY.json
+  assets/js/sizing/city-data/KZ.json
+  assets/js/sizing/city-data/LA.json
+  assets/js/sizing/city-data/LB.json
+  assets/js/sizing/city-data/LC.json
+  assets/js/sizing/city-data/LK.json
+  assets/js/sizing/city-data/LR.json
+  assets/js/sizing/city-data/LS.json
+  assets/js/sizing/city-data/LT.json
+  assets/js/sizing/city-data/LU.json
+  assets/js/sizing/city-data/LV.json
+  assets/js/sizing/city-data/LY.json
+  assets/js/sizing/city-data/MA.json
+  assets/js/sizing/city-data/MC.json
+  assets/js/sizing/city-data/MD.json
+  assets/js/sizing/city-data/ME.json
+  assets/js/sizing/city-data/MG.json
+  assets/js/sizing/city-data/MH.json
+  assets/js/sizing/city-data/MK.json
+  assets/js/sizing/city-data/ML.json
+  assets/js/sizing/city-data/MM.json
+  assets/js/sizing/city-data/MN.json
+  assets/js/sizing/city-data/MO.json
+  assets/js/sizing/city-data/MP.json
+  assets/js/sizing/city-data/MQ.json
+  assets/js/sizing/city-data/MR.json
+  assets/js/sizing/city-data/MT.json
+  assets/js/sizing/city-data/MU.json
+  assets/js/sizing/city-data/MV.json
+  assets/js/sizing/city-data/MW.json
+  assets/js/sizing/city-data/MX.json
+  assets/js/sizing/city-data/MY.json
+  assets/js/sizing/city-data/MZ.json
+  assets/js/sizing/city-data/NA.json
+  assets/js/sizing/city-data/NC.json
+  assets/js/sizing/city-data/NE.json
+  assets/js/sizing/city-data/NG.json
+  assets/js/sizing/city-data/NI.json
+  assets/js/sizing/city-data/NL.json
+  assets/js/sizing/city-data/NO.json
+  assets/js/sizing/city-data/NP.json
+  assets/js/sizing/city-data/NZ.json
+  assets/js/sizing/city-data/OM.json
+  assets/js/sizing/city-data/PA.json
+  assets/js/sizing/city-data/PE.json
+  assets/js/sizing/city-data/PF.json
+  assets/js/sizing/city-data/PG.json
+  assets/js/sizing/city-data/PH.json
+  assets/js/sizing/city-data/PK.json
+  assets/js/sizing/city-data/PL.json
+  assets/js/sizing/city-data/PR.json
+  assets/js/sizing/city-data/PS.json
+  assets/js/sizing/city-data/PT.json
+  assets/js/sizing/city-data/PW.json
+  assets/js/sizing/city-data/PY.json
+  assets/js/sizing/city-data/QA.json
+  assets/js/sizing/city-data/RE.json
+  assets/js/sizing/city-data/RO.json
+  assets/js/sizing/city-data/RS.json
+  assets/js/sizing/city-data/RU.json
+  assets/js/sizing/city-data/RW.json
+  assets/js/sizing/city-data/SA.json
+  assets/js/sizing/city-data/SB.json
+  assets/js/sizing/city-data/SC.json
+  assets/js/sizing/city-data/SD.json
+  assets/js/sizing/city-data/SE.json
+  assets/js/sizing/city-data/SG.json
+  assets/js/sizing/city-data/SI.json
+  assets/js/sizing/city-data/SK.json
+  assets/js/sizing/city-data/SL.json
+  assets/js/sizing/city-data/SN.json
+  assets/js/sizing/city-data/SO.json
+  assets/js/sizing/city-data/SR.json
+  assets/js/sizing/city-data/SS.json
+  assets/js/sizing/city-data/ST.json
+  assets/js/sizing/city-data/SV.json
+  assets/js/sizing/city-data/SY.json
+  assets/js/sizing/city-data/SZ.json
+  assets/js/sizing/city-data/TC.json
+  assets/js/sizing/city-data/TD.json
+  assets/js/sizing/city-data/TG.json
+  assets/js/sizing/city-data/TH.json
+  assets/js/sizing/city-data/TJ.json
+  assets/js/sizing/city-data/TL.json
+  assets/js/sizing/city-data/TM.json
+  assets/js/sizing/city-data/TN.json
+  assets/js/sizing/city-data/TO.json
+  assets/js/sizing/city-data/TR.json
+  assets/js/sizing/city-data/TT.json
+  assets/js/sizing/city-data/TW.json
+  assets/js/sizing/city-data/TZ.json
+  assets/js/sizing/city-data/UA.json
+  assets/js/sizing/city-data/UG.json
+  assets/js/sizing/city-data/US.json
+  assets/js/sizing/city-data/UY.json
+  assets/js/sizing/city-data/UZ.json
+  assets/js/sizing/city-data/VC.json
+  assets/js/sizing/city-data/VE.json
+  assets/js/sizing/city-data/VI.json
+  assets/js/sizing/city-data/VN.json
+  assets/js/sizing/city-data/VU.json
+  assets/js/sizing/city-data/WS.json
+  assets/js/sizing/city-data/XK.json
+  assets/js/sizing/city-data/YE.json
+  assets/js/sizing/city-data/YT.json
+  assets/js/sizing/city-data/ZA.json
+  assets/js/sizing/city-data/ZM.json
+  assets/js/sizing/city-data/ZW.json
+  assets/js/sizing/climate.js
+  assets/js/sizing/country-currency.js
+  assets/js/sizing/engine.js
+  assets/js/sizing/frontier-chart.js
+  assets/js/sizing/frontier.js
+  assets/js/sizing/fuel-units.js
+  assets/js/sizing/infeasible-copy.js
+  assets/js/sizing/lead-acid.js
+  assets/js/sizing/location-picker.js
+  assets/js/sizing/map-provider.js
+  assets/js/sizing/mode-chrome.js
+  assets/js/sizing/money.js
+  assets/js/sizing/nasa.js
+  assets/js/sizing/parts-csv.js
+  assets/js/sizing/paths.js
+  assets/js/sizing/pricing.js
+  assets/js/sizing/profiles.js
+  assets/js/sizing/pwa-install.js
+  assets/js/sizing/rescale.js
+  assets/js/sizing/run-coordinator.js
+  assets/js/sizing/run.js
+  assets/js/sizing/share-codec.js
+  assets/js/sizing/sim-cache.js
+  assets/js/sizing/sizing-worker.js
+  assets/js/sizing/tilt-harvest.js
+  assets/js/sizing/ui.js
+  assets/js/sizing/usecases.js
+  assets/js/sizing/validate.js
+  assets/js/sizing/wizard.js
+  assets/js/turnstile-client.js
+  assets/og-card.jpg
+  assets/og-card.png
+  assets/site.css
+  assets/vendor/leaflet/LICENSE
+  assets/vendor/leaflet/README.md
+  assets/vendor/leaflet/images/layers-2x.png
+  assets/vendor/leaflet/images/layers.png
+  assets/vendor/leaflet/images/marker-icon-2x.png
+  assets/vendor/leaflet/images/marker-icon.png
+  assets/vendor/leaflet/images/marker-shadow.png
+  assets/vendor/leaflet/leaflet.css
+  assets/vendor/leaflet/leaflet.js
+  assets/vendor/leaflet/leaflet.js.map
+  blog/battery-longevity-and-dod-reference/index.html
+  blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage/index.html
+  blog/escape-load-shedding/index.html
+  blog/hawaii-2026-hurricane-season-backup-power/index.html
+  blog/hawaii-solar-scams-2026-warning/index.html
+  blog/how-to-cut-electricity-bill-with-solar/index.html
+  blog/index.html
+  blog/is-a-home-battery-worth-it/index.html
+  blog/off-grid-battery-bank-sizing/index.html
+  blog/off-grid-vs-grid-tie-payback/index.html
+  blog/salderingsregeling-stopt-2027/index.html
+  blog/solar-vs-generator-cost/index.html
+  blog/time-of-use-tariffs-battery/index.html
+  blog/what-size-solar-system-for-off-grid/index.html
+  index.html
+  llms.txt
+  manifest.webmanifest
+  robots.txt
+  rss.xml
+  sitemap.xml
+  solar-calculator/accra/index.html
+  solar-calculator/addis-ababa/index.html
+  solar-calculator/antananarivo/index.html
+  solar-calculator/athens/index.html
+  solar-calculator/auckland/index.html
+  solar-calculator/bangkok/index.html
+  solar-calculator/beijing/index.html
+  solar-calculator/berlin/index.html
+  solar-calculator/bogota/index.html
+  solar-calculator/buenos-aires/index.html
+  solar-calculator/cairo/index.html
+  solar-calculator/casablanca/index.html
+  solar-calculator/chicago/index.html
+  solar-calculator/colombo/index.html
+  solar-calculator/cusco/index.html
+  solar-calculator/dakar/index.html
+  solar-calculator/delhi/index.html
+  solar-calculator/denver/index.html
+  solar-calculator/dhaka/index.html
+  solar-calculator/dubai/index.html
+  solar-calculator/guatemala-city/index.html
+  solar-calculator/havana/index.html
+  solar-calculator/ho-chi-minh-city/index.html
+  solar-calculator/hong-kong/index.html
+  solar-calculator/honolulu/index.html
+  solar-calculator/index.html
+  solar-calculator/istanbul/index.html
+  solar-calculator/jakarta/index.html
+  solar-calculator/johannesburg/index.html
+  solar-calculator/karachi/index.html
+  solar-calculator/kathmandu/index.html
+  solar-calculator/kinshasa/index.html
+  solar-calculator/la-paz/index.html
+  solar-calculator/lagos/index.html
+  solar-calculator/lima/index.html
+  solar-calculator/london/index.html
+  solar-calculator/los-angeles/index.html
+  solar-calculator/madrid/index.html
+  solar-calculator/manila/index.html
+  solar-calculator/mexico-city/index.html
+  solar-calculator/miami/index.html
+  solar-calculator/mumbai/index.html
+  solar-calculator/nairobi/index.html
+  solar-calculator/new-york/index.html
+  solar-calculator/oslo/index.html
+  solar-calculator/panama-city/index.html
+  solar-calculator/papeete/index.html
+  solar-calculator/paris/index.html
+  solar-calculator/perth/index.html
+  solar-calculator/phnom-penh/index.html
+  solar-calculator/phoenix/index.html
+  solar-calculator/port-au-prince/index.html
+  solar-calculator/quito/index.html
+  solar-calculator/riyadh/index.html
+  solar-calculator/rome/index.html
+  solar-calculator/san-juan/index.html
+  solar-calculator/santiago/index.html
+  solar-calculator/santo-domingo/index.html
+  solar-calculator/sao-paulo/index.html
+  solar-calculator/seoul/index.html
+  solar-calculator/singapore/index.html
+  solar-calculator/suva/index.html
+  solar-calculator/sydney/index.html
+  solar-calculator/taipei/index.html
+  solar-calculator/tokyo/index.html
+  solar-calculator/toronto/index.html
+  solar-calculator/warsaw/index.html
+  solar-heatmap/index.html
+  styles.css
+  sw.js
+
+--check: built staging only, not pushing.
+SMOKE       local build served at http://127.0.0.1:55008/ (with _headers policy)
+SMOKE      base: http://127.0.0.1:55008/
+SMOKE      browser: C:\Program Files\Google\Chrome\Application\chrome.exe
+SMOKE      ── main page: grid-tie ──
+SMOKE OK    hero CTA present
+SMOKE OK    deferred localization leaves no raw bill slider suffix on first load — {"text":"~$170/mo","suffix":"/mo"}
+SMOKE      ── location edits ──
+SMOKE OK    city suggestions for Honolulu
+SMOKE OK    Honolulu switches the fuel helper to gallons — {"label":"Price per gallon ($):","placeholder":"e.g. 3.90","unit":"gal","unit2":"gal","petrol":"0.13","diesel":"0.09"}
+SMOKE OK    explicit Honolulu run completes — posts=1
+SMOKE OK    editing a city blocks the old coordinates and explains the wait — {"status":"Choose a city suggestion or wait for lookup to finish.","note":"","hidden":true,"posts":1}
+SMOKE OK    city label, note, and coordinates agree — {"city":"New York, New York, USA","latitude":40.71,"longitude":-74.01,"note":"Sunshine data from New York, New York, USA"}
+SMOKE OK    New York run uses the selected coordinates — {"type":"run","seq":6,"epoch":6,"latitude":40.71,"longitude":-74.01,"dailyKwh":19.853739358967033,"chemistry":"auto","years":5,"tariff":0.23,"exportRate":null,"fixedMonthlyUsd":0,"autoTier":"tier99","autoTargetId":"cut80","customCut":0.8,"mode":"gridtie","basis":"monthly electric bill","hardwareConfig":"both","focusPvKw":null,"focusBattKwh":null,"focusChemistry":null,"peakLoadW":null,"peakSurgeW":null,"requiresSplitPhase":false,"climateAware":false,"noSwapMode":false,"useCase":"billcut","reservePct":0.2,"outageTargetHours":8,"essentialKwh":1.72,"backupSolarRecharge":true,"portableDeviceKwh":1.049,"portableBankKwh":3,"portableShorePower":false,"touPeakRate":null,"touOffPeakRate":null,"generatorAllowed":true,"generatorRuntime":"gen1","soilingOverride":null,"wiringOverride":0.98,"mpptOverride":0.98,"pvMaxOverride":null}
+SMOKE OK    click during coordinate debounce cannot run stale results — {"status":"Checking those coordinates…","hidden":true,"note":"","posts":2}
+SMOKE OK    custom coordinates are confirmed after the debounce
+SMOKE OK    custom-coordinate run uses current coordinates despite rapid clicks — {"posts":3,"run":{"type":"run","seq":9,"epoch":9,"latitude":34.05,"longitude":-118.24,"dailyKwh":20.450609602213888,"chemistry":"auto","years":5,"tariff":0.302,"exportRate":null,"fixedMonthlyUsd":0,"autoTier":"tier99","autoTargetId":"cut80","customCut":0.8,"mode":"gridtie","basis":"monthly electric bill","hardwareConfig":"both","focusPvKw":null,"focusBattKwh":null,"focusChemistry":null,"peakLoadW":null,"peakSurgeW":null,"requiresSplitPhase":false,"climateAware":false,"noSwapMode":false,"useCase":"billcut","reservePct":0.2,"outageTargetHours":8,"essentialKwh":1.72,"backupSolarRecharge":true,"portableDeviceKwh":1.049,"portableBankKwh":3,"portableShorePower":false,"touPeakRate":null,"touOffPeakRate":null,"generatorAllowed":true,"generatorRuntime":"gen1","soilingOverride":null,"wiringOverride":0.98,"mpptOverride":0.98,"pvMaxOverride":null}}
+SMOKE OK    clearing a coordinate immediately hides stale results — {"status":"Pick a city (or use 📍 My location) so we know your sunshine.","hidden":true,"posts":3}
+SMOKE OK    out-of-range coordinates explain the valid bounds and never run — {"status":"Latitude must be between −90 and 90 and longitude between −180 and 180.","hidden":true,"posts":3}
+SMOKE OK    empty kWh entry stays on the form with an actionable range hint — {"status":"Daily energy use must be between 0.5 and 500 kWh per day — enter a figure in that range, or tick the appliances you want to power instead.","hidden":true,"posts":3}
+SMOKE OK    0.1 kWh/day is rejected before starting the worker — {"status":"Daily energy use must be between 0.5 and 500 kWh per day — enter a figure in that range, or tick the appliances you want to power instead.","hidden":true,"posts":3}
+SMOKE OK    501 kWh/day is rejected before starting the worker — {"status":"Daily energy use must be between 0.5 and 500 kWh per day — enter a figure in that range, or tick the appliances you want to power instead.","hidden":true,"posts":3}
+SMOKE OK    a metric site switches the fuel helper back to litres — {"settled":true,"label":"Price per liter (€):","placeholder":"e.g. 1.20","unit":"L","unit2":"L","petrol":"0.5","diesel":"0.35"}
+SMOKE      ── weather persistence ──
+SMOKE OK    city suggestions for Honolulu
+SMOKE OK    first-load run completes
+SMOKE OK    cold reload run completes
+SMOKE OK    cold load pulls weather (counter has teeth) — 3 NASA network pulls on the cold load
+SMOKE OK    same-location reload pulls zero weather data — 0 NASA network pulls after reload (expect 0)
+SMOKE      ── auto-location ──
+SMOKE OK    location resolves without starting sizing
+SMOKE      ── infeasible off-grid + solar-only ──
+SMOKE OK    infeasible banner names the real reason, in the banner and the live region — {"display":"block","title":"Solar-only can't reach 100% off-grid","liveText":"Solar-only can't reach 100% off-grid. An off-grid home needs storage for nights and cloudy days. Add a battery to the hardware selector, or sw
+SMOKE OK    no savings-unavailable fallback on infeasible run
+SMOKE OK    chat bridge loaded (extracted classic script)
+SMOKE OK    page load under 60s — 45 ms
+SMOKE OK    city suggestions for Honolulu
+SMOKE OK    positive grid price — $0.44/kWh
+SMOKE OK    bill slider endpoints are reachable without changing displayed state — {"min":"27","max":"5357","step":"10","low":{"expected":"27","actual":"27"},"high":{"expected":"5357","actual":"5357"},"suffix":"/mo","restoredValue":"137","initialValue":"137","restoredLabel":"~$134/mo","initialLabel":"~$134/mo"}
+SMOKE OK    visible bill slider follows German copy without changing its amount — {"before":{"lang":"en","value":"137","text":"~$134/mo","suffix":"/mo","amount":"~$134","visible":true},"after":{"lang":"de","value":"137","text":"~$134/Mon.","suffix":"/Mon.","amount":"~$134","visible":true}}
+SMOKE OK    visible bill slider returns to English with its amount intact — {"before":{"lang":"en","value":"137","text":"~$134/mo","suffix":"/mo","amount":"~$134","visible":true},"after":{"lang":"en","value":"137","text":"~$134/mo","suffix":"/mo","amount":"~$134","visible":true}}
+SMOKE OK    result card has Total 20-year cost
+SMOKE OK    solvable run retracts the previous infeasible reason — {"display":"none","htmlEmpty":true,"liveEmpty":true,"liveRendered":true}
+SMOKE OK    infeasible live region stays rendered while empty — {"display":"none","htmlEmpty":true,"liveEmpty":true,"liveRendered":true}
+SMOKE OK    savings chart heading present
+SMOKE OK    no savings-unavailable fallback
+SMOKE OK    cumCostCanvas non-zero — {"w":596,"h":444.5}
+SMOKE OK    cumCostCaption explains running cost — 851 chars
+SMOKE OK    with-panels cumulative legend uses the active locale solar label — Grid without solar: $32,120.00Solar system: $3,056.00Residual grid cost after feed-in: $4,939.00
+SMOKE OK    with-panels curve method note still describes panel-and-battery — The curve comes from simulating every panel-and-battery combination on a coarse grid against the same hourly weather as the cards above, then keeping only the s
+SMOKE OK    with-panels power-cost row is still the power cost — Your power cost$0.05/k
+SMOKE OK    with-panels keeps the tilt guide and its PV safety item — sunPathWrap display=block
+SMOKE      ── battery-only: peak offset, not a bill cut ──
+SMOKE OK    battery-only run renders a no-panel result
+SMOKE OK    battery-only chip says peak offset, not bill cut — 🔋 2 kWh LFP 💵 ~$161.00–$578.00 up-front ⚡ 92% peak offset 🧾 ~$136.00/mo bill after 🔁 ~2× bank swaps 🏁 ~$1,190.00 20-yr true cost 🏚️ save ~$10,706.00 vs le
+SMOKE OK    battery-only money bar promises no payback — At $0.44/kWh, your power costs about $1,606.00 per year today. A battery with no panels moves when you draw power; it does not cut what you pay.
+SMOKE OK    battery-only panel still reports no break-even
+SMOKE OK    battery-only build has no solar array
+SMOKE OK    no surface claims a bill cut for a battery-only build
+SMOKE OK    battery-only frontier verdict does not call the ceiling a share of the bill — Shifting about 92.1% of your peak hours onto the battery costs around $389.00. Past that, each further percent costs roughly $18.00 — about 5.9 times the earlier rate. Be
+SMOKE OK    battery-only frontier verdict describes shifting peak hours
+SMOKE OK    use-case card renders without an unresolved placeholder — Your result: Save with a battery on time-of-use rates 74% of your peak-window energy run by the battery Does not work here: the battery covers 74% of your peak-window energy, worth about $1,294.66 ove
+SMOKE OK    time-of-use verdict shows its amounts as money — Your result: Save with a battery on time-of-use rates 74% of your peak-window energy run by the battery Does not work here: the battery covers 74% of your peak-window energy, worth about $1,294.66 ove
+SMOKE OK    peak-to-off-peak spread is shown as money per kWh — Your result: Save with a battery on time-of-use rates 74% of your peak-window energy run by the battery Does not work here: the battery covers 74% of your peak-window energy, worth about $1,294.66 ove
+SMOKE OK    battery-only target control offers a peak offset, not a bill cut — Your peak-offset target | Target: shift ~80% of your peak hours onto the battery
+SMOKE OK    battery-only auto note describes the peak-hour offset, not a bill cut — Sodium-Ion and LFP (LiFePO4) sized for a ~15% peak-hour offset. Click any cell in the matrix below to see that exact system in every chart and the har
+SMOKE OK    battery-only cumulative caption never names the sun — Running 20-year cost for the recommended system (LFP (LiFePO4)): the amber line is what you pay the utility if you stay on the grid ($32,674.00). The emerald line is the system's own cost (~$1,190.00)
+SMOKE OK    battery-only cumulative caption states the 20-year gap as a cost — ay for itself here. The slate line is the residual grid cost itself — about $1,633.00/yr for the 3,713 kWh/yr still drawn from the grid (net of your feed-in credit), $32,674.00 over the full 20 years.
+SMOKE OK    battery-only cumulative panel asks what the battery changes — What does the battery change about your 20-year cost? (cumulative cost)
+SMOKE OK    battery-only cumulative legend uses the active locale label, not its solar label — Grid without solar: $32,674.00Battery-only system: $1,190.00Residual grid cost after feed-in: $32,674.00
+SMOKE OK    battery-only curve method note describes a battery-only sweep — The curve comes from simulating every battery size on a coarse grid against the same hourly weather and tariff windows as the cards above, then keeping only the
+SMOKE OK    battery-only power-cost row is named for what it measures — Cost per shifted kWh$0.08/k
+SMOKE OK    battery-only tilt guide is not advice about an array it does not build — sunPathWrap display=none
+SMOKE OK    battery-only BOS checklist carries no PV-only item — Equipment Grounding
+SMOKE OK    battery-only print sheet carries no bare null — Basis: direct k
+SMOKE OK    battery-only capacity spectrum baseline badge has no phantom solar array — Baseline: no panels — 2 kWh LFP
+SMOKE OK    battery-only capacity spectrum baseline subtitle has no phantom solar array — Comparing larger and smaller configurations around your baseline of 2 kWh LFP battery with no panels. Includes only cost-efficient chemistries (excluding AGM). Evaluate u
+SMOKE OK    battery-only capacity spectrum tiers build no panels — ["1.2 kWh LFP battery with no panels","1.6 kWh LFP battery with no panels"]
+SMOKE OK    no battery-only surface reports a solar array with a size — Solar array None (Battery-only) Batte / Solar array None (Battery-only) Batte / Solar array None (Battery-only) Batte
+SMOKE OK    battery-only frontier chart axis says peak hours, not a bill cut — How far your money gets you | A curve of 3 systems, from $246.00 covering 46% to $533.00 covering 100%. The full figures are in the table below the chart. | 0% | 25% | 50% | 75% | 100% | $0.00 | $200.00 | $400.00 | $600.
+SMOKE OK    language switch re-renders the results instead of half-translating them — Kumulierte Kosten über 20 Jahre für das empfohlene System (LFP (LiFePO4)): Die amberfarben | Ziel für die Verschiebung der Spitzenlaststunden
+SMOKE OK    switching back restores the English panel — Running 20-year cost for the recommended system (LFP (LiFePO4)): the amber line is what yo
+SMOKE      ── off-grid mode chrome (reported repro) ──
+SMOKE OK    off-grid chrome: bill-cut row visible after grid-tie result (repro precondition) — display=block
+SMOKE OK    off-grid chrome: goal button present — display=flex
+SMOKE OK    off-grid chrome: bill-cut row hidden after Off-grid click — display=none
+SMOKE OK    off-grid chrome: off-grid inputs shown for the off-grid use case — shown=true
+SMOKE OK    off-grid chrome: generator question visible on the off-grid use case — {"visible":true,"opts":["gen0","gen1","gen2"],"value":"gen1"}
+SMOKE OK    off-grid chrome: generator offers 0% / 1% / 2%+ with 1% default — {"visible":true,"opts":["gen0","gen1","gen2"],"value":"gen1"}
+SMOKE OK    off-grid chrome: bill-cut row restored after Grid-tie click (clean state) — display=block
+SMOKE OK    pre-calculation inputs wait for explicit sizing — {"ran":0,"hidden":true}
+SMOKE OK    explicit sizing resumes after pre-calculation edits
+SMOKE      ── held-response race ──
+SMOKE OK    stale held reply is dropped without deadlocking the next run — {"held":true,"heldSeq":55,"staleDropped":true,"resultsStillHidden":true,"postsAfterDrop":1,"totalPosts":2,"recovered":true}
+SMOKE      ── responsiveness ──
+SMOKE OK    warm re-run under 2s — 1 ms (payload-cache fast path)
+SMOKE OK    same-location re-run pulls zero weather data — 0 NASA fetches (expect 0)
+SMOKE OK    instant-run badge shown on repeat
+SMOKE OK    preconnect hints present — 3 hints
+SMOKE OK    loading pipeline or instant path observed — instant
+SMOKE OK    Jev sanity badge renders on a fresh result (wired, pass-shaped stub) — badge
+SMOKE OK    Jev inconclusive verdict renders a neutral badge (request fires) — {"badge":true,"calls":1}
+SMOKE OK    Jev badge survives Simple-mode toggle (cache re-mount, no refetch) — {"regularBadge":true,"simpleBadge":true,"regularBadgeBack":true,"regularBadgeCount":1,"simpleBadgeCount":1,"callsAtMount":1,"callsAfterToggles":1}
+SMOKE OK    advisor brief states a battery-only run builds no solar panels — Please size an off-grid battery system for me.
+Basis: monthly electric bill of $unspecified USD.
+Destination region: Global DDP Port.
+System: BATTERY ONLY - this run builds NO solar panels. Do not ass
+SMOKE OK    advisor brief bars panel advice on a battery-only run — Please size an off-grid battery system for me.
+Basis: monthly electric bill of $unspecified USD.
+Destination region: Global DDP Port.
+System: BATTERY ONLY - this run builds NO solar panels. Do not ass
+SMOKE OK    advisor brief never promises a bill cut the battery cannot deliver — Please size an off-grid battery system for me.
+Basis: monthly electric bill of $unspecified USD.
+Destination region: Global DDP Port.
+System: BATTERY ONLY - this run builds NO solar panels. Do not ass
+SMOKE OK    advisor brief still names the array on a with-panels run — Please size an off-grid battery system for me.
+Basis: monthly electric bill of $unspecified USD.
+Destination region: Global DDP Port.
+System: battery plus solar panels (grid-tied).
+Climate: unknown.
+A
+SMOKE OK    grid-equivalence box is absent from the page (its copy was never reachable)
+SMOKE OK    advisor brief keeps the battery-only branch in German — lang=de Please size an off-grid battery system for me.
+Basis: monthly electric bill of $unspecified USD.
+Destination region: Global DDP Port.
+System: BATTERY ONLY - this run builds NO sola
+SMOKE      ── share link ──
+SMOKE OK    share click leaves a #s= link in the URL — #s=eyJ2IjoxLCJsYSI6MjEuM
+SMOKE OK    share link restores inputs and explains it is waiting for a click — {"kwh":"16","results":false,"hash":"#s=eyJ2IjoxLCJsYSI6MjEuMzEsImxvIjotMTU3Ljg2LCJrdyI6MTYsImNoIjoiYXV0byIsImciOjEsInJwIjowLjIsIm9oIjo4LCJhIjoxLCJhZyI6ImN1dDgwIiwiY2MiOjAuOCwic2VsIjoiYmVzdCIsInRmIjowLjQ0LCJ0IjpbWzIuOTgsMTFdLFsyLjk4LDhdXX0","expectedKwh":16,"status":"Shared setup loaded. Review the inputs, then click Size My System to calculate."}
+SMOKE OK    share link sizes after the explicit click
+SMOKE OK    reload fixture holds a real in-flight sizing message
+SMOKE OK    reload during sizing preserves share inputs and waits for explicit consent — {"loaded":true,"kwh":"16","hash":"#s=eyJ2IjoxLCJsYSI6MjEuMzEsImxvIjotMTU3Ljg2LCJrdyI6MTYsImNoIjoiYXV0byIsImciOjEsInJwIjowLjIsIm9oIjo4LCJhIjoxLCJhZyI6ImN1dDgwIiwiY2MiOjAuOCwic2VsIjoiYmVzdCIsInRmIjowLjQ0LCJ0IjpbWzIuOTgsMTFdLFsyLjk4LDhdXX0","resultsHidden":true,"status":"Shared setup loaded. Review the inputs, then click Size My System to calculate.","posts":0}
+SMOKE OK    explicit sizing recovers after a mid-run reload
+SMOKE OK    malformed share latitude is explained before the user tries to run it — This share link could not be read — it may have been cut short when it was copied. Ignore it and set up your own estimate below.
+SMOKE OK    malformed share latitude is rejected before mutating the form or starting a worker — {"label":"latitude","before":{"lat":"21.31","lon":"-157.86","kwh":"20","hash":"#s=eyJ2IjoxLCJsYSI6OTEsImxvIjoxMCwia3ciOjE2fQ","status":"This share link could not be read — it may have been cut short when it was copied. Ignore it and set up your own estimate below."},"after":{"lat":"21.31","lon":"-157.86","kwh":"20","hash":"#s=eyJ2IjoxLCJsYSI6OTEsImxvIjoxMCwia3ciOjE2fQ","hidden":true,"status":"Pick a city (or use 📍 My location) so we know your sunshine.","posts":0}}
+SMOKE OK    malformed share longitude is explained before the user tries to run it — This share link could not be read — it may have been cut short when it was copied. Ignore it and set up your own estimate below.
+SMOKE OK    malformed share longitude is rejected before mutating the form or starting a worker — {"label":"longitude","before":{"lat":"21.31","lon":"-157.86","kwh":"20","hash":"#s=eyJ2IjoxLCJsYSI6MTAsImxvIjoxODEsImt3IjoxNn0","status":"This share link could not be read — it may have been cut short when it was copied. Ignore it and set up your own estimate below."},"after":{"lat":"21.31","lon":"-157.86","kwh":"20","hash":"#s=eyJ2IjoxLCJsYSI6MTAsImxvIjoxODEsImt3IjoxNn0","hidden":true,"status":"Pick a city (or use 📍 My location) so we know your sunshine.","posts":0}}
+SMOKE OK    malformed share daily-kWh is explained before the user tries to run it — This share link could not be read — it may have been cut short when it was copied. Ignore it and set up your own estimate below.
+SMOKE OK    malformed share daily-kWh is rejected before mutating the form or starting a worker — {"label":"daily-kWh","before":{"lat":"21.31","lon":"-157.86","kwh":"20","hash":"#s=eyJ2IjoxLCJsYSI6MjEuMzEsImxvIjotMTU3Ljg2LCJrdyI6NTAxfQ","status":"This share link could not be read — it may have been cut short when it was copied. Ignore it and set up your own estimate below."},"after":{"lat":"21.31","lon":"-157.86","kwh":"20","hash":"#s=eyJ2IjoxLCJsYSI6MjEuMzEsImxvIjotMTU3Ljg2LCJrdyI6NTAxfQ","hidden":true,"status":"Pick a city (or use 📍 My location) so we know your sunshine.","posts":0}}
+SMOKE OK    valid share flow recovers after malformed-link probes
+SMOKE OK    html lang set — en
+SMOKE OK    single visible h1 — 1 found
+SMOKE OK    images have alt text — 0 missing
+SMOKE OK    buttons have accessible names — 0 missing
+SMOKE      ── independent slider constraints ──
+SMOKE OK    budget change keeps the independent bill-cut target — {"cutStayedIndependent":true,"targetStayedIndependent":true,"cutMoved":true,"budgetStayedPinned":true,"selectMatches":true,"budgetWithinRange":true,"cutBeforeBudget":80,"requestedCut":87,"pinnedBudget":7161}
+SMOKE OK    bill-cut target and the form select agree
+SMOKE OK    cut change keeps the chosen budget pinned — {"cutStayedIndependent":true,"targetStayedIndependent":true,"cutMoved":true,"budgetStayedPinned":true,"selectMatches":true,"budgetWithinRange":true,"cutBeforeBudget":80,"requestedCut":87,"pinnedBudget":7161}
+SMOKE OK    budget thumb stays inside the curve's span — {"cutStayedIndependent":true,"targetStayedIndependent":true,"cutMoved":true,"budgetStayedPinned":true,"selectMatches":true,"budgetWithinRange":true,"cutBeforeBudget":80,"requestedCut":87,"pinnedBudget":7161}
+SMOKE      ── controls without inline handlers ──
+SMOKE OK    every control has a real click listener
+SMOKE OK    nav toggle opens and closes the drawer — ok
+SMOKE OK    all three terms links open the legal modal — 3/3
+SMOKE OK    close controls hide every modal — {"opens":3,"legalClosed":true,"sizingClosed":true,"systemClosed":true}
+SMOKE OK    chat send stays bound after its on* attribute was removed
+SMOKE OK    service worker registered — ready
+SMOKE      ── bill-cut slider re-slice ──
+SMOKE OK    slider re-labels to 82%
+SMOKE OK    card survives slider re-slice
+SMOKE      ── main page: simple mode ──
+SMOKE OK    simple mode: root attribute set
+SMOKE OK    simple mode: plain-language card renders
+SMOKE OK    simple mode: AI advisor button opens the chat modal and sends the brief — click=opened
+chat: GROQ_API_KEY is not configured; serving the degraded advisor reply (R-CF-10)
+SMOKE OK    simple mode: the advisor button gets a real answer from the worker — chars=420 text=I explain the results from the main sizing tool — battery ch
+SMOKE OK    simple mode: dense panels hidden (computed)
+SMOKE OK    simple mode: charts + matrix stay visible (full functionality)
+SMOKE OK    simple mode: card has no NaN/undefined figures
+SMOKE OK    simple mode: toggle off restores regular view
+SMOKE FAIL  smoke run completed — {"code":-32000,"message":"Inspected target navigated or closed"}
+SMOKE      a11y facet line (203 chars):
+  the calculator's controls were NOT measured in a browser this run (the a11y flow did not complete in this run), so keyboard reach, control names, contrast and reduced motion rest on nothing from this run
+
+1 SMOKE GATE(S) FAILED of 134
+
+LOCAL BROWSER SMOKE FAILED — see the gates above
+EXIT=1

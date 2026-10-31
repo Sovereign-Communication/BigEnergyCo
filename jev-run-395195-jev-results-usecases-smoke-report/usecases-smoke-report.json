@@ -1,0 +1,339 @@
+{
+  "measured_by": "scripts/browser-smoke.mjs",
+  "facet_axes": [
+    "usecases"
+  ],
+  "facet_lines": {
+    "usecases": "Chrome Honolulu: billcut 76% partial; tou 74% not-here; backup 100% works; reserve 0% savings/31h cover works; offgrid 99% partial; portable 0% not-here; six distinct metrics, 15/15 inputs visible; ToU at equal $0.42/kWh gives not-here; 31/31 gates."
+  },
+  "metric": {
+    "browser": "Chrome",
+    "locale": "en",
+    "gates": [
+      {
+        "name": "city suggestions for Honolulu",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "use-case flow starts from a resolved Honolulu location",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "use-case registry assigns six unique outcome metrics",
+        "passed": true,
+        "detail": "bill_cut_pct, tou_peak_offset_pct, outage_coverage_pct, reserve_tradeoff, grid_independence_pct, portable_runtime_coverage_pct"
+      },
+      {
+        "name": "reader-visible chooser offers all six declared cases",
+        "passed": true,
+        "detail": "6 options: billcut, tou, backup, reserve, offgrid, portable"
+      },
+      {
+        "name": "manual sizing controls are available to the use-case flow",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "billcut: chooser selects the case and renders its explanation",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "billcut: run button accepts the selected case",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "billcut: every declared input is reader-visible after its run",
+        "passed": true,
+        "detail": "3/3: billSlider, loadMode, cutSlider"
+      },
+      {
+        "name": "billcut: rendered result uses its own translated metric, value and verdict",
+        "passed": true,
+        "detail": "of your bill removed over 20 years = 76%; partial; runDisabled=false; status=n/a"
+      },
+      {
+        "name": "tou: chooser selects the case and renders its explanation",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "tou: run button accepts the selected case",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "tou: every declared input is reader-visible after its run",
+        "passed": true,
+        "detail": "3/3: touPeakRate, touOffPeakRate, dailyKwhInput"
+      },
+      {
+        "name": "tou: rendered result uses its own translated metric, value and verdict",
+        "passed": true,
+        "detail": "of your peak-window energy run by the battery = 74%; notHere; runDisabled=false; status=n/a"
+      },
+      {
+        "name": "backup: chooser selects the case and renders its explanation",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "backup: run button accepts the selected case",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "backup: every declared input is reader-visible after its run",
+        "passed": true,
+        "detail": "3/3: essentialLoadList, outageTargetHours, backupSolarRecharge"
+      },
+      {
+        "name": "backup: rendered result uses its own translated metric, value and verdict",
+        "passed": true,
+        "detail": "of power cuts your essentials ride out for the full target = 100%; works; runDisabled=false; status=n/a"
+      },
+      {
+        "name": "reserve: chooser selects the case and renders its explanation",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "reserve: run button accepts the selected case",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "reserve: every declared input is reader-visible after its run",
+        "passed": true,
+        "detail": "1/1: reserveSlider"
+      },
+      {
+        "name": "reserve: rendered result uses its own translated metric, value and verdict",
+        "passed": true,
+        "detail": "what holding a reserve costs, in savings and hours = 0% of savings, 31 h of cover; works; runDisabled=false; status=n/a"
+      },
+      {
+        "name": "offgrid: chooser selects the case and renders its explanation",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "offgrid: run button accepts the selected case",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "offgrid: every declared input is reader-visible after its run",
+        "passed": true,
+        "detail": "2/2: dailyKwhInput, generatorAllowed"
+      },
+      {
+        "name": "offgrid: rendered result uses its own translated metric, value and verdict",
+        "passed": true,
+        "detail": "of the year running with no grid at all = 99%; partial; runDisabled=false; status=n/a"
+      },
+      {
+        "name": "portable: chooser selects the case and renders its explanation",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "portable: run button accepts the selected case",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "portable: every declared input is reader-visible after its run",
+        "passed": true,
+        "detail": "3/3: portableDeviceList, portableBankKwh, portableShorePower"
+      },
+      {
+        "name": "portable: rendered result uses its own translated metric, value and verdict",
+        "passed": true,
+        "detail": "of days the station runs your devices all day = 0%; notHere; runDisabled=false; status=n/a"
+      },
+      {
+        "name": "flat-rate time-of-use case gives an honest no-benefit verdict",
+        "passed": true,
+        "detail": "0.42/0.42: Does not work here: the battery covers 74% of your peak-window energy, worth about $0.00 over 20 years against a $0.00 battery. Your peak-to-off-peak spread here is $0.00 per kWh."
+      },
+      {
+        "name": "use-case browser evidence covers all six reader-visible outcomes",
+        "passed": true,
+        "detail": "6/6 rendered; 15/15 declared controls visible; flat-rate ToU=true"
+      }
+    ],
+    "unique_metric_ids": true,
+    "declared_controls_visible": 15,
+    "declared_controls_total": 15,
+    "flat_rate_tou_not_here": true,
+    "cases": [
+      {
+        "id": "billcut",
+        "metric_id": "bill_cut_pct",
+        "metric_label": "of your bill removed over 20 years",
+        "value": "76%",
+        "verdict": "Partly: this system removes 76% of your bill over 20 years.",
+        "status": "partial",
+        "tou_rates": {
+          "peak": 0.672,
+          "offPeak": 0.231
+        },
+        "declared_controls": [
+          {
+            "id": "billSlider",
+            "visible": true
+          },
+          {
+            "id": "loadMode",
+            "visible": true
+          },
+          {
+            "id": "cutSlider",
+            "visible": true
+          }
+        ],
+        "rendered": true,
+        "control_coverage": true,
+        "outcome_valid": true
+      },
+      {
+        "id": "tou",
+        "metric_id": "tou_peak_offset_pct",
+        "metric_label": "of your peak-window energy run by the battery",
+        "value": "74%",
+        "verdict": "Does not work here: the battery covers 74% of your peak-window energy, worth about $0.00 over 20 years against a $0.00 battery. Your peak-to-off-peak spread here is $0.00 per kWh.",
+        "status": "notHere",
+        "tou_rates": {
+          "peak": 0.42,
+          "offPeak": 0.42
+        },
+        "declared_controls": [
+          {
+            "id": "touPeakRate",
+            "visible": true
+          },
+          {
+            "id": "touOffPeakRate",
+            "visible": true
+          },
+          {
+            "id": "dailyKwhInput",
+            "visible": true
+          }
+        ],
+        "rendered": true,
+        "control_coverage": true,
+        "outcome_valid": true
+      },
+      {
+        "id": "backup",
+        "metric_id": "outage_coverage_pct",
+        "metric_label": "of power cuts your essentials ride out for the full target",
+        "value": "100%",
+        "verdict": "Works: your essentials run for the full 8 hours in 100% of the power cuts we simulated (typical night: 8 hours).",
+        "status": "works",
+        "tou_rates": {
+          "peak": 0.42,
+          "offPeak": 0.42
+        },
+        "declared_controls": [
+          {
+            "id": "essentialLoadList",
+            "visible": true
+          },
+          {
+            "id": "outageTargetHours",
+            "visible": true
+          },
+          {
+            "id": "backupSolarRecharge",
+            "visible": true
+          }
+        ],
+        "rendered": true,
+        "control_coverage": true,
+        "outcome_valid": true
+      },
+      {
+        "id": "reserve",
+        "metric_id": "reserve_tradeoff",
+        "metric_label": "what holding a reserve costs, in savings and hours",
+        "value": "0% of savings, 31 h of cover",
+        "verdict": "Works: holding that reserve costs 0% of your bill savings and buys 31 hours of cover.",
+        "status": "works",
+        "tou_rates": {
+          "peak": 0.42,
+          "offPeak": 0.42
+        },
+        "declared_controls": [
+          {
+            "id": "reserveSlider",
+            "visible": true
+          }
+        ],
+        "rendered": true,
+        "control_coverage": true,
+        "outcome_valid": true
+      },
+      {
+        "id": "offgrid",
+        "metric_id": "grid_independence_pct",
+        "metric_label": "of the year running with no grid at all",
+        "value": "99%",
+        "verdict": "Partly: 99% of the year runs with no grid — 71 hours short in the worst year, 1.4 days of autonomy.",
+        "status": "partial",
+        "tou_rates": {
+          "peak": 0.42,
+          "offPeak": 0.42
+        },
+        "declared_controls": [
+          {
+            "id": "dailyKwhInput",
+            "visible": true
+          },
+          {
+            "id": "generatorAllowed",
+            "visible": true
+          }
+        ],
+        "rendered": true,
+        "control_coverage": true,
+        "outcome_valid": true
+      },
+      {
+        "id": "portable",
+        "metric_id": "portable_runtime_coverage_pct",
+        "metric_label": "of days the station runs your devices all day",
+        "value": "0%",
+        "verdict": "Does not work here: your station runs a full day on 2 of 1826 days here, and one charge lasts 55 hours.",
+        "status": "notHere",
+        "tou_rates": {
+          "peak": 0.42,
+          "offPeak": 0.42
+        },
+        "declared_controls": [
+          {
+            "id": "portableDeviceList",
+            "visible": true
+          },
+          {
+            "id": "portableBankKwh",
+            "visible": true
+          },
+          {
+            "id": "portableShorePower",
+            "visible": true
+          }
+        ],
+        "rendered": true,
+        "control_coverage": true,
+        "outcome_valid": true
+      }
+    ],
+    "complete": true
+  }
+}

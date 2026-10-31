@@ -1,0 +1,8 @@
+npm.cmd : [warn] tests/jev-scope-quality-git.test.mjs
+At C:\tmp\pr232-run-exact-checks-20261018.ps1:22 char:5
++     & $Executable @Arguments *> $log
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([warn] tests/je...ty-git.test.mjs:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+

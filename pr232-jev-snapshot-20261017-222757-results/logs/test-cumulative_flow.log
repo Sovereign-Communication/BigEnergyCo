@@ -1,0 +1,5 @@
+
+> bigenergyco@1.0.0 verify:flow
+> node scripts/verify-cumulative-flow.mjs
+
+cumulative real-entry flow passed

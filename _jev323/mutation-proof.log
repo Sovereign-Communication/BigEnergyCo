@@ -1,0 +1,30 @@
+OK   56/56 selected label-term checks across 7 locales; lexical consistency only
+OK   12/12 material-quantity checks across 2 quantity-bearing keys; figures are preserved, not proof of meaning
+OK   every en key exists in all 6 locales
+OK   every translated string also exists in English (parity holds both ways)
+OK   all 137 markup hooks resolve in at least one locale
+OK   es: all 137 HTML hooks translated
+OK   pt: all 137 HTML hooks translated
+OK   fr: all 137 HTML hooks translated
+OK   de: all 137 HTML hooks translated
+OK   nl: all 137 HTML hooks translated
+OK   ar: all 137 HTML hooks translated
+OK   every translation carries the same placeholders as English
+OK   no locale ships a key name as its own text
+OK   only `ar` flips direction
+OK   language picker exposes 6 locales, all with dictionaries
+OK   es: every runtime-composed verdict string present
+OK   pt: every runtime-composed verdict string present
+OK   fr: every runtime-composed verdict string present
+OK   de: every runtime-composed verdict string present
+OK   nl: every runtime-composed verdict string present
+OK   ar: every runtime-composed verdict string present
+OK   all 467 keys across 7 locales are rendered by shipped code or markup
+OK   none of the 11 known-bad values are present
+OK   index.html: every reader-visible prose block has a locale hook
+     unkeyed prose on translated pages: 371/485 ceiling (known, tracked, must fall)
+FAIL ui.js builds the BOM description from the raw English item.desc instead of the dictionary (runtime copy bypasses every rule above)
+FAIL ui.js renders the BOM description without a data-i18n hook, so a language switch cannot re-apply it
+     coverage — es: 466 keys, 100% of HTML hooks · pt: 466 keys, 100% of HTML hooks · fr: 466 keys, 100% of HTML hooks · de: 466 keys, 100% of HTML hooks · nl: 466 keys, 100% of HTML hooks · ar: 467 keys, 100% of HTML hooks
+
+2 I18N FAILURE(S)

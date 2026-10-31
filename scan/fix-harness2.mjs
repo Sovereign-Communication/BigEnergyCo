@@ -1,0 +1,10 @@
+import { readFileSync, writeFileSync } from "node:fs";
+const p = "C:/tmp/gate-scope/.drift-pins-demo.mjs";
+let s = readFileSync(p, "utf8");
+const oldNeedle = 'l.includes("solar-calculator/[^/]+/index.html$")';
+const newNeedle = 'l.includes("solar-calculator") && l.includes(".test(p),")';
+const hits = s.split(oldNeedle).length - 1;
+if (hits < 2) throw new Error(`expected 2 needles, found ${hits}`);
+s = s.replaceAll(oldNeedle, newNeedle);
+writeFileSync(p, s);
+console.log(`patched ${hits} needle(s)`);

@@ -1,0 +1,53 @@
+LIVE OK    hero CTA present
+LIVE OK    hero tag i18n hook
+LIVE OK    em-dashes present
+LIVE OK    no mojibake residue
+LIVE OK    no replacement char U+FFFD
+LIVE OK    marker: id="moneyBar"
+LIVE OK    marker: id="printSheet"
+LIVE OK    marker: btnShareResult
+LIVE OK    marker: rel="canonical"
+LIVE OK    marker: id="systemGoal"
+LIVE OK    marker: Cut my bill, stay connected
+LIVE OK    marker: value="auto" selected
+LIVE OK    marker: compare all three chemistries by lifetim
+LIVE OK    marker: id="exportRate"
+LIVE OK    marker: Lead-Acid (AGM)
+LIVE OK    marker: id="langSelect"
+LIVE OK    marker: id="cumCostChartWrap"
+LIVE OK    marker: id="cumCostCanvas"
+LIVE OK    marker: id="cumCostCaption"
+LIVE OK    marker: rel="manifest"
+LIVE OK    marker: name="theme-color"
+LIVE OK    marker: id="faq"
+LIVE OK    marker: application/ld+json
+LIVE OK    marker: "WebApplication"
+LIVE OK    absent: "$75,185"
+LIVE OK    absent: "netSavingsVal"
+LIVE OK    absent: "851.85"
+LIVE OK    absent: "â€"
+LIVE OK    ui.js served with a version token
+LIVE OK    index.html links versioned site.css
+LIVE OK    site.css serves with print rules
+LIVE OK    module assets/js/sizing/engine.js (+content)
+LIVE OK    module assets/js/sizing/run.js (+content)
+LIVE OK    module assets/js/sizing/sizing-worker.js (+content)
+LIVE OK    module assets/js/sizing/ui.js (+content)
+LIVE OK    module assets/js/sizing/money.js (+content)
+LIVE OK    module assets/js/shared/i18n.js (+content)
+LIVE OK    module assets/js/shared/locales.js (+content)
+LIVE OK    chat.js serves with SW registration
+LIVE OK    cache chain assets/js/sizing/ui.js (token 20261005h)
+LIVE OK    cache chain assets/js/sizing/sizing-worker.js (token 20261005h)
+LIVE OK    cache chain assets/js/sizing/run.js (token 20261005h)
+LIVE OK    HTTP 404: index-freenet.html (got 404)
+LIVE OK    HTTP 200: blog/ (got 200)
+LIVE OK    HTTP 200: 404.html (got 200)
+LIVE OK    HTTP 200: blog/off-grid-vs-grid-tie-payback/ (got 200)
+LIVE OK    HTTP 200: sw.js (got 200)
+LIVE OK    HTTP 200: manifest.webmanifest (got 200)
+LIVE OK    HTTP 200: assets/icon.svg (got 200)
+LIVE OK    HTTP 200: assets/js/sizing/profiles.js (got 200)
+LIVE OK    AI endpoint reply (176 chars, brief)
+
+ALL LIVE CHECKS PASSED

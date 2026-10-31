@@ -1,0 +1,3 @@
+import { readFileSync } from "node:fs";
+const l=JSON.parse(readFileSync("C:/tmp/jev-main-5f1/lighthouse-report.json","utf8"));
+console.log(JSON.stringify({code_sha:l.code_sha,stage:l.stage,unit:l.unit,lighthouse_version:l.lighthouse_version,chrome:l.chrome,throttling:l.throttling,targets:l.targets,measured:l.measured.map(m=>({id:m.id,scores:m.scores,runScores:m.runScores,speed:m.speed})),warm_interaction:l.warm_interaction,first_measurement:l.first_measurement,floors:l.floors,absolute_targets:l.absolute_targets,speed_ceilings:l.speed_ceilings},null,2));

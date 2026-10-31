@@ -1,0 +1,79 @@
+﻿jev-complete	Jev complete gate (live, model-pinned)	﻿2026-10-23T03:34:18.4406910Z ##[group]Run args=()
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:18.4407311Z ^[[36;1margs=()^[[0m
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:18.4407733Z ^[[36;1mif [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then^[[0m
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:18.4408191Z ^[[36;1m  args+=(--scope "")^[[0m
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:18.4408738Z ^[[36;1m  echo "PR scoped report is advisory; production uses the post-merge full report."^[[0m
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:18.4409280Z ^[[36;1melse^[[0m
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:18.4409701Z ^[[36;1m  echo "Running the full Jev release gate for main SHA $GITHUB_SHA."^[[0m
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:18.4410174Z ^[[36;1mfi^[[0m
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:18.4410619Z ^[[36;1mnode scripts/validate-jev-complete.mjs "${args[@]}" --require-live \^[[0m
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:18.4411177Z ^[[36;1m  --evidence "$RUNNER_TEMP/jev-evidence.json" \^[[0m
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:18.4411641Z ^[[36;1m  --out "$RUNNER_TEMP/jev-report.json"^[[0m
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:18.4482584Z shell: /usr/bin/bash -e {0}
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:18.4482948Z env:
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:18.4483711Z   TYPESAFE_API_KEY: ***
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:18.4484053Z ##[endgroup]
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:18.4582722Z Running the full Jev release gate for main SHA 6c5d4511acb6b05d01dc6caaeec3a8afa33c3c84.
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.3994342Z 
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.3995412Z === Jev complete gate: ? @ 6c5d451 ===
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.3996027Z score: 97.36 / 100  (target 95)  [FAIL]
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.3997133Z mechanical: 100  semantic: 91.19
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.3997687Z hard gates:
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.3998233Z   ✓ tests_green
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.3998597Z   ✓ smoke_green
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.3998939Z   ✓ ci_green
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.3999265Z   ✓ prettier_clean
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.3999610Z   ✓ seo_green
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.3999943Z   ✓ secrets_clean
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4000280Z   ✓ tree_clean
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4002173Z facets (21):
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4003191Z   ✓ spec           confident — solid with minor gaps  (ordinal 85, live)
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4004455Z   ✓ design         proven — google-quality, evidenced end to end  (ordinal 100, live)
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4005963Z   ✓ correctness    proven — google-quality, evidenced end to end  (ordinal 100, live)
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4007180Z   ✓ quality        confident — solid with minor gaps  (ordinal 85, live)
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4008304Z   ✓ security       proven — google-quality, evidenced end to end  (ordinal 100, live)
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4009561Z   · performance    mixed — partial or unverified evidence  (ordinal 60, live)
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4010840Z   ✓ accessibility  proven — google-quality, evidenced end to end  (ordinal 100, live)
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4012012Z   ✓ i18n           confident — solid with minor gaps  (ordinal 85, live)
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4013163Z   ✓ seo            proven — google-quality, evidenced end to end  (ordinal 100, code)
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4014269Z   ✓ resilience     confident — solid with minor gaps  (ordinal 85, live)
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4015454Z   ✓ experience     proven — google-quality, evidenced end to end  (ordinal 100, live)
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4016497Z   ✓ docs           proven — google-quality, evidenced end to end  (ordinal 100, live)
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4017401Z   ✓ testing        proven — google-quality, evidenced end to end  (ordinal 100, code)
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4018110Z   ✓ release        proven — google-quality, evidenced end to end  (ordinal 100, code)
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4018776Z   ✓ advisor        confident — solid with minor gaps  (ordinal 85, live)
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4019410Z   ✓ physics        confident — solid with minor gaps  (ordinal 85, live)
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4020250Z   ✓ provenance     confident — solid with minor gaps  (ordinal 85, live)
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4020934Z   ✓ comparison     proven — google-quality, evidenced end to end  (ordinal 100, live)
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4021657Z   ✓ usecases       proven — google-quality, evidenced end to end  (ordinal 100, live)
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4022642Z   ✓ privacy        proven — google-quality, evidenced end to end  (ordinal 100, live)
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4023715Z   · translation    mixed — partial or unverified evidence  (ordinal 60, live)
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4024923Z not proven (9/21): advisor, i18n, performance, physics, provenance, quality, resilience, spec, translation
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4026609Z required work (by severity):
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4027327Z     [perf_gap] Performance gap — playtest
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4028976Z       Run the playtest pass on the real surface: measure the slow interaction, confirm warm-cache paths issue zero redundant network pulls, and make subsequent adjustments instant.
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4030669Z   * [translation_gap] Translation quality gap — contract-tests
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4032984Z       Gate each locale on parity in both directions, placeholder integrity, no English leakage and no raw key name reaching a visitor, then back-translate the rendered strings and read them for meaning: fix any string that is technically present and not actually readable.
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4034999Z recommended actions by work type:
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4035766Z   contract-tests (1):
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4037863Z     - Gate each locale on parity in both directions, placeholder integrity, no English leakage and no raw key name reaching a visitor, then back-translate the rendered strings and read them for meaning: fix any string that is technically present and not actually readable.
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4040254Z   playtest (1):
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4041774Z     - Run the playtest pass on the real surface: measure the slow interaction, confirm warm-cache paths issue zero redundant network pulls, and make subsequent adjustments instant.
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4043452Z live: provider=typesafe fallback=false cost=$0.000003
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4043978Z 
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4043991Z 
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4044362Z why the score is 97.36 (target 95):
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4045071Z   1. [perf_gap] Performance gap (playtest)
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4046371Z     - performance: mixed — partial or unverified evidence (ordinal 60, source: live)
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4047884Z         why: the live judge rated this "mixed — partial or unverified evidence" (ordinal 60) — short of proven
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4049241Z         why: judge confidence was low (0.38) — the evidence was thin or ambiguous
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4051900Z         judge saw: "PLAYTEST, 1 Chrome, 1 city: cold 5.4s, repeat 46ms, drag 6ms, 2.2s confirm (median of 3), 0 NASA warm/reload, result renders without pricing model. Lighthouse, 14 targets, median of 3. perf NOT ratcheted, 51-100 this run, 40-76 over 21 runs. 3 categories ratcheted (in report)."
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4054337Z     focus: Run the playtest pass on the real surface: measure the slow interaction, confirm warm-cache paths issue zero redundant network pulls, and make subsequent adjustments instant.
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4056089Z   2. *PRIMARY* [translation_gap] Translation quality gap (contract-tests)
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4057237Z     - translation: mixed — partial or unverified evidence (ordinal 60, source: live)
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4058557Z         why: the live judge rated this "mixed — partial or unverified evidence" (ordinal 60) — short of proven
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4059951Z         why: judge confidence (0.63) is below the required 0.95 confidence bar; the judgment is not certain enough to pass
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4062473Z         judge saw: "RUNTIME, 7 locales x 3 re-entry points: 0 raw keys on 22 pages, 42/42 JS-painted surfaces show their own locale's dictionary value. Parity both ways + placeholders: scripts/check-i18n.mjs. Not done: back-reading translated strings for meaning (native judgement)."
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4065867Z     focus: Gate each locale on parity in both directions, placeholder integrity, no English leakage and no raw key name reaching a visitor, then back-translate the rendered strings and read them for meaning: fix any string that is technically present and not actually readable.
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4068122Z report written: /home/runner/work/_temp/jev-report.json
+jev-complete	Jev complete gate (live, model-pinned)	2026-10-23T03:34:19.4111406Z ##[error]Process completed with exit code 1.

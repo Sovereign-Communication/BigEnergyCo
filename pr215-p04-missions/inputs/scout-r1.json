@@ -1,0 +1,17 @@
+﻿{
+  "files": [
+    {"path": "assets/js/chat.js", "why": "Classic deferred script can own the shared reduced-motion policy.", "bytes": 0},
+    {"path": "assets/js/sizing/ui.js", "why": "Sizing module has three scroll call sites and a duplicate policy helper.", "bytes": 0},
+    {"path": "scripts/smoke/a11y.js", "why": "Existing Chrome flow measures sizing scrolls but not chat scroll entry points.", "bytes": 0},
+    {"path": "tests/reduced-motion.test.mjs", "why": "Source-regex assertions duplicate structure assumptions instead of behavior.", "bytes": 0},
+    {"path": "index.html", "why": "Declares ui.js before deferred chat.js; execution order matters to the shared global.", "bytes": 0}
+  ],
+  "patterns": ["index.html orders the sizing module before deferred chat.js", "ui.js installs DOM handlers through whenDOMReady", "both modules currently define scrollBehavior()", "Chrome smoke measures two ui.js scroll paths in normal/reduce mode but no chat path", "reduced-motion.test.mjs regex-matches implementation source"],
+  "dependencies": ["index.html script ordering -> chat.js publishes window.scrollBehavior -> ui.js DOM-ready handlers call shared policy", "scripts/browser-smoke.mjs -> runA11yFlow -> measureSite", "tests/reduced-motion.test.mjs -> npm test"],
+  "canon_rows": ["P0.4"],
+  "gates": ["node --test tests/reduced-motion.test.mjs", "npm run smoke:local", "exact-head GitHub Actions pull_request CI including Jev on PR #215"],
+  "scope_summary": "Make chat.js the explicit reduced-motion policy owner, remove ui.js duplicate, correct the load-order comment, extend real-Chrome coverage to a chat path and retain sizing paths under normal/reduced preferences, and remove the brittle source-regex test.",
+  "out_of_scope": ["plan edits", "translation or other plan-item work", "unrelated performance redesign", "shared dirty checkout", "merge", "deployment"],
+  "estimated_effort": "Small",
+  "context_size_estimate": "~5K"
+}

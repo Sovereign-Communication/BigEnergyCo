@@ -1,0 +1,42 @@
+        <div
+          class="table-wrapper"
+          tabindex="0"
+          role="region"
+          aria-label="Inputs to disclose in a battery cost comparison, scrollable table"
+        >
+          <table>
+            <caption>Inputs to disclose in a battery cost comparison</caption>
+            <thead>
+              <tr>
+                <th scope="col">Input</th>
+                <th scope="col">What to state</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">Battery product</th>
+                <td>Exact cell or pack model, nameplate capacity, and usable capacity.</td>
+              </tr>
+              <tr>
+                <th scope="row">Price</th>
+                <td>Source and date, currency, tax, shipping, and installation.</td>
+              </tr>
+              <tr>
+                <th scope="row">Test and service conditions</th>
+                <td>Temperature, discharge rate, depth of discharge, and end-of-life capacity.</td>
+              </tr>
+              <tr>
+                <th scope="row">Replacement estimate</th>
+                <td>Source for cycle-life or calendar-life assumptions, plus labor, freight, and recycling.</td>
+              </tr>
+              <tr>
+                <th scope="row">Comparison method</th>
+                <td>Shared analysis period and any efficiency or discount assumptions.</td>
+              </tr>
+              <tr>
+                <th scope="row">Uncertain values</th>
+                <td>Label estimates and unknowns instead of presenting them as product facts.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>

@@ -1,0 +1,336 @@
+{
+  "plan_item": "P0.4",
+  "metric": "resilience",
+  "generated_at": "2026-10-22T05:59:06.215Z",
+  "code_sha": "635c464716941ab6eb316592451706e0ee504a86",
+  "facet_axes": [
+    "resilience"
+  ],
+  "unit": "browser-observed stage outcomes plus source-level timeout arithmetic, on the staged build",
+  "stage": "_pages_resilience",
+  "timeout_graph": {
+    "outer": {
+      "run_reply_deadline_ms": 180000,
+      "owner": "assets/js/sizing/run-coordinator.js",
+      "realm": "page",
+      "what": "the worker reply deadline. Armed on every full run with the fixed three-minute bound, which application inputs cannot weaken."
+    },
+    "inner": {
+      "weather_fetch_ms": 45000,
+      "weather_owner": "assets/js/sizing/nasa.js",
+      "weather_realm": "worker",
+      "weather_note": "armed per 2-year chunk, and the chunks of one 5-year pull are issued in PARALLEL, so the worst case for a whole run is one chunk's budget rather than three of them stacked",
+      "city_lookup_ms": 12000,
+      "city_owner": "assets/js/sizing/cities.js",
+      "country_fetch_ms": 8000,
+      "country_owner": "assets/js/sizing/cities.js",
+      "jev_probe_ms": 3500,
+      "jev_owner": "assets/js/sizing/validate.js"
+    },
+    "recorded": {
+      "outer": {
+        "run_reply_deadline_ms": 180000,
+        "owner": "assets/js/sizing/run-coordinator.js",
+        "realm": "page",
+        "what": "the worker reply deadline. Armed on every full run with the fixed three-minute bound, which application inputs cannot weaken."
+      },
+      "inner": {
+        "weather_fetch_ms": 45000,
+        "weather_owner": "assets/js/sizing/nasa.js",
+        "weather_realm": "worker",
+        "weather_note": "armed per 2-year chunk, and the chunks of one 5-year pull are issued in PARALLEL, so the worst case for a whole run is one chunk's budget rather than three of them stacked",
+        "city_lookup_ms": 12000,
+        "city_owner": "assets/js/sizing/cities.js",
+        "country_fetch_ms": 8000,
+        "country_owner": "assets/js/sizing/cities.js",
+        "jev_probe_ms": 3500,
+        "jev_owner": "assets/js/sizing/validate.js"
+      }
+    }
+  },
+  "budget_fits": {
+    "failures": [],
+    "checked": [
+      {
+        "id": "weather_under_run_deadline",
+        "inner_ms": 45000,
+        "worst_ms": 45000,
+        "cap_ms": 180000,
+        "slack_ms": 135000
+      },
+      {
+        "id": "city_lookup_under_run_deadline",
+        "inner_ms": 12000,
+        "worst_ms": 24000,
+        "cap_ms": 180000,
+        "slack_ms": 156000
+      },
+      {
+        "id": "country_fetch_under_run_deadline",
+        "inner_ms": 8000,
+        "worst_ms": 8000,
+        "cap_ms": 180000,
+        "slack_ms": 172000
+      },
+      {
+        "id": "jev_probe_under_run_deadline",
+        "inner_ms": 3500,
+        "worst_ms": 3500,
+        "cap_ms": 180000,
+        "slack_ms": 176500
+      }
+    ]
+  },
+  "expectations": {
+    "degraded_run_still_answers": true,
+    "degraded_run_is_labelled": true,
+    "degraded_run_releases_button": true,
+    "every_mode_degrades_alike": true,
+    "min_intercepted_per_mode": 1,
+    "control_must_not_be_labelled_offline": true,
+    "stuck_run_shows_no_result": true,
+    "stuck_run_error_is_actionable": true,
+    "stuck_run_releases_button": true,
+    "fixture_shortens_exactly_one_timer": 1,
+    "fixture_swallows_exactly_one_message": 1,
+    "fresh_worker_after_failure": true
+  },
+  "recorded_graph": {
+    "outer": {
+      "run_reply_deadline_ms": 180000,
+      "owner": "assets/js/sizing/run-coordinator.js",
+      "realm": "page",
+      "what": "the worker reply deadline. Armed on every full run with the fixed three-minute bound, which application inputs cannot weaken."
+    },
+    "inner": {
+      "weather_fetch_ms": 45000,
+      "weather_owner": "assets/js/sizing/nasa.js",
+      "weather_realm": "worker",
+      "weather_note": "armed per 2-year chunk, and the chunks of one 5-year pull are issued in PARALLEL, so the worst case for a whole run is one chunk's budget rather than three of them stacked",
+      "city_lookup_ms": 12000,
+      "city_owner": "assets/js/sizing/cities.js",
+      "country_fetch_ms": 8000,
+      "country_owner": "assets/js/sizing/cities.js",
+      "jev_probe_ms": 3500,
+      "jev_owner": "assets/js/sizing/validate.js"
+    }
+  },
+  "resilience_reading": {
+    "budget_fits": {
+      "failures": [],
+      "checked": [
+        {
+          "id": "weather_under_run_deadline",
+          "inner_ms": 45000,
+          "worst_ms": 45000,
+          "cap_ms": 180000,
+          "slack_ms": 135000
+        },
+        {
+          "id": "city_lookup_under_run_deadline",
+          "inner_ms": 12000,
+          "worst_ms": 24000,
+          "cap_ms": 180000,
+          "slack_ms": 156000
+        },
+        {
+          "id": "country_fetch_under_run_deadline",
+          "inner_ms": 8000,
+          "worst_ms": 8000,
+          "cap_ms": 180000,
+          "slack_ms": 172000
+        },
+        {
+          "id": "jev_probe_under_run_deadline",
+          "inner_ms": 3500,
+          "worst_ms": 3500,
+          "cap_ms": 180000,
+          "slack_ms": 176500
+        }
+      ]
+    },
+    "transport": {
+      "ok": true,
+      "modes": [
+        {
+          "id": "connection_failed",
+          "label": "connection could not be made",
+          "control": false,
+          "ok": true,
+          "intercepted": 3,
+          "held": 0,
+          "nasa_sessions": [
+            "page"
+          ],
+          "card_rendered": true,
+          "ms": 1077,
+          "status": "✅ 1 yr of hourly data (2025–2025) · 1,812 kWh/yr per kW of panel. · 🌐 offline typical-year mode",
+          "status_years": "1",
+          "offline_label": true,
+          "button_disabled": false,
+          "button_released": true,
+          "page_errors": [],
+          "error": null
+        },
+        {
+          "id": "request_aborted",
+          "label": "request cancelled",
+          "control": false,
+          "ok": true,
+          "intercepted": 3,
+          "held": 0,
+          "nasa_sessions": [
+            "page"
+          ],
+          "card_rendered": true,
+          "ms": 1033,
+          "status": "✅ 1 yr of hourly data (2025–2025) · 1,812 kWh/yr per kW of panel. · 🌐 offline typical-year mode",
+          "status_years": "1",
+          "offline_label": true,
+          "button_disabled": false,
+          "button_released": true,
+          "page_errors": [],
+          "error": null
+        },
+        {
+          "id": "connection_refused",
+          "label": "nothing listening",
+          "control": false,
+          "ok": true,
+          "intercepted": 3,
+          "held": 0,
+          "nasa_sessions": [
+            "page"
+          ],
+          "card_rendered": true,
+          "ms": 1026,
+          "status": "✅ 1 yr of hourly data (2025–2025) · 1,812 kWh/yr per kW of panel. · 🌐 offline typical-year mode",
+          "status_years": "1",
+          "offline_label": true,
+          "button_disabled": false,
+          "button_released": true,
+          "page_errors": [],
+          "error": null
+        },
+        {
+          "id": "server_503",
+          "label": "a real 5xx response",
+          "control": false,
+          "ok": true,
+          "intercepted": 3,
+          "held": 0,
+          "nasa_sessions": [
+            "page"
+          ],
+          "card_rendered": true,
+          "ms": 1037,
+          "status": "✅ 1 yr of hourly data (2025–2025) · 1,812 kWh/yr per kW of panel. · 🌐 offline typical-year mode",
+          "status_years": "1",
+          "offline_label": true,
+          "button_disabled": false,
+          "button_released": true,
+          "page_errors": [],
+          "error": null
+        },
+        {
+          "id": "malformed_200",
+          "label": "HTTP 200 with a body that is not the expected shape",
+          "control": false,
+          "ok": true,
+          "intercepted": 3,
+          "held": 0,
+          "nasa_sessions": [
+            "page"
+          ],
+          "card_rendered": true,
+          "ms": 1042,
+          "status": "✅ 1 yr of hourly data (2025–2025) · 1,812 kWh/yr per kW of panel. · 🌐 offline typical-year mode",
+          "status_years": "1",
+          "offline_label": true,
+          "button_disabled": false,
+          "button_released": true,
+          "page_errors": [],
+          "error": null
+        },
+        {
+          "id": "control",
+          "label": "control: nothing intercepted",
+          "control": true,
+          "ok": true,
+          "intercepted": 0,
+          "held": 0,
+          "nasa_sessions": [
+            "page"
+          ],
+          "card_rendered": true,
+          "ms": 5676,
+          "status": "✅ 5 yr of hourly data (2021–2025) · 1,803 kWh/yr per kW of panel.",
+          "status_years": "5",
+          "offline_label": false,
+          "button_disabled": false,
+          "button_released": true,
+          "page_errors": [],
+          "error": null
+        }
+      ]
+    },
+    "stuck_run": {
+      "ok": true,
+      "rewrites": 1,
+      "held_run_posts": 1,
+      "run_posts": 2,
+      "worker_constructions": 1,
+      "stuck_status": "The sizing engine did not reply in time — check your connection and click Size My System to try again.",
+      "stuck_error_is_actionable": true,
+      "stuck_card_rendered": false,
+      "stuck_deadline_fired": true,
+      "stuck_button_released": true,
+      "retry_card_rendered": false,
+      "retry_ms": null,
+      "retry_status": "The sizing engine did not reply in time — check your connection and click Size My System to try again.",
+      "retry_status_cleared": false,
+      "retry_button_released": true,
+      "retry_results_visible": false,
+      "fresh_worker_after_failure": false,
+      "page_errors": []
+    },
+    "stale_inputs": {
+      "ok": true,
+      "second_run_started_while_first_in_flight": true,
+      "settled_input": "27",
+      "card_rendered": true,
+      "status": "✅ 5 yr of hourly data (2021–2025) · 1,803 kWh/yr per kW of panel.",
+      "button_released": true,
+      "rendered_kw": 27.4,
+      "stale_figure_rendered": false,
+      "new_figure_rendered": true,
+      "rendered_kw_readable": true,
+      "page_errors": []
+    },
+    "share_restore": {
+      "ok": true,
+      "share_hash": "#s=eyJ2IjoxLCJsYSI6MjEuMzEsImxvIjotMTU3Ljg2LCJrdyI6MTMuOTYsImNoIjoiYXV0byIsImciOjEsInJwIjowLjIsIm9oIjo4LCJhIjoxLCJhZyI6I",
+      "restored_daily_kwh": "14",
+      "inputs_restored": true,
+      "hash_preserved": true,
+      "status": "✅ 5 yr of hourly data (2021–2025) · 1,803 kWh/yr per kW of panel.",
+      "card_rendered_after_restore": true,
+      "button_released": true,
+      "explicit_run_after_restore": true,
+      "explicit_run_ms": 5983,
+      "page_errors": []
+    }
+  },
+  "regressions": [],
+  "holes": [],
+  "notes": [
+    "control: 5 yr of real weather, not labelled offline — the detector refuses, so the passes above mean something",
+    "all 5 injected modes degraded identically",
+    "stuck run: deadline fired, 1 message swallowed, 1 fresh worker(s) built for the retry",
+    "stale inputs: settled on 27 kWh/day; the rendered payload's share hash reads 27.4 kWh/day, so the screen belongs to the newer run",
+    "share restore: a link produced by a real run restored 14 kWh/day and still runs on an explicit click"
+  ],
+  "scope_limit": "one unthrottled Chrome, one city, five injected transport failures plus a control, and one silent-worker deadline. The 45s weather abort is NOT browser-exercised: it is armed inside the sizing worker's realm, which a page-realm timer shim cannot reach, so the budget arithmetic for it is a source-level invariant over the constants the modules export. No device matrix, no CPU or network throttling, no load test.",
+  "enforcement": "blocking from P0: a measured defect, a stage that did not run, a stage that ran and intercepted nothing, and an inner budget that does not fit its outer cap",
+  "facet_line": "ADVERSARIAL, 1 Chrome, 1 city: 5 failures degrade alike, control clean; silent worker trips the page deadline; inner budgets fit their outer caps (tightest slack 135s). Budget arithmetic is source-level: worker-realm timers cannot be shortened from the page. No device matrix."
+}

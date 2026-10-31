@@ -1,0 +1,9 @@
+node.exe : note: warm-interaction measurement failed (CDP timeout: Runtime.evaluate); the report carries the hole and 
+the facet line falls back to first paint
+At C:\tmp\pr232-run-exact-checks-20261018.ps1:22 char:5
++     & $Executable @Arguments *> $log
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (note: warm-inte... to first paint:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+

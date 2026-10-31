@@ -1,0 +1,669 @@
+﻿2026-10-22T16:22:49.2022836Z Current runner version: '2.338.0'
+2026-10-22T16:22:49.2040912Z ##[group]Runner Image Provisioner
+2026-10-22T16:22:49.2041905Z Hosted Compute Agent
+2026-10-22T16:22:49.2042331Z Version: 20261021.618
+2026-10-22T16:22:49.2042827Z Commit: 21505ad2541d5be6135ed84fc33697146cf75b8e
+2026-10-22T16:22:49.2043369Z Build Date: 2026-10-21T00:45:21Z
+2026-10-22T16:22:49.2043838Z Worker ID: {5b6bc499-9f16-4af5-9ee6-fa57ed6c29b1}
+2026-10-22T16:22:49.2044340Z Region: centralus
+2026-10-22T16:22:49.2044733Z Cloud: Azure
+2026-10-22T16:22:49.2045104Z ##[endgroup]
+2026-10-22T16:22:49.2046356Z ##[group]Operating System
+2026-10-22T16:22:49.2046786Z Ubuntu
+2026-10-22T16:22:49.2047149Z 24.04.5
+2026-10-22T16:22:49.2047526Z LTS
+2026-10-22T16:22:49.2047919Z ##[endgroup]
+2026-10-22T16:22:49.2048330Z ##[group]Runner Image
+2026-10-22T16:22:49.2048732Z Image: ubuntu-24.04
+2026-10-22T16:22:49.2049169Z Version: 20261021.345.10
+2026-10-22T16:22:49.2050169Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261021.345/images/ubuntu/Ubuntu2404-Readme.md
+2026-10-22T16:22:49.2052208Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261021.345
+2026-10-22T16:22:49.2053040Z ##[endgroup]
+2026-10-22T16:22:49.2053893Z ##[group]GITHUB_TOKEN Permissions
+2026-10-22T16:22:49.2055905Z Contents: read
+2026-10-22T16:22:49.2056294Z Metadata: read
+2026-10-22T16:22:49.2056707Z ##[endgroup]
+2026-10-22T16:22:49.2058304Z Secret source: Actions
+2026-10-22T16:22:49.2059014Z Cache mode: write
+2026-10-22T16:22:49.2060291Z Prepare workflow directory
+2026-10-22T16:22:49.2301821Z Prepare all required actions
+2026-10-22T16:22:49.2338311Z Getting action download info
+2026-10-22T16:22:49.4745499Z Download action repository 'actions/checkout@v7' (SHA:3d3c42e5aac5ba805825da76410c181273ba90b1)
+2026-10-22T16:22:49.5445330Z Download action repository 'actions/setup-node@v7' (SHA:949feb2413d6458794dcd2491c4babbbce0c15c1)
+2026-10-22T16:22:49.6301221Z Download action repository 'actions/upload-artifact@v7' (SHA:cf430e030ddbb5b0abf93d22962f4752f3646cd9)
+2026-10-22T16:22:49.8011055Z Complete job name: lighthouse
+2026-10-22T16:22:49.8575984Z ##[group]Run actions/checkout@v7
+2026-10-22T16:22:49.8576816Z with:
+2026-10-22T16:22:49.8577255Z   repository: Sovereign-Communication/BigEnergyCo
+2026-10-22T16:22:49.8580385Z   token: ***
+2026-10-22T16:22:49.8580830Z   ssh-strict: true
+2026-10-22T16:22:49.8581214Z   ssh-user: git
+2026-10-22T16:22:49.8582277Z   persist-credentials: true
+2026-10-22T16:22:49.8582729Z   clean: true
+2026-10-22T16:22:49.8583144Z   sparse-checkout-cone-mode: true
+2026-10-22T16:22:49.8583680Z   fetch-depth: 1
+2026-10-22T16:22:49.8584061Z   fetch-tags: false
+2026-10-22T16:22:49.8584493Z   show-progress: true
+2026-10-22T16:22:49.8584859Z   lfs: false
+2026-10-22T16:22:49.8585187Z   submodules: false
+2026-10-22T16:22:49.8585632Z   set-safe-directory: true
+2026-10-22T16:22:49.8586145Z   allow-unsafe-pr-checkout: false
+2026-10-22T16:22:49.8586842Z ##[endgroup]
+2026-10-22T16:22:49.9359192Z Syncing repository: Sovereign-Communication/BigEnergyCo
+2026-10-22T16:22:49.9360682Z ##[group]Getting Git version info
+2026-10-22T16:22:49.9361567Z Working directory is '/home/runner/work/BigEnergyCo/BigEnergyCo'
+2026-10-22T16:22:49.9362498Z [command]/usr/bin/git version
+2026-10-22T16:22:49.9487737Z git version 2.55.0
+2026-10-22T16:22:49.9515521Z ##[endgroup]
+2026-10-22T16:22:49.9522140Z Temporarily overriding HOME='/home/runner/work/_temp/d89bfe18-fe08-48a6-80d7-166b9e913c14' before making global git config changes
+2026-10-22T16:22:49.9523921Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-22T16:22:49.9525233Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/BigEnergyCo/BigEnergyCo
+2026-10-22T16:22:49.9564970Z Deleting the contents of '/home/runner/work/BigEnergyCo/BigEnergyCo'
+2026-10-22T16:22:49.9568770Z ##[group]Determining repository object format
+2026-10-22T16:22:49.9569785Z ##[endgroup]
+2026-10-22T16:22:49.9570640Z ##[group]Initializing the repository
+2026-10-22T16:22:49.9574343Z [command]/usr/bin/git init /home/runner/work/BigEnergyCo/BigEnergyCo
+2026-10-22T16:22:49.9666731Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-10-22T16:22:49.9667783Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-10-22T16:22:49.9668751Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-10-22T16:22:49.9669570Z hint: call:
+2026-10-22T16:22:49.9670012Z hint:
+2026-10-22T16:22:49.9670503Z hint: 	git config --global init.defaultBranch <name>
+2026-10-22T16:22:49.9671097Z hint:
+2026-10-22T16:22:49.9671869Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-10-22T16:22:49.9672807Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-10-22T16:22:49.9673479Z hint:
+2026-10-22T16:22:49.9673868Z hint: 	git branch -m <name>
+2026-10-22T16:22:49.9674241Z hint:
+2026-10-22T16:22:49.9674770Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-10-22T16:22:49.9675763Z Initialized empty Git repository in /home/runner/work/BigEnergyCo/BigEnergyCo/.git/
+2026-10-22T16:22:49.9689495Z [command]/usr/bin/git remote add origin https://github.com/Sovereign-Communication/BigEnergyCo
+2026-10-22T16:22:49.9770444Z ##[endgroup]
+2026-10-22T16:22:49.9771057Z ##[group]Disabling automatic garbage collection
+2026-10-22T16:22:49.9774701Z [command]/usr/bin/git config --local gc.auto 0
+2026-10-22T16:22:49.9800495Z ##[endgroup]
+2026-10-22T16:22:49.9801619Z ##[group]Setting up auth
+2026-10-22T16:22:49.9802475Z Removing SSH command configuration
+2026-10-22T16:22:49.9805101Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-22T16:22:49.9832222Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-22T16:22:50.0121278Z Removing HTTP extra header
+2026-10-22T16:22:50.0125013Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-22T16:22:50.0147109Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-22T16:22:50.0292483Z Removing includeIf entries pointing to credentials config files
+2026-10-22T16:22:50.0295759Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-22T16:22:50.0318441Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-22T16:22:50.0473696Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-4c913e75-5c1b-4b98-ab60-518b9960df18.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-22T16:22:50.0501913Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/BigEnergyCo/BigEnergyCo/.git.path /home/runner/work/_temp/git-credentials-4c913e75-5c1b-4b98-ab60-518b9960df18.config
+2026-10-22T16:22:50.0526342Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/BigEnergyCo/BigEnergyCo/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-4c913e75-5c1b-4b98-ab60-518b9960df18.config
+2026-10-22T16:22:50.0553420Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-4c913e75-5c1b-4b98-ab60-518b9960df18.config
+2026-10-22T16:22:50.0578601Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-4c913e75-5c1b-4b98-ab60-518b9960df18.config
+2026-10-22T16:22:50.0603330Z ##[endgroup]
+2026-10-22T16:22:50.0604117Z ##[group]Fetching the repository
+2026-10-22T16:22:50.0608070Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +baa5a8eef681c13a57efe2c15a159c6d0fd86458:refs/remotes/pull/269/merge
+2026-10-22T16:22:50.9227300Z From https://github.com/Sovereign-Communication/BigEnergyCo
+2026-10-22T16:22:50.9229217Z  * [new ref]         baa5a8eef681c13a57efe2c15a159c6d0fd86458 -> pull/269/merge
+2026-10-22T16:22:50.9232847Z ##[endgroup]
+2026-10-22T16:22:50.9233957Z ##[group]Determining the checkout info
+2026-10-22T16:22:50.9235214Z ##[endgroup]
+2026-10-22T16:22:50.9236246Z [command]/usr/bin/git sparse-checkout disable
+2026-10-22T16:22:50.9285091Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-22T16:22:50.9313719Z ##[group]Checking out the ref
+2026-10-22T16:22:50.9315806Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/269/merge
+2026-10-22T16:22:51.0093459Z Note: switching to 'refs/remotes/pull/269/merge'.
+2026-10-22T16:22:51.0094499Z 
+2026-10-22T16:22:51.0095429Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-10-22T16:22:51.0097367Z changes and commit them, and you can discard any commits you make in this
+2026-10-22T16:22:51.0099063Z state without impacting any branches by switching back to a branch.
+2026-10-22T16:22:51.0099975Z 
+2026-10-22T16:22:51.0100573Z If you want to create a new branch to retain commits you create, you may
+2026-10-22T16:22:51.0102282Z do so (now or later) by using -c with the switch command. Example:
+2026-10-22T16:22:51.0103308Z 
+2026-10-22T16:22:51.0103756Z   git switch -c <new-branch-name>
+2026-10-22T16:22:51.0104496Z 
+2026-10-22T16:22:51.0104977Z Or undo this operation with:
+2026-10-22T16:22:51.0105747Z 
+2026-10-22T16:22:51.0106168Z   git switch -
+2026-10-22T16:22:51.0106750Z 
+2026-10-22T16:22:51.0107750Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-10-22T16:22:51.0108865Z 
+2026-10-22T16:22:51.0110062Z HEAD is now at baa5a8e Merge 1da30e17958f2cf5ad0fa48efd0d2131d6aeb4f9 into dcf04cb3750ba8e0013d0aadd4ee9916b8038ad2
+2026-10-22T16:22:51.0114588Z ##[endgroup]
+2026-10-22T16:22:51.0139807Z [command]/usr/bin/git log -1 --format=%H
+2026-10-22T16:22:51.0163410Z baa5a8eef681c13a57efe2c15a159c6d0fd86458
+2026-10-22T16:22:51.0468406Z ##[group]Run actions/setup-node@v7
+2026-10-22T16:22:51.0469314Z with:
+2026-10-22T16:22:51.0469988Z   node-version: 22
+2026-10-22T16:22:51.0470727Z   cache: npm
+2026-10-22T16:22:51.0471683Z   check-latest: false
+2026-10-22T16:22:51.0478315Z   token: ***
+2026-10-22T16:22:51.0479107Z   package-manager-cache: true
+2026-10-22T16:22:51.0479964Z ##[endgroup]
+2026-10-22T16:22:51.1468644Z Found in cache @ /opt/hostedtoolcache/node/22.23.4/x64
+2026-10-22T16:22:51.2327225Z ##[group]Environment details
+2026-10-22T16:22:51.4862813Z node: v22.23.4
+2026-10-22T16:22:51.4863328Z npm: 10.9.9
+2026-10-22T16:22:51.4863722Z yarn: 1.22.22
+2026-10-22T16:22:51.4864578Z ##[endgroup]
+2026-10-22T16:22:51.4877771Z [command]/opt/hostedtoolcache/node/22.23.4/x64/bin/npm config get cache
+2026-10-22T16:22:51.6501159Z /home/runner/.npm
+2026-10-22T16:22:51.8184101Z Cache hit for: node-cache-Linux-x64-npm-c49e35b91286e39b729fddc286a9e36ae5e997619bd0d0acbbb4e4b42cfba6c2
+2026-10-22T16:22:52.9844409Z Received 43105313 of 47299617 (91.1%), 41.1 MBs/sec
+2026-10-22T16:22:53.6078733Z Received 47299617 of 47299617 (100.0%), 27.8 MBs/sec
+2026-10-22T16:22:53.6079865Z Cache Size: ~45 MB (47299617 B)
+2026-10-22T16:22:53.6103091Z [command]/usr/bin/tar -xf /home/runner/work/_temp/79935668-c8ca-4de8-ac85-2fcdb9fa4584/cache.tzst -P -C /home/runner/work/BigEnergyCo/BigEnergyCo --use-compress-program unzstd
+2026-10-22T16:22:53.6704476Z Cache restored successfully
+2026-10-22T16:22:53.6728539Z Cache restored from key: node-cache-Linux-x64-npm-c49e35b91286e39b729fddc286a9e36ae5e997619bd0d0acbbb4e4b42cfba6c2
+2026-10-22T16:22:53.6882652Z ##[group]Run npm ci --no-audit --no-fund
+2026-10-22T16:22:53.6883149Z [36;1mnpm ci --no-audit --no-fund[0m
+2026-10-22T16:22:53.7008764Z shell: /usr/bin/bash -e {0}
+2026-10-22T16:22:53.7009291Z ##[endgroup]
+2026-10-22T16:22:56.4388367Z npm warn deprecated tsconfck@3.1.3: unmaintained
+2026-10-22T16:22:56.6378677Z npm warn deprecated prom-client@15.1.3: prom-client has been replaced by @prometheus-io/client
+2026-10-22T16:23:00.0799787Z 
+2026-10-22T16:23:00.0800751Z added 206 packages in 6s
+2026-10-22T16:23:00.1122474Z ##[group]Run node scripts/deploy-pages-local.mjs --check --stage _pages_lighthouse
+2026-10-22T16:23:00.1123018Z [36;1mnode scripts/deploy-pages-local.mjs --check --stage _pages_lighthouse[0m
+2026-10-22T16:23:00.1157333Z shell: /usr/bin/bash -e {0}
+2026-10-22T16:23:00.1157638Z ##[endgroup]
+2026-10-22T16:23:00.1514456Z Staging 394 manifest files into _pages_lighthouse/ ...
+2026-10-22T16:23:00.2773399Z Deployable files:
+2026-10-22T16:23:00.2773930Z   404.html
+2026-10-22T16:23:00.2774216Z   _headers
+2026-10-22T16:23:00.2774533Z   _redirects
+2026-10-22T16:23:00.2774858Z   about/index.html
+2026-10-22T16:23:00.2775257Z   assets/apple-touch-icon.png
+2026-10-22T16:23:00.2776295Z   assets/data/heatmap-grid.json
+2026-10-22T16:23:00.2776664Z   assets/data/heatmap-grid.min.json
+2026-10-22T16:23:00.2778083Z   assets/data/heatmap-rankings.json
+2026-10-22T16:23:00.2778433Z   assets/data/provenance.json
+2026-10-22T16:23:00.2778838Z   assets/favicon-48.png
+2026-10-22T16:23:00.2779338Z   assets/icon-192.png
+2026-10-22T16:23:00.2779687Z   assets/icon-512.png
+2026-10-22T16:23:00.2780108Z   assets/icon-maskable-512.png
+2026-10-22T16:23:00.2780411Z   assets/icon.svg
+2026-10-22T16:23:00.2780785Z   assets/img/heatmap/b-grid-u0.6a5a06e2f634.png
+2026-10-22T16:23:00.2781235Z   assets/img/heatmap/b-grid-u1.97473d7c3adb.png
+2026-10-22T16:23:00.2781773Z   assets/img/heatmap/b-grid-u2.97473d7c3adb.png
+2026-10-22T16:23:00.2782165Z   assets/img/heatmap/b-grid-u3.97473d7c3adb.png
+2026-10-22T16:23:00.2782568Z   assets/img/heatmap/b-real-u0.7fb3d99d1ec1.png
+2026-10-22T16:23:00.2782991Z   assets/img/heatmap/b-real-u1.fc5b46ce303e.png
+2026-10-22T16:23:00.2783390Z   assets/img/heatmap/b-real-u2.fc5b46ce303e.png
+2026-10-22T16:23:00.2783845Z   assets/img/heatmap/b-real-u3.fc5b46ce303e.png
+2026-10-22T16:23:00.2784232Z   assets/img/heatmap/cost-grid.ef7c4d70a563.png
+2026-10-22T16:23:00.2784643Z   assets/img/heatmap/cost-real.92beea92d8ba.png
+2026-10-22T16:23:00.2785119Z   assets/img/heatmap/manifest.json
+2026-10-22T16:23:00.2785486Z   assets/img/heatmap/p-grid-u0.87683c14639e.png
+2026-10-22T16:23:00.2785903Z   assets/img/heatmap/p-grid-u1.87683c14639e.png
+2026-10-22T16:23:00.2786253Z   assets/img/heatmap/p-grid-u2.87683c14639e.png
+2026-10-22T16:23:00.2786691Z   assets/img/heatmap/p-grid-u3.87683c14639e.png
+2026-10-22T16:23:00.2787094Z   assets/img/heatmap/p-real-u0.ab5865e9cc79.png
+2026-10-22T16:23:00.2787518Z   assets/img/heatmap/p-real-u1.ab5865e9cc79.png
+2026-10-22T16:23:00.2787912Z   assets/img/heatmap/p-real-u2.ab5865e9cc79.png
+2026-10-22T16:23:00.2788290Z   assets/img/heatmap/p-real-u3.ab5865e9cc79.png
+2026-10-22T16:23:00.2788687Z   assets/js/cf-beacon.js
+2026-10-22T16:23:00.2789006Z   assets/js/chat.js
+2026-10-22T16:23:00.2789312Z   assets/js/heatmap-palette.js
+2026-10-22T16:23:00.2789669Z   assets/js/heatmap.js
+2026-10-22T16:23:00.2789950Z   assets/js/shared/content.js
+2026-10-22T16:23:00.2790317Z   assets/js/shared/coords.js
+2026-10-22T16:23:00.2790689Z   assets/js/shared/cut-targets.js
+2026-10-22T16:23:00.2791054Z   assets/js/shared/escape.js
+2026-10-22T16:23:00.2791530Z   assets/js/shared/home-copy.js
+2026-10-22T16:23:00.2791935Z   assets/js/shared/i18n.js
+2026-10-22T16:23:00.2792307Z   assets/js/shared/interpolate.js
+2026-10-22T16:23:00.2792646Z   assets/js/shared/jargon-dict.js
+2026-10-22T16:23:00.2793017Z   assets/js/shared/locales.js
+2026-10-22T16:23:00.2793291Z   assets/js/shared/simple-mode.js
+2026-10-22T16:23:00.2793575Z   assets/js/shared/simple-view.js
+2026-10-22T16:23:00.2793894Z   assets/js/sizing/appliances.js
+2026-10-22T16:23:00.2794158Z   assets/js/sizing/bom.js
+2026-10-22T16:23:00.2794432Z   assets/js/sizing/budget-span.js
+2026-10-22T16:23:00.2794746Z   assets/js/sizing/charts.js
+2026-10-22T16:23:00.2795047Z   assets/js/sizing/cities.js
+2026-10-22T16:23:00.2795416Z   assets/js/sizing/city-data/AD.json
+2026-10-22T16:23:00.2795846Z   assets/js/sizing/city-data/AE.json
+2026-10-22T16:23:00.2796417Z   assets/js/sizing/city-data/AF.json
+2026-10-22T16:23:00.2796823Z   assets/js/sizing/city-data/AG.json
+2026-10-22T16:23:00.2797410Z   assets/js/sizing/city-data/AL.json
+2026-10-22T16:23:00.2797866Z   assets/js/sizing/city-data/AM.json
+2026-10-22T16:23:00.2798236Z   assets/js/sizing/city-data/AO.json
+2026-10-22T16:23:00.2798545Z   assets/js/sizing/city-data/AR.json
+2026-10-22T16:23:00.2798855Z   assets/js/sizing/city-data/AS.json
+2026-10-22T16:23:00.2799133Z   assets/js/sizing/city-data/AT.json
+2026-10-22T16:23:00.2799447Z   assets/js/sizing/city-data/AU.json
+2026-10-22T16:23:00.2799753Z   assets/js/sizing/city-data/AW.json
+2026-10-22T16:23:00.2800179Z   assets/js/sizing/city-data/AX.json
+2026-10-22T16:23:00.2800503Z   assets/js/sizing/city-data/AZ.json
+2026-10-22T16:23:00.2800776Z   assets/js/sizing/city-data/BA.json
+2026-10-22T16:23:00.2801777Z   assets/js/sizing/city-data/BB.json
+2026-10-22T16:23:00.2802080Z   assets/js/sizing/city-data/BD.json
+2026-10-22T16:23:00.2802345Z   assets/js/sizing/city-data/BE.json
+2026-10-22T16:23:00.2802696Z   assets/js/sizing/city-data/BF.json
+2026-10-22T16:23:00.2802977Z   assets/js/sizing/city-data/BG.json
+2026-10-22T16:23:00.2803262Z   assets/js/sizing/city-data/BH.json
+2026-10-22T16:23:00.2803563Z   assets/js/sizing/city-data/BI.json
+2026-10-22T16:23:00.2803851Z   assets/js/sizing/city-data/BJ.json
+2026-10-22T16:23:00.2804133Z   assets/js/sizing/city-data/BM.json
+2026-10-22T16:23:00.2804407Z   assets/js/sizing/city-data/BN.json
+2026-10-22T16:23:00.2804730Z   assets/js/sizing/city-data/BO.json
+2026-10-22T16:23:00.2805019Z   assets/js/sizing/city-data/BQ.json
+2026-10-22T16:23:00.2805319Z   assets/js/sizing/city-data/BR.json
+2026-10-22T16:23:00.2805628Z   assets/js/sizing/city-data/BS.json
+2026-10-22T16:23:00.2805887Z   assets/js/sizing/city-data/BT.json
+2026-10-22T16:23:00.2806188Z   assets/js/sizing/city-data/BW.json
+2026-10-22T16:23:00.2806512Z   assets/js/sizing/city-data/BY.json
+2026-10-22T16:23:00.2806800Z   assets/js/sizing/city-data/BZ.json
+2026-10-22T16:23:00.2807075Z   assets/js/sizing/city-data/CA.json
+2026-10-22T16:23:00.2807385Z   assets/js/sizing/city-data/CD.json
+2026-10-22T16:23:00.2807723Z   assets/js/sizing/city-data/CF.json
+2026-10-22T16:23:00.2808037Z   assets/js/sizing/city-data/CG.json
+2026-10-22T16:23:00.2808339Z   assets/js/sizing/city-data/CH.json
+2026-10-22T16:23:00.2808614Z   assets/js/sizing/city-data/CI.json
+2026-10-22T16:23:00.2808934Z   assets/js/sizing/city-data/CK.json
+2026-10-22T16:23:00.2809204Z   assets/js/sizing/city-data/CL.json
+2026-10-22T16:23:00.2809482Z   assets/js/sizing/city-data/CM.json
+2026-10-22T16:23:00.2809809Z   assets/js/sizing/city-data/CN.json
+2026-10-22T16:23:00.2810082Z   assets/js/sizing/city-data/CO.json
+2026-10-22T16:23:00.2810369Z   assets/js/sizing/city-data/CR.json
+2026-10-22T16:23:00.2810689Z   assets/js/sizing/city-data/CU.json
+2026-10-22T16:23:00.2810955Z   assets/js/sizing/city-data/CV.json
+2026-10-22T16:23:00.2811243Z   assets/js/sizing/city-data/CW.json
+2026-10-22T16:23:00.2811702Z   assets/js/sizing/city-data/CY.json
+2026-10-22T16:23:00.2812029Z   assets/js/sizing/city-data/CZ.json
+2026-10-22T16:23:00.2812329Z   assets/js/sizing/city-data/DE.json
+2026-10-22T16:23:00.2812640Z   assets/js/sizing/city-data/DJ.json
+2026-10-22T16:23:00.2812911Z   assets/js/sizing/city-data/DK.json
+2026-10-22T16:23:00.2813172Z   assets/js/sizing/city-data/DM.json
+2026-10-22T16:23:00.2813460Z   assets/js/sizing/city-data/DO.json
+2026-10-22T16:23:00.2813786Z   assets/js/sizing/city-data/DZ.json
+2026-10-22T16:23:00.2814068Z   assets/js/sizing/city-data/EC.json
+2026-10-22T16:23:00.2814340Z   assets/js/sizing/city-data/EE.json
+2026-10-22T16:23:00.2814642Z   assets/js/sizing/city-data/EG.json
+2026-10-22T16:23:00.2814940Z   assets/js/sizing/city-data/EH.json
+2026-10-22T16:23:00.2815216Z   assets/js/sizing/city-data/ER.json
+2026-10-22T16:23:00.2815527Z   assets/js/sizing/city-data/ES.json
+2026-10-22T16:23:00.2815798Z   assets/js/sizing/city-data/ET.json
+2026-10-22T16:23:00.2816066Z   assets/js/sizing/city-data/FI.json
+2026-10-22T16:23:00.2816520Z   assets/js/sizing/city-data/FJ.json
+2026-10-22T16:23:00.2816791Z   assets/js/sizing/city-data/FM.json
+2026-10-22T16:23:00.2817174Z   assets/js/sizing/city-data/FO.json
+2026-10-22T16:23:00.2817479Z   assets/js/sizing/city-data/FR.json
+2026-10-22T16:23:00.2817785Z   assets/js/sizing/city-data/GA.json
+2026-10-22T16:23:00.2818061Z   assets/js/sizing/city-data/GB.json
+2026-10-22T16:23:00.2818366Z   assets/js/sizing/city-data/GE.json
+2026-10-22T16:23:00.2818649Z   assets/js/sizing/city-data/GF.json
+2026-10-22T16:23:00.2818920Z   assets/js/sizing/city-data/GG.json
+2026-10-22T16:23:00.2819383Z   assets/js/sizing/city-data/GH.json
+2026-10-22T16:23:00.2819737Z   assets/js/sizing/city-data/GI.json
+2026-10-22T16:23:00.2820108Z   assets/js/sizing/city-data/GL.json
+2026-10-22T16:23:00.2820542Z   assets/js/sizing/city-data/GM.json
+2026-10-22T16:23:00.2820906Z   assets/js/sizing/city-data/GN.json
+2026-10-22T16:23:00.2821425Z   assets/js/sizing/city-data/GP.json
+2026-10-22T16:23:00.2821842Z   assets/js/sizing/city-data/GQ.json
+2026-10-22T16:23:00.2822227Z   assets/js/sizing/city-data/GR.json
+2026-10-22T16:23:00.2822597Z   assets/js/sizing/city-data/GT.json
+2026-10-22T16:23:00.2823021Z   assets/js/sizing/city-data/GU.json
+2026-10-22T16:23:00.2823352Z   assets/js/sizing/city-data/GW.json
+2026-10-22T16:23:00.2823668Z   assets/js/sizing/city-data/GY.json
+2026-10-22T16:23:00.2824421Z   assets/js/sizing/city-data/HK.json
+2026-10-22T16:23:00.2824955Z   assets/js/sizing/city-data/HN.json
+2026-10-22T16:23:00.2825284Z   assets/js/sizing/city-data/HR.json
+2026-10-22T16:23:00.2825632Z   assets/js/sizing/city-data/HT.json
+2026-10-22T16:23:00.2825934Z   assets/js/sizing/city-data/HU.json
+2026-10-22T16:23:00.2826235Z   assets/js/sizing/city-data/ID.json
+2026-10-22T16:23:00.2826527Z   assets/js/sizing/city-data/IE.json
+2026-10-22T16:23:00.2826835Z   assets/js/sizing/city-data/IL.json
+2026-10-22T16:23:00.2827113Z   assets/js/sizing/city-data/IM.json
+2026-10-22T16:23:00.2827387Z   assets/js/sizing/city-data/IN.json
+2026-10-22T16:23:00.2827713Z   assets/js/sizing/city-data/IQ.json
+2026-10-22T16:23:00.2828001Z   assets/js/sizing/city-data/IR.json
+2026-10-22T16:23:00.2828277Z   assets/js/sizing/city-data/IS.json
+2026-10-22T16:23:00.2828587Z   assets/js/sizing/city-data/IT.json
+2026-10-22T16:23:00.2828843Z   assets/js/sizing/city-data/JE.json
+2026-10-22T16:23:00.2829160Z   assets/js/sizing/city-data/JM.json
+2026-10-22T16:23:00.2829454Z   assets/js/sizing/city-data/JO.json
+2026-10-22T16:23:00.2829741Z   assets/js/sizing/city-data/JP.json
+2026-10-22T16:23:00.2830009Z   assets/js/sizing/city-data/KE.json
+2026-10-22T16:23:00.2830336Z   assets/js/sizing/city-data/KG.json
+2026-10-22T16:23:00.2830632Z   assets/js/sizing/city-data/KH.json
+2026-10-22T16:23:00.2830906Z   assets/js/sizing/city-data/KI.json
+2026-10-22T16:23:00.2831261Z   assets/js/sizing/city-data/KM.json
+2026-10-22T16:23:00.2832114Z   assets/js/sizing/city-data/KN.json
+2026-10-22T16:23:00.2832398Z   assets/js/sizing/city-data/KP.json
+2026-10-22T16:23:00.2832744Z   assets/js/sizing/city-data/KR.json
+2026-10-22T16:23:00.2833017Z   assets/js/sizing/city-data/KW.json
+2026-10-22T16:23:00.2833317Z   assets/js/sizing/city-data/KY.json
+2026-10-22T16:23:00.2833624Z   assets/js/sizing/city-data/KZ.json
+2026-10-22T16:23:00.2833965Z   assets/js/sizing/city-data/LA.json
+2026-10-22T16:23:00.2834236Z   assets/js/sizing/city-data/LB.json
+2026-10-22T16:23:00.2834543Z   assets/js/sizing/city-data/LC.json
+2026-10-22T16:23:00.2834827Z   assets/js/sizing/city-data/LK.json
+2026-10-22T16:23:00.2835204Z   assets/js/sizing/city-data/LR.json
+2026-10-22T16:23:00.2835537Z   assets/js/sizing/city-data/LS.json
+2026-10-22T16:23:00.2835816Z   assets/js/sizing/city-data/LT.json
+2026-10-22T16:23:00.2836088Z   assets/js/sizing/city-data/LU.json
+2026-10-22T16:23:00.2836515Z   assets/js/sizing/city-data/LV.json
+2026-10-22T16:23:00.2836819Z   assets/js/sizing/city-data/LY.json
+2026-10-22T16:23:00.2837240Z   assets/js/sizing/city-data/MA.json
+2026-10-22T16:23:00.2837522Z   assets/js/sizing/city-data/MC.json
+2026-10-22T16:23:00.2837991Z   assets/js/sizing/city-data/MD.json
+2026-10-22T16:23:00.2838301Z   assets/js/sizing/city-data/ME.json
+2026-10-22T16:23:00.2838708Z   assets/js/sizing/city-data/MG.json
+2026-10-22T16:23:00.2839032Z   assets/js/sizing/city-data/MH.json
+2026-10-22T16:23:00.2839322Z   assets/js/sizing/city-data/MK.json
+2026-10-22T16:23:00.2839658Z   assets/js/sizing/city-data/ML.json
+2026-10-22T16:23:00.2840021Z   assets/js/sizing/city-data/MM.json
+2026-10-22T16:23:00.2840376Z   assets/js/sizing/city-data/MN.json
+2026-10-22T16:23:00.2840679Z   assets/js/sizing/city-data/MO.json
+2026-10-22T16:23:00.2840938Z   assets/js/sizing/city-data/MP.json
+2026-10-22T16:23:00.2841528Z   assets/js/sizing/city-data/MQ.json
+2026-10-22T16:23:00.2841871Z   assets/js/sizing/city-data/MR.json
+2026-10-22T16:23:00.2842261Z   assets/js/sizing/city-data/MT.json
+2026-10-22T16:23:00.2842677Z   assets/js/sizing/city-data/MU.json
+2026-10-22T16:23:00.2843118Z   assets/js/sizing/city-data/MV.json
+2026-10-22T16:23:00.2843620Z   assets/js/sizing/city-data/MW.json
+2026-10-22T16:23:00.2843972Z   assets/js/sizing/city-data/MX.json
+2026-10-22T16:23:00.2844402Z   assets/js/sizing/city-data/MY.json
+2026-10-22T16:23:00.2844799Z   assets/js/sizing/city-data/MZ.json
+2026-10-22T16:23:00.2845204Z   assets/js/sizing/city-data/NA.json
+2026-10-22T16:23:00.2845622Z   assets/js/sizing/city-data/NC.json
+2026-10-22T16:23:00.2846058Z   assets/js/sizing/city-data/NE.json
+2026-10-22T16:23:00.2846440Z   assets/js/sizing/city-data/NG.json
+2026-10-22T16:23:00.2846856Z   assets/js/sizing/city-data/NI.json
+2026-10-22T16:23:00.2847320Z   assets/js/sizing/city-data/NL.json
+2026-10-22T16:23:00.2847742Z   assets/js/sizing/city-data/NO.json
+2026-10-22T16:23:00.2848114Z   assets/js/sizing/city-data/NP.json
+2026-10-22T16:23:00.2848450Z   assets/js/sizing/city-data/NZ.json
+2026-10-22T16:23:00.2848786Z   assets/js/sizing/city-data/OM.json
+2026-10-22T16:23:00.2849148Z   assets/js/sizing/city-data/PA.json
+2026-10-22T16:23:00.2849487Z   assets/js/sizing/city-data/PE.json
+2026-10-22T16:23:00.2849827Z   assets/js/sizing/city-data/PF.json
+2026-10-22T16:23:00.2850203Z   assets/js/sizing/city-data/PG.json
+2026-10-22T16:23:00.2850545Z   assets/js/sizing/city-data/PH.json
+2026-10-22T16:23:00.2850918Z   assets/js/sizing/city-data/PK.json
+2026-10-22T16:23:00.2851223Z   assets/js/sizing/city-data/PL.json
+2026-10-22T16:23:00.2851791Z   assets/js/sizing/city-data/PR.json
+2026-10-22T16:23:00.2852258Z   assets/js/sizing/city-data/PS.json
+2026-10-22T16:23:00.2852686Z   assets/js/sizing/city-data/PT.json
+2026-10-22T16:23:00.2853023Z   assets/js/sizing/city-data/PW.json
+2026-10-22T16:23:00.2853376Z   assets/js/sizing/city-data/PY.json
+2026-10-22T16:23:00.2853677Z   assets/js/sizing/city-data/QA.json
+2026-10-22T16:23:00.2853991Z   assets/js/sizing/city-data/RE.json
+2026-10-22T16:23:00.2854299Z   assets/js/sizing/city-data/RO.json
+2026-10-22T16:23:00.2854573Z   assets/js/sizing/city-data/RS.json
+2026-10-22T16:23:00.2854872Z   assets/js/sizing/city-data/RU.json
+2026-10-22T16:23:00.2855158Z   assets/js/sizing/city-data/RW.json
+2026-10-22T16:23:00.2855433Z   assets/js/sizing/city-data/SA.json
+2026-10-22T16:23:00.2855761Z   assets/js/sizing/city-data/SB.json
+2026-10-22T16:23:00.2856034Z   assets/js/sizing/city-data/SC.json
+2026-10-22T16:23:00.2856302Z   assets/js/sizing/city-data/SD.json
+2026-10-22T16:23:00.2856614Z   assets/js/sizing/city-data/SE.json
+2026-10-22T16:23:00.2856878Z   assets/js/sizing/city-data/SG.json
+2026-10-22T16:23:00.2857313Z   assets/js/sizing/city-data/SI.json
+2026-10-22T16:23:00.2857613Z   assets/js/sizing/city-data/SK.json
+2026-10-22T16:23:00.2858022Z   assets/js/sizing/city-data/SL.json
+2026-10-22T16:23:00.2858365Z   assets/js/sizing/city-data/SN.json
+2026-10-22T16:23:00.2858775Z   assets/js/sizing/city-data/SO.json
+2026-10-22T16:23:00.2859167Z   assets/js/sizing/city-data/SR.json
+2026-10-22T16:23:00.2859519Z   assets/js/sizing/city-data/SS.json
+2026-10-22T16:23:00.2859935Z   assets/js/sizing/city-data/ST.json
+2026-10-22T16:23:00.2860283Z   assets/js/sizing/city-data/SV.json
+2026-10-22T16:23:00.2860805Z   assets/js/sizing/city-data/SY.json
+2026-10-22T16:23:00.2861208Z   assets/js/sizing/city-data/SZ.json
+2026-10-22T16:23:00.2861779Z   assets/js/sizing/city-data/TC.json
+2026-10-22T16:23:00.2862165Z   assets/js/sizing/city-data/TD.json
+2026-10-22T16:23:00.2862576Z   assets/js/sizing/city-data/TG.json
+2026-10-22T16:23:00.2862946Z   assets/js/sizing/city-data/TH.json
+2026-10-22T16:23:00.2863301Z   assets/js/sizing/city-data/TJ.json
+2026-10-22T16:23:00.2863695Z   assets/js/sizing/city-data/TL.json
+2026-10-22T16:23:00.2864139Z   assets/js/sizing/city-data/TM.json
+2026-10-22T16:23:00.2864493Z   assets/js/sizing/city-data/TN.json
+2026-10-22T16:23:00.2864909Z   assets/js/sizing/city-data/TO.json
+2026-10-22T16:23:00.2865248Z   assets/js/sizing/city-data/TR.json
+2026-10-22T16:23:00.2865609Z   assets/js/sizing/city-data/TT.json
+2026-10-22T16:23:00.2866025Z   assets/js/sizing/city-data/TW.json
+2026-10-22T16:23:00.2866454Z   assets/js/sizing/city-data/TZ.json
+2026-10-22T16:23:00.2866844Z   assets/js/sizing/city-data/UA.json
+2026-10-22T16:23:00.2867193Z   assets/js/sizing/city-data/UG.json
+2026-10-22T16:23:00.2867597Z   assets/js/sizing/city-data/US.json
+2026-10-22T16:23:00.2867983Z   assets/js/sizing/city-data/UY.json
+2026-10-22T16:23:00.2868317Z   assets/js/sizing/city-data/UZ.json
+2026-10-22T16:23:00.2868722Z   assets/js/sizing/city-data/VC.json
+2026-10-22T16:23:00.2869070Z   assets/js/sizing/city-data/VE.json
+2026-10-22T16:23:00.2869446Z   assets/js/sizing/city-data/VI.json
+2026-10-22T16:23:00.2869859Z   assets/js/sizing/city-data/VN.json
+2026-10-22T16:23:00.2870197Z   assets/js/sizing/city-data/VU.json
+2026-10-22T16:23:00.2870522Z   assets/js/sizing/city-data/WS.json
+2026-10-22T16:23:00.2871002Z   assets/js/sizing/city-data/XK.json
+2026-10-22T16:23:00.2871595Z   assets/js/sizing/city-data/YE.json
+2026-10-22T16:23:00.2871985Z   assets/js/sizing/city-data/YT.json
+2026-10-22T16:23:00.2872429Z   assets/js/sizing/city-data/ZA.json
+2026-10-22T16:23:00.2872805Z   assets/js/sizing/city-data/ZM.json
+2026-10-22T16:23:00.2873166Z   assets/js/sizing/city-data/ZW.json
+2026-10-22T16:23:00.2873646Z   assets/js/sizing/climate.js
+2026-10-22T16:23:00.2874066Z   assets/js/sizing/country-currency.js
+2026-10-22T16:23:00.2874422Z   assets/js/sizing/engine.js
+2026-10-22T16:23:00.2874798Z   assets/js/sizing/frontier-chart.js
+2026-10-22T16:23:00.2875082Z   assets/js/sizing/frontier.js
+2026-10-22T16:23:00.2875383Z   assets/js/sizing/fuel-units.js
+2026-10-22T16:23:00.2875689Z   assets/js/sizing/infeasible-copy.js
+2026-10-22T16:23:00.2876004Z   assets/js/sizing/lead-acid.js
+2026-10-22T16:23:00.2876284Z   assets/js/sizing/location-picker.js
+2026-10-22T16:23:00.2876677Z   assets/js/sizing/map-provider.js
+2026-10-22T16:23:00.2877737Z   assets/js/sizing/mode-chrome.js
+2026-10-22T16:23:00.2878200Z   assets/js/sizing/money.js
+2026-10-22T16:23:00.2878552Z   assets/js/sizing/nasa.js
+2026-10-22T16:23:00.2878871Z   assets/js/sizing/parts-csv.js
+2026-10-22T16:23:00.2879153Z   assets/js/sizing/paths.js
+2026-10-22T16:23:00.2879436Z   assets/js/sizing/pricing.js
+2026-10-22T16:23:00.2879724Z   assets/js/sizing/profiles.js
+2026-10-22T16:23:00.2879982Z   assets/js/sizing/rescale.js
+2026-10-22T16:23:00.2880319Z   assets/js/sizing/run-coordinator.js
+2026-10-22T16:23:00.2880585Z   assets/js/sizing/run.js
+2026-10-22T16:23:00.2880851Z   assets/js/sizing/share-codec.js
+2026-10-22T16:23:00.2881139Z   assets/js/sizing/sizing-worker.js
+2026-10-22T16:23:00.2881610Z   assets/js/sizing/tilt-harvest.js
+2026-10-22T16:23:00.2881924Z   assets/js/sizing/ui.js
+2026-10-22T16:23:00.2882186Z   assets/js/sizing/usecases.js
+2026-10-22T16:23:00.2882496Z   assets/js/sizing/validate.js
+2026-10-22T16:23:00.2882745Z   assets/js/sizing/wizard.js
+2026-10-22T16:23:00.2883002Z   assets/js/turnstile-client.js
+2026-10-22T16:23:00.2883330Z   assets/og-card.jpg
+2026-10-22T16:23:00.2883564Z   assets/og-card.png
+2026-10-22T16:23:00.2883810Z   assets/site.css
+2026-10-22T16:23:00.2884141Z   blog/battery-longevity-and-dod-reference/index.html
+2026-10-22T16:23:00.2884584Z   blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage/index.html
+2026-10-22T16:23:00.2885097Z   blog/escape-load-shedding/index.html
+2026-10-22T16:23:00.2885786Z   blog/hawaii-2026-hurricane-season-backup-power/index.html
+2026-10-22T16:23:00.2886181Z   blog/hawaii-solar-scams-2026-warning/index.html
+2026-10-22T16:23:00.2886561Z   blog/how-to-cut-electricity-bill-with-solar/index.html
+2026-10-22T16:23:00.2886914Z   blog/index.html
+2026-10-22T16:23:00.2887182Z   blog/is-a-home-battery-worth-it/index.html
+2026-10-22T16:23:00.2887492Z   blog/off-grid-battery-bank-sizing/index.html
+2026-10-22T16:23:00.2887870Z   blog/off-grid-vs-grid-tie-payback/index.html
+2026-10-22T16:23:00.2888220Z   blog/salderingsregeling-stopt-2027/index.html
+2026-10-22T16:23:00.2888548Z   blog/solar-vs-generator-cost/index.html
+2026-10-22T16:23:00.2888890Z   blog/time-of-use-tariffs-battery/index.html
+2026-10-22T16:23:00.2889237Z   blog/what-size-solar-system-for-off-grid/index.html
+2026-10-22T16:23:00.2889546Z   index.html
+2026-10-22T16:23:00.2889798Z   llms.txt
+2026-10-22T16:23:00.2890045Z   manifest.webmanifest
+2026-10-22T16:23:00.2890282Z   robots.txt
+2026-10-22T16:23:00.2890533Z   rss.xml
+2026-10-22T16:23:00.2890760Z   sitemap.xml
+2026-10-22T16:23:00.2890996Z   solar-calculator/accra/index.html
+2026-10-22T16:23:00.2891492Z   solar-calculator/addis-ababa/index.html
+2026-10-22T16:23:00.2891836Z   solar-calculator/antananarivo/index.html
+2026-10-22T16:23:00.2892146Z   solar-calculator/athens/index.html
+2026-10-22T16:23:00.2892483Z   solar-calculator/auckland/index.html
+2026-10-22T16:23:00.2892773Z   solar-calculator/bangkok/index.html
+2026-10-22T16:23:00.2893072Z   solar-calculator/beijing/index.html
+2026-10-22T16:23:00.2893372Z   solar-calculator/berlin/index.html
+2026-10-22T16:23:00.2893672Z   solar-calculator/bogota/index.html
+2026-10-22T16:23:00.2893971Z   solar-calculator/buenos-aires/index.html
+2026-10-22T16:23:00.2894306Z   solar-calculator/cairo/index.html
+2026-10-22T16:23:00.2894593Z   solar-calculator/casablanca/index.html
+2026-10-22T16:23:00.2894871Z   solar-calculator/chicago/index.html
+2026-10-22T16:23:00.2895226Z   solar-calculator/colombo/index.html
+2026-10-22T16:23:00.2895512Z   solar-calculator/cusco/index.html
+2026-10-22T16:23:00.2895801Z   solar-calculator/dakar/index.html
+2026-10-22T16:23:00.2896108Z   solar-calculator/delhi/index.html
+2026-10-22T16:23:00.2896381Z   solar-calculator/denver/index.html
+2026-10-22T16:23:00.2896688Z   solar-calculator/dhaka/index.html
+2026-10-22T16:23:00.2896963Z   solar-calculator/dubai/index.html
+2026-10-22T16:23:00.2897294Z   solar-calculator/guatemala-city/index.html
+2026-10-22T16:23:00.2897596Z   solar-calculator/havana/index.html
+2026-10-22T16:23:00.2897950Z   solar-calculator/ho-chi-minh-city/index.html
+2026-10-22T16:23:00.2898259Z   solar-calculator/hong-kong/index.html
+2026-10-22T16:23:00.2898545Z   solar-calculator/honolulu/index.html
+2026-10-22T16:23:00.2898840Z   solar-calculator/index.html
+2026-10-22T16:23:00.2899149Z   solar-calculator/istanbul/index.html
+2026-10-22T16:23:00.2899465Z   solar-calculator/jakarta/index.html
+2026-10-22T16:23:00.2899763Z   solar-calculator/johannesburg/index.html
+2026-10-22T16:23:00.2900086Z   solar-calculator/karachi/index.html
+2026-10-22T16:23:00.2900377Z   solar-calculator/kathmandu/index.html
+2026-10-22T16:23:00.2900665Z   solar-calculator/kinshasa/index.html
+2026-10-22T16:23:00.2901011Z   solar-calculator/la-paz/index.html
+2026-10-22T16:23:00.2901487Z   solar-calculator/lagos/index.html
+2026-10-22T16:23:00.2901810Z   solar-calculator/lima/index.html
+2026-10-22T16:23:00.2902139Z   solar-calculator/london/index.html
+2026-10-22T16:23:00.2902423Z   solar-calculator/los-angeles/index.html
+2026-10-22T16:23:00.2902752Z   solar-calculator/madrid/index.html
+2026-10-22T16:23:00.2903061Z   solar-calculator/manila/index.html
+2026-10-22T16:23:00.2903355Z   solar-calculator/mexico-city/index.html
+2026-10-22T16:23:00.2903645Z   solar-calculator/miami/index.html
+2026-10-22T16:23:00.2903965Z   solar-calculator/mumbai/index.html
+2026-10-22T16:23:00.2904253Z   solar-calculator/nairobi/index.html
+2026-10-22T16:23:00.2904632Z   solar-calculator/new-york/index.html
+2026-10-22T16:23:00.2904955Z   solar-calculator/oslo/index.html
+2026-10-22T16:23:00.2905331Z   solar-calculator/panama-city/index.html
+2026-10-22T16:23:00.2905630Z   solar-calculator/papeete/index.html
+2026-10-22T16:23:00.2905960Z   solar-calculator/paris/index.html
+2026-10-22T16:23:00.2906284Z   solar-calculator/perth/index.html
+2026-10-22T16:23:00.2906596Z   solar-calculator/phnom-penh/index.html
+2026-10-22T16:23:00.2906938Z   solar-calculator/phoenix/index.html
+2026-10-22T16:23:00.2907256Z   solar-calculator/port-au-prince/index.html
+2026-10-22T16:23:00.2907556Z   solar-calculator/quito/index.html
+2026-10-22T16:23:00.2907862Z   solar-calculator/riyadh/index.html
+2026-10-22T16:23:00.2908153Z   solar-calculator/rome/index.html
+2026-10-22T16:23:00.2908455Z   solar-calculator/san-juan/index.html
+2026-10-22T16:23:00.2908775Z   solar-calculator/santiago/index.html
+2026-10-22T16:23:00.2909072Z   solar-calculator/santo-domingo/index.html
+2026-10-22T16:23:00.2909372Z   solar-calculator/sao-paulo/index.html
+2026-10-22T16:23:00.2909713Z   solar-calculator/seoul/index.html
+2026-10-22T16:23:00.2909984Z   solar-calculator/singapore/index.html
+2026-10-22T16:23:00.2910292Z   solar-calculator/suva/index.html
+2026-10-22T16:23:00.2910596Z   solar-calculator/sydney/index.html
+2026-10-22T16:23:00.2910892Z   solar-calculator/taipei/index.html
+2026-10-22T16:23:00.2911185Z   solar-calculator/tokyo/index.html
+2026-10-22T16:23:00.2911724Z   solar-calculator/toronto/index.html
+2026-10-22T16:23:00.2912105Z   solar-calculator/warsaw/index.html
+2026-10-22T16:23:00.2912374Z   solar-heatmap/index.html
+2026-10-22T16:23:00.2912677Z   styles.css
+2026-10-22T16:23:00.2912890Z   sw.js
+2026-10-22T16:23:00.2913012Z 
+2026-10-22T16:23:00.2913177Z --check: built staging only, not pushing.
+2026-10-22T16:23:00.2945901Z ##[group]Run node scripts/check-lighthouse.mjs --stage _pages_lighthouse --out lighthouse-report.json
+2026-10-22T16:23:00.2946519Z [36;1mnode scripts/check-lighthouse.mjs --stage _pages_lighthouse --out lighthouse-report.json[0m
+2026-10-22T16:23:00.2977231Z shell: /usr/bin/bash -e {0}
+2026-10-22T16:23:00.2977628Z ##[endgroup]
+2026-10-22T16:23:25.8046234Z file:///home/runner/work/BigEnergyCo/BigEnergyCo/node_modules/chrome-launcher/dist/chrome-launcher.js:314
+2026-10-22T16:23:25.8047879Z                         return Promise.reject(new Error('waiting for dynamic debugging port in chrome-err.log'));
+2026-10-22T16:23:25.8048662Z                                               ^
+2026-10-22T16:23:25.8049182Z 
+2026-10-22T16:23:25.8049950Z Error: waiting for dynamic debugging port in chrome-err.log
+2026-10-22T16:23:25.8050946Z     at checkReady (file:///home/runner/work/BigEnergyCo/BigEnergyCo/node_modules/chrome-launcher/dist/chrome-launcher.js:314:47)
+2026-10-22T16:23:25.8052240Z     at poll (file:///home/runner/work/BigEnergyCo/BigEnergyCo/node_modules/chrome-launcher/dist/chrome-launcher.js:318:17)
+2026-10-22T16:23:25.8052709Z 
+2026-10-22T16:23:25.8052953Z Node.js v22.23.4
+2026-10-22T16:23:25.8110006Z ##[error]Process completed with exit code 1.
+2026-10-22T16:23:25.8190795Z ##[group]Run actions/upload-artifact@v7
+2026-10-22T16:23:25.8191072Z with:
+2026-10-22T16:23:25.8191503Z   name: jev-results-lighthouse-report
+2026-10-22T16:23:25.8191907Z   path: lighthouse-report.json
+2026-10-22T16:23:25.8192232Z   if-no-files-found: error
+2026-10-22T16:23:25.8192503Z   retention-days: 7
+2026-10-22T16:23:25.8192727Z   compression-level: 6
+2026-10-22T16:23:25.8192993Z   overwrite: false
+2026-10-22T16:23:25.8193267Z   include-hidden-files: false
+2026-10-22T16:23:25.8193558Z   archive: true
+2026-10-22T16:23:25.8193784Z ##[endgroup]
+2026-10-22T16:23:25.9319090Z ##[error]No files were found with the provided path: lighthouse-report.json. No artifacts will be uploaded.
+2026-10-22T16:23:25.9487478Z ##[group]Run mkdir -p "$(dirname "$RESULT_PATH")"
+2026-10-22T16:23:25.9488003Z [36;1mmkdir -p "$(dirname "$RESULT_PATH")"[0m
+2026-10-22T16:23:25.9488420Z [36;1mnode -e '[0m
+2026-10-22T16:23:25.9488710Z [36;1m  const fs = require("fs");[0m
+2026-10-22T16:23:25.9489660Z [36;1m  const job = {[0m
+2026-10-22T16:23:25.9489898Z [36;1m    job: "lighthouse",[0m
+2026-10-22T16:23:25.9490200Z [36;1m    conclusion: "failure",[0m
+2026-10-22T16:23:25.9490518Z [36;1m    steps: { lighthouse: "failure" },[0m
+2026-10-22T16:23:25.9490817Z [36;1m  };[0m
+2026-10-22T16:23:25.9491433Z [36;1m  fs.writeFileSync(process.env.RESULT_PATH, JSON.stringify(job, null, 2) + "\n");[0m
+2026-10-22T16:23:25.9492081Z [36;1m  console.log("recorded " + process.env.RESULT_PATH + ": " + JSON.stringify(job.steps));[0m
+2026-10-22T16:23:25.9492541Z [36;1m'[0m
+2026-10-22T16:23:25.9525430Z shell: /usr/bin/bash -e {0}
+2026-10-22T16:23:25.9525956Z env:
+2026-10-22T16:23:25.9526509Z   RESULT_PATH: jev-artifacts/lighthouse.json
+2026-10-22T16:23:25.9527038Z ##[endgroup]
+2026-10-22T16:23:25.9818886Z recorded jev-artifacts/lighthouse.json: {"lighthouse":"failure"}
+2026-10-22T16:23:25.9892932Z ##[group]Run actions/upload-artifact@v7
+2026-10-22T16:23:25.9893236Z with:
+2026-10-22T16:23:25.9893467Z   name: jev-results-lighthouse
+2026-10-22T16:23:25.9893766Z   path: jev-artifacts/lighthouse.json
+2026-10-22T16:23:25.9894064Z   if-no-files-found: error
+2026-10-22T16:23:25.9894307Z   retention-days: 7
+2026-10-22T16:23:25.9894548Z   compression-level: 6
+2026-10-22T16:23:25.9894805Z   overwrite: false
+2026-10-22T16:23:25.9895035Z   include-hidden-files: false
+2026-10-22T16:23:25.9895298Z   archive: true
+2026-10-22T16:23:25.9895518Z ##[endgroup]
+2026-10-22T16:23:26.1033389Z With the provided path, there will be 1 file uploaded
+2026-10-22T16:23:26.1036807Z Artifact name is valid!
+2026-10-22T16:23:26.1037523Z Root directory input is valid!
+2026-10-22T16:23:26.4100262Z Uploading artifact: jev-results-lighthouse.zip
+2026-10-22T16:23:26.4129711Z Beginning upload of artifact content to blob storage
+2026-10-22T16:23:26.5840066Z Uploaded bytes 216
+2026-10-22T16:23:26.6211562Z Finished uploading artifact content to blob storage!
+2026-10-22T16:23:26.6212328Z SHA256 digest of uploaded artifact is 79c0b01b57ac6dca6ab84931260148961fa76f515e5cd76b79ab96e28ff9bdc1
+2026-10-22T16:23:26.6212878Z Finalizing artifact upload
+2026-10-22T16:23:27.1344212Z Artifact jev-results-lighthouse successfully finalized. Artifact ID 12441655563
+2026-10-22T16:23:27.1344882Z Artifact jev-results-lighthouse has been successfully uploaded! Final size is 216 bytes. Artifact ID is 12441655563
+2026-10-22T16:23:27.1347120Z Artifact download URL: https://github.com/Sovereign-Communication/BigEnergyCo/actions/runs/39806954471/artifacts/12441655563
+2026-10-22T16:23:27.1503315Z Post job cleanup.
+2026-10-22T16:23:27.2159858Z [command]/usr/bin/git version
+2026-10-22T16:23:27.2190274Z git version 2.55.0
+2026-10-22T16:23:27.2216248Z Temporarily overriding HOME='/home/runner/work/_temp/997b2742-916f-47ae-8702-a05722686ff2' before making global git config changes
+2026-10-22T16:23:27.2217301Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-22T16:23:27.2220749Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/BigEnergyCo/BigEnergyCo
+2026-10-22T16:23:27.2246241Z Removing SSH command configuration
+2026-10-22T16:23:27.2250829Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-22T16:23:27.2276609Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-22T16:23:27.2444457Z Removing HTTP extra header
+2026-10-22T16:23:27.2449026Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-22T16:23:27.2473217Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-22T16:23:27.2656626Z Removing includeIf entries pointing to credentials config files
+2026-10-22T16:23:27.2661895Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-22T16:23:27.2679622Z includeif.gitdir:/home/runner/work/BigEnergyCo/BigEnergyCo/.git.path
+2026-10-22T16:23:27.2680168Z includeif.gitdir:/home/runner/work/BigEnergyCo/BigEnergyCo/.git/worktrees/*.path
+2026-10-22T16:23:27.2680660Z includeif.gitdir:/github/workspace/.git.path
+2026-10-22T16:23:27.2681106Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-22T16:23:27.2688431Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/BigEnergyCo/BigEnergyCo/.git.path
+2026-10-22T16:23:27.2706286Z /home/runner/work/_temp/git-credentials-4c913e75-5c1b-4b98-ab60-518b9960df18.config
+2026-10-22T16:23:27.2713775Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/BigEnergyCo/BigEnergyCo/.git.path \/home\/runner\/work\/_temp\/git\-credentials\-4c913e75\-5c1b\-4b98\-ab60\-518b9960df18\.config
+2026-10-22T16:23:27.2790367Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/BigEnergyCo/BigEnergyCo/.git/worktrees/*.path
+2026-10-22T16:23:27.2810633Z /home/runner/work/_temp/git-credentials-4c913e75-5c1b-4b98-ab60-518b9960df18.config
+2026-10-22T16:23:27.2817784Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/BigEnergyCo/BigEnergyCo/.git/worktrees/*.path \/home\/runner\/work\/_temp\/git\-credentials\-4c913e75\-5c1b\-4b98\-ab60\-518b9960df18\.config
+2026-10-22T16:23:27.2846805Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+2026-10-22T16:23:27.2865959Z /github/runner_temp/git-credentials-4c913e75-5c1b-4b98-ab60-518b9960df18.config
+2026-10-22T16:23:27.2870567Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path \/github\/runner_temp\/git\-credentials\-4c913e75\-5c1b\-4b98\-ab60\-518b9960df18\.config
+2026-10-22T16:23:27.2976334Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-22T16:23:27.2994221Z /github/runner_temp/git-credentials-4c913e75-5c1b-4b98-ab60-518b9960df18.config
+2026-10-22T16:23:27.2999428Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-4c913e75\-5c1b\-4b98\-ab60\-518b9960df18\.config
+2026-10-22T16:23:27.3084151Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-22T16:23:27.3232771Z Removing credentials config '/home/runner/work/_temp/git-credentials-4c913e75-5c1b-4b98-ab60-518b9960df18.config'
+2026-10-22T16:23:27.3353521Z Cleaning up orphan processes
+2026-10-22T16:23:27.3574350Z Terminate orphan process: pid (2149) (chrome)
+2026-10-22T16:23:27.3599782Z Terminate orphan process: pid (2154) (cat)
+2026-10-22T16:23:27.3768724Z Terminate orphan process: pid (2155) (cat)
+2026-10-22T16:23:27.3785999Z Terminate orphan process: pid (2161) (chrome_crashpad_handler)
+2026-10-22T16:23:27.3802599Z Terminate orphan process: pid (2163) (chrome_crashpad_handler)

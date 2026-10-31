@@ -1,0 +1,1431 @@
+{
+ "measuredAt": "2026-10-14T23:51:59.586Z",
+ "tree": {
+  "catalogCities": 66,
+  "catalogCountries": 57,
+  "countryFilesDeclared": 220,
+  "partitionFiles": 220,
+  "pageDirs": 66,
+  "hubExists": true
+ },
+ "data": {
+  "catalogChecked": 66,
+  "partitionsChecked": 220,
+  "totalPartitionRows": 45013,
+  "partitionRowRange": [
+   1,
+   4924
+  ],
+  "currenciesInMapping": 151,
+  "countriesInMapping": 221,
+  "displayCurrencies": 151,
+  "defects": [
+   "AU.json: 1 duplicate coordinate(s) within the partition",
+   "DO.json: 1 duplicate coordinate(s) within the partition",
+   "IN.json: 1 duplicate coordinate(s) within the partition",
+   "JP.json: 2 duplicate coordinate(s) within the partition",
+   "RU.json: 1 duplicate coordinate(s) within the partition",
+   "SG.json: 1 duplicate coordinate(s) within the partition"
+  ]
+ },
+ "live": {
+  "staging": "https://bigenergyco.pages.dev",
+  "home": {
+   "status": 200,
+   "bytes": 129861,
+   "sameAsTree": true
+  },
+  "hub": {
+   "status": 200,
+   "bytes": 14318,
+   "sameAsTree": true,
+   "citiesLinked": 66
+  },
+  "cities": [
+   {
+    "slug": "honolulu",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.44/kWh",
+    "title": "Honolulu Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "los-angeles",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.30/kWh",
+    "title": "Los Angeles Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "phoenix",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.14/kWh",
+    "title": "Phoenix Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "denver",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.14/kWh",
+    "title": "Denver Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "chicago",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.17/kWh",
+    "title": "Chicago Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "miami",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.15/kWh",
+    "title": "Miami Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "new-york",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.23/kWh",
+    "title": "New York Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "toronto",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.13/kWh",
+    "title": "Toronto Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "mexico-city",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.16/kWh",
+    "title": "Mexico City Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "san-juan",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.33/kWh",
+    "title": "San Juan Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "santo-domingo",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.33/kWh",
+    "title": "Santo Domingo Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "guatemala-city",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.16/kWh",
+    "title": "Guatemala City Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "panama-city",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.33/kWh",
+    "title": "Panama City Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "havana",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.33/kWh",
+    "title": "Havana Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "port-au-prince",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.33/kWh",
+    "title": "Port-au-Prince Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "bogota",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.20/kWh",
+    "title": "Bogota Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "lima",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.14/kWh",
+    "title": "Lima Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "cusco",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.16/kWh",
+    "title": "Cusco Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "santiago",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.17/kWh",
+    "title": "Santiago Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "sao-paulo",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.17/kWh",
+    "title": "Sao Paulo Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "buenos-aires",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.17/kWh",
+    "title": "Buenos Aires Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "quito",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.16/kWh",
+    "title": "Quito Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "la-paz",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.16/kWh",
+    "title": "La Paz Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "london",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.34/kWh",
+    "title": "London Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "paris",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.25/kWh",
+    "title": "Paris Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "madrid",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.26/kWh",
+    "title": "Madrid Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "rome",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.42/kWh",
+    "title": "Rome Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "berlin",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.40/kWh",
+    "title": "Berlin Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "warsaw",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.20/kWh",
+    "title": "Warsaw Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "athens",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.29/kWh",
+    "title": "Athens Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "oslo",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.29/kWh",
+    "title": "Oslo Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "istanbul",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.11/kWh",
+    "title": "Istanbul Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "casablanca",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.16/kWh",
+    "title": "Casablanca Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "cairo",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.05/kWh",
+    "title": "Cairo Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "accra",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.14/kWh",
+    "title": "Accra Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "lagos",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.07/kWh",
+    "title": "Lagos Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "nairobi",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.19/kWh",
+    "title": "Nairobi Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "johannesburg",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.18/kWh",
+    "title": "Johannesburg Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "dakar",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.16/kWh",
+    "title": "Dakar Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "addis-ababa",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.16/kWh",
+    "title": "Addis Ababa Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "kinshasa",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.16/kWh",
+    "title": "Kinshasa Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "antananarivo",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.16/kWh",
+    "title": "Antananarivo Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "dubai",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.09/kWh",
+    "title": "Dubai Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "riyadh",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.09/kWh",
+    "title": "Riyadh Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "karachi",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.08/kWh",
+    "title": "Karachi Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "delhi",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.08/kWh",
+    "title": "Delhi Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "mumbai",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.08/kWh",
+    "title": "Mumbai Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "colombo",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.08/kWh",
+    "title": "Colombo Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "dhaka",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.08/kWh",
+    "title": "Dhaka Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "kathmandu",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.08/kWh",
+    "title": "Kathmandu Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "bangkok",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.13/kWh",
+    "title": "Bangkok Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "ho-chi-minh-city",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.08/kWh",
+    "title": "Ho Chi Minh City Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "jakarta",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.11/kWh",
+    "title": "Jakarta Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "phnom-penh",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.13/kWh",
+    "title": "Phnom Penh Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "manila",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.19/kWh",
+    "title": "Manila Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "hong-kong",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.09/kWh",
+    "title": "Hong Kong Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "taipei",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.09/kWh",
+    "title": "Taipei Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "seoul",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.21/kWh",
+    "title": "Seoul Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "tokyo",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.20/kWh",
+    "title": "Tokyo Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "beijing",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.09/kWh",
+    "title": "Beijing Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "singapore",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.11/kWh",
+    "title": "Singapore Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "suva",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.29/kWh",
+    "title": "Suva Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "papeete",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.28/kWh",
+    "title": "Papeete Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "perth",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.29/kWh",
+    "title": "Perth Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "sydney",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.29/kWh",
+    "title": "Sydney Solar &amp; Battery Calculator — Free Sizing"
+   },
+   {
+    "slug": "auckland",
+    "status": 200,
+    "checks": {
+     "status200": true,
+     "marketTitle": true,
+     "marketH1": true,
+     "marketDescription": true,
+     "canonicalMarketUrl": true,
+     "hreflangReciprocal": true,
+     "ldParses": true,
+     "ldNamesMarket": true,
+     "ownCoordinates": true,
+     "inSitemap": true,
+     "sitemapHasLastmod": true,
+     "linksBackToHub": true
+    },
+    "payback": "at ~$0.29/kWh",
+    "title": "Auckland Solar &amp; Battery Calculator — Free Sizing"
+   }
+  ],
+  "failing": [],
+  "pagesDifferingFromTree": [],
+  "linkFailures": [],
+  "linkTargets": 82,
+  "sitemap": {
+   "urls": 82,
+   "cityUrls": 66,
+   "withoutLastmod": 0
+  }
+ },
+ "brand": {
+  "results": [
+   {
+    "url": "https://freeoffgridcalculator.com/",
+    "status": 403,
+    "cfMitigated": "challenge",
+    "server": "cloudflare",
+    "bytes": 5094,
+    "looksLikeSite": false
+   },
+   {
+    "url": "https://freeoffgridcalculator.com/solar-calculator/",
+    "status": 403,
+    "cfMitigated": "challenge",
+    "server": "cloudflare",
+    "bytes": 5166,
+    "looksLikeSite": false
+   },
+   {
+    "url": "https://freeoffgridcalculator.com/solar-calculator/tokyo/",
+    "status": 403,
+    "cfMitigated": "challenge",
+    "server": "cloudflare",
+    "bytes": 5184,
+    "looksLikeSite": false
+   },
+   {
+    "url": "https://freeoffgridcalculator.com/solar-calculator/lagos/",
+    "status": 403,
+    "cfMitigated": "challenge",
+    "server": "cloudflare",
+    "bytes": 5184,
+    "looksLikeSite": false
+   },
+   {
+    "url": "https://freeoffgridcalculator.com/solar-calculator/new-york/",
+    "status": 403,
+    "cfMitigated": "challenge",
+    "server": "cloudflare",
+    "bytes": 5215,
+    "looksLikeSite": false
+   },
+   {
+    "url": "https://freeoffgridcalculator.com/sitemap.xml",
+    "status": 403,
+    "cfMitigated": "challenge",
+    "server": "cloudflare",
+    "bytes": 5148,
+    "looksLikeSite": false
+   }
+  ]
+ },
+ "limits": [
+  "brand domain returned 403 + cf-mitigated: challenge on 6/6 probed URLs -> those responses are UNMEASURED (not passes, not failures)"
+ ]
+}

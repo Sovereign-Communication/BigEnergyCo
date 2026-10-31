@@ -1,0 +1,152 @@
+a7-audit-score-refresh	merged-PR-head	PR #338 head == tip, diff vs squash empty
+audit/round4-artifacts	merged-PR-head	PR #2 head == tip, diff vs squash empty
+audit/scmessenger-progression	merged-PR-head	PR #3 head == tip, diff vs squash empty
+backup/h-Harness-verify-panel-hg-20260929	superseded	gitignore .venv/ present in origin/main
+backup/h-stash0-hv4-waist-20260929	sha-duplicate	tip 9c617277 == stash SHA
+backup/h-stash1-hv1-wip-20260929	sha-duplicate	tip 5966d9b9 == stash SHA
+chore/canon-reconcile-prune-civicscope	merged-PR-head	PR #224 head == tip, diff vs squash empty
+chore/ci-docs-hygiene	ancestor	tip e4eee66b in origin/main history
+chore/claude-lane	ancestor	tip b3778a64 in origin/main history
+chore/handoff-scope-stamp	ancestor	tip 6dc0d3ea in origin/main history
+ci-refresh-coverage-baseline	merged-PR-head	PR #264 head == tip, diff vs squash empty
+codex/df-ms4-free-pool	ancestor	tip 2dab186e in origin/main history
+codex/docs-df-ms4-closure	ancestor	tip 3fcea485 in origin/main history
+codex/hourglass-vision-plan	ancestor	tip 431de1c0 in origin/main history
+codex/hv-0-jev-vision-assessment	merged-PR-head	PR #93 head == tip, diff vs squash empty
+codex/hv-0-vision-assessment	ancestor	tip 8631ecad in origin/main history
+codex/hv5-planning-invocation-rebased	ancestor	tip 1f85f0f5 in origin/main history
+codex/jev-status-row-identity	ancestor	tip 6417a552 in origin/main history
+codex/oc-handoff-canon	merged-PR-head	PR #91 head == tip, diff vs squash empty
+codex/oc-handoff-worker	merged-PR-head	PR #90 head == tip, diff vs squash empty
+codex/pr124-rankings-guard	ancestor	tip 4f246933 in origin/main history
+codex/unify-lanes-canon	ancestor	tip 40ae5e65 in origin/main history
+contract-only	ancestor	tip d9e2ff59 in origin/main history
+docs/archive-unique-handoff-files	merged-PR-head	PR #54 head == tip, diff vs squash empty
+docs/canon-reconcile-2026-09-28	ancestor	tip 61bc7bc0 in origin/main history
+docs/canon-reconcile-2026-10-04	ancestor	tip d061f752 in origin/main history
+docs/fix-changelog-markers	merged-PR-head	PR #53 head == tip, diff vs squash empty
+docs/freebuff-agents-context	merged-PR-head	PR #38 head == tip, diff vs squash empty
+docs/hourglass-stack-merged	patch-equivalent	git cherry: 0 unlanded
+docs/hv2-use-intake-status	merged-PR-head	PR #137 head == tip, diff vs squash empty
+docs/hv4-status-flip	ancestor	tip e3a5499a in origin/main history
+docs/jev-log-dogfood-evidence	ancestor	tip 7304499f in origin/main history
+docs/jev-p2-unblock-guidance	patch-equivalent	git cherry: 0 unlanded
+docs/jev-status-exit-hulb-completion	merged-PR-head	PR #52 head == tip, diff vs squash empty
+docs/plat-status-landed	ancestor	tip 6c26341e in origin/main history
+docs/seats-status-2026-09-22	ancestor	tip 3df3dd27 in origin/main history
+docs/status-sync-slice	ancestor	tip c6e84dd7 in origin/main history
+docs/status-sync-slice-2	ancestor	tip 620eb828 in origin/main history
+feat/concurrent-executor	ancestor	tip 0aaf0d1a in origin/main history
+feat/context-condenser	ancestor	tip 140205b6 in origin/main history
+feat/demotion-mcp-auth-ladder	ancestor	tip 363e5341 in origin/main history
+feat/df-ling-2-rotation	ancestor	tip 0edbeae3 in origin/main history
+feat/df-ui-2-faces	ancestor	tip 28f5d88a in origin/main history
+feat/drv-gui-full-integration	ancestor	tip bc9eca77 in origin/main history
+feat/ev6-fireworks-source	superseded	EV6/7 shipped files present in origin/main
+feat/ev8-fireworks-probe	superseded	EV-8 shipped (fireworks_probe.py + PR #304 in main)
+feat/hg-repair	merged-PR-head	PR #68 head == tip, diff vs squash empty
+feat/hourglass-composition	merged-PR-head	PR #44 head == tip, diff vs squash empty
+feat/hul-a-mission-pack	merged-PR-head	PR #41 head == tip, diff vs squash empty
+feat/hul-b-dual-budget	merged-PR-head	PR #47 head == tip, diff vs squash empty
+feat/hul-cd-scope-driver	ancestor	tip a3afc16b in origin/main history
+feat/hv-answer-lifecycle	ancestor	tip 1422a151 in origin/main history
+feat/hv2-condensation	ancestor	tip a3a9d677 in origin/main history
+feat/hv3-token-budget	ancestor	tip 5b0bcc37 in origin/main history
+feat/hv4-waist-composition	ancestor	tip 39e56c9d in origin/main history
+feat/hv5-execution-handoffs-rebased	ancestor	tip bb6e06b9 in origin/main history
+feat/jev-audit-gate	ancestor	tip d223068f in origin/main history
+feat/jev-bar-sentiment	ancestor	tip 85b54391 in origin/main history
+feat/jev-log-factor-analysis	ancestor	tip 46f90290 in origin/main history
+feat/jev-log-promote	ancestor	tip a5a7e02d in origin/main history
+feat/jev-mission-next	merged-PR-head	PR #40 head == tip, diff vs squash empty
+feat/jev-order-canon-then-addendum	merged-PR-head	PR #50 head == tip, diff vs squash empty
+feat/jev-p0	merged-PR-head	PR #34 head == tip, diff vs squash empty
+feat/jev-p1-policy-and-lanes	merged-PR-head	PR #35 head == tip, diff vs squash empty
+feat/jev-p2-escalation-driver	ancestor	tip a16e5c28 in origin/main history
+feat/jev-p2-system-one-pillars	merged-PR-head	PR #36 head == tip, diff vs squash empty
+feat/jev-p3-utilization	merged-PR-head	PR #43 head == tip, diff vs squash empty
+feat/jev-p4-ops-exit	merged-PR-head	PR #46 head == tip, diff vs squash empty
+feat/jev-p5-issue-sort	merged-PR-head	PR #42 head == tip, diff vs squash empty
+feat/jev-phase-completion-score	merged-PR-head	PR #39 head == tip, diff vs squash empty
+feat/jev-repo-summary	ancestor	tip dacaa99c in origin/main history
+feat/jev-status-align-open-prs	merged-PR-head	PR #49 head == tip, diff vs squash empty
+feat/jev-status-posthg	merged-PR-head	PR #45 head == tip, diff vs squash empty
+feat/lane-correctness	ancestor	tip 5c404682 in origin/main history
+feat/media-adapter	ancestor	tip c2aa114f in origin/main history
+feat/model-driven-orchestration	ancestor	tip c9340969 in origin/main history
+feat/planning-surface	ancestor	tip 508fabba in origin/main history
+feat/plat-unify	ancestor	tip 8f2f95a3 in origin/main history
+feat/sliding-scale-router	ancestor	tip e8250a59 in origin/main history
+feat/task-decomposition-dag	ancestor	tip 5cc5966b in origin/main history
+feat/trusted-pypi-publish-107	ancestor	tip ff7c69c1 in origin/main history
+feat/ui-mcp-parity	ancestor	tip 3f9ef271 in origin/main history
+fix/4dim-audit-95	ancestor	tip eaeb7040 in origin/main history
+fix/apply-escalation-and-audit-p0s	ancestor	tip 841a7388 in origin/main history
+fix/audit-p0s-and-lane-recuration	merged-PR-head	PR #1 head == tip, diff vs squash empty
+fix/brief-cli-crash	ancestor	tip 7e607e30 in origin/main history
+fix/decision-gate-v2	ancestor	tip 806bd2da in origin/main history
+fix/ev0-endpoint-budget	ancestor	tip f889b4cb in origin/main history
+fix/free-byok-filter	merged-PR-head	PR #267 head == tip, diff vs squash empty
+fix/gui-stop-interrupts-provider-requests	ancestor	tip 71b203bd in origin/main history
+fix/hul-d-followups	ancestor	tip a325112b in origin/main history
+fix/issue-198-cancellation-progress-rebased	ancestor	tip 84bc8e56 in origin/main history
+fix/l3-audit-ledger-isolation	ancestor	tip dd51ffbe in origin/main history
+fix/l3-d12-fail-closed	ancestor	tip fed4076a in origin/main history
+fix/ledger-segments-audit-r13	ancestor	tip 218472b0 in origin/main history
+fix/ling-parse	ancestor	tip 779a91f9 in origin/main history
+fix/ms-2b-verify-preflight	ancestor	tip 4763866d in origin/main history
+fix/pr4-review-followups	ancestor	tip 94038e68 in origin/main history
+fix/rankings-report-json	ancestor	tip b2c87e52 in origin/main history
+fix/reasoning-model-hints-and-bom	ancestor	tip 46f90290 in origin/main history
+fix/rebase-gate-host-independent	merged-PR-head	PR #33 head == tip, diff vs squash empty
+fix/register-shipped-canon-rows	ancestor	tip 593313ad in origin/main history
+fix/remaining-burndown	ancestor	tip 82085c0a in origin/main history
+fix/report-run-count	merged-PR-head	PR #4 head == tip, diff vs squash empty
+fix/safety-burndown	ancestor	tip f11ba068 in origin/main history
+fix/shortfall-convergence-spend	patch-equivalent	git cherry: 0 unlanded
+fix/verify-effective-meta	merged-PR-head	PR #268 head == tip, diff vs squash empty
+fix/web-allowlist-and-search	merged-PR-head	PR #323 head == tip, diff vs squash empty
+freebuff/audit-all-the-recent-work-see-what-s-landed-what-s-2978d197-d755-4271-8da6-2efdd25d2ab0	ancestor	tip 2cf24b56 in origin/main history
+freebuff/audit-updated-roadmap-and-drive-completion-298d2bdf-0fa1-40ad-a82a-0e17d8892b75	ancestor	tip 0676d642 in origin/main history
+freebuff/chat-topic-title-request-9531ead7-ccad-4d47-bb73-3b909123fff8	ancestor	tip 1511d32f in origin/main history
+freebuff/check-issue-177-to-drive-all-pr-s-to-safe-comprehe-650892ae-f23c-47fb-8227-3145d964adb7	ancestor	tip 0022cbb6 in origin/main history
+freebuff/continue-the-authorized-harness-lane-1-lane-2-and--d7a4b559-0337-464f-9b97-48cd079a7e21	ancestor	tip b2c87e52 in origin/main history
+freebuff/dogfood-harness-until-clean-16701cf4-c3fa-474d-a8a7-7c7cbb03bdf1	ancestor	tip dfdd419d in origin/main history
+freebuff/harness-completion-mission-all-remaining-work-2026-704d1bdf-dbee-4624-a7eb-7551866b9bfa	ancestor	tip 02d5f428 in origin/main history
+freebuff/how-flushed-out-is-the-jev-solo-mode-can-it-act-as-e421ad8c-c7ac-4b84-b608-60e7616564d2	ancestor	tip 5e20113f in origin/main history
+freebuff/hv-3-token-budget-implementation-task-75e7761a-e29f-4326-ad14-74669bd93437	ancestor	tip 2cf24b56 in origin/main history
+freebuff/implementing-evidence-bearing-brief-artifact-4f742378-6dfa-4b68-a75b-1172954f9a10	ancestor	tip 2cf24b56 in origin/main history
+freebuff/lane-2-waist-composition-mission-brief-fc321fcd-ce51-4c74-b15d-5728b83f1ff9	ancestor	tip 04992777 in origin/main history
+freebuff/lane-3-verification-and-infra-mission-briefing-ef2fdc7d-f34e-4811-9285-c08fff9e8f6e	ancestor	tip 04992777 in origin/main history
+freebuff/plan-the-website-i-wanna-show-the-real-efficiency--49927b08-e698-40cd-a161-458dcd5db11b	merged-PR-head	PR #62 head == tip, diff vs squash empty
+freebuff/read-only-audit-openrouter-models-https-openrouter-66d2d4a2-5f86-40e4-83af-b8885696bc94	ancestor	tip dbfd5e7a in origin/main history
+freebuff/validate-this-plan-and-assess-your-confidence-to-c-93446ebc-25a0-4a0a-9ab5-ef5abd38d04b	ancestor	tip c5c4180e in origin/main history
+freebuff/what-is-the-total-code-size-for-this-repo-in-token-8b7b4894-8b39-4c14-9faa-cf4106328e8a	ancestor	tip ac88fc3f in origin/main history
+gui-dogfood-result-feedback	patch-equivalent	git cherry: 0 unlanded
+gui-driver-empty-goal	patch-equivalent	git cherry: 0 unlanded
+gui-driver-restart-feedback	merged-PR-head	PR #263 head == tip, diff vs squash empty
+handoff/worktree-evidence-correction-2026-09-30	ancestor	tip 3933ad87 in origin/main history
+handoff/worktree-removal-evidence-2026-09-29	ancestor	tip 51bb4cac in origin/main history
+harness/task_1-21796-18dab8c6	ancestor	tip 286b7151 in origin/main history
+harness/task_1-21796-479baa9d	ancestor	tip 286b7151 in origin/main history
+harness/task_2-23916-03dee302	ancestor	tip 286b7151 in origin/main history
+harness/task_2-23916-3902ffec	ancestor	tip 286b7151 in origin/main history
+harness/task_2-25024-913923a8	ancestor	tip 286b7151 in origin/main history
+harness/task_2-25024-decc5b2d	ancestor	tip 286b7151 in origin/main history
+harness/task_2-27876-acd4a8a4	ancestor	tip 286b7151 in origin/main history
+harness/task_2-30336-82c89e63	ancestor	tip 286b7151 in origin/main history
+harness/task_2-7328-2f643c30	ancestor	tip 286b7151 in origin/main history
+harness/task_2-7328-9138dc15	ancestor	tip 286b7151 in origin/main history
+l2/hv4-composition-merge	ancestor	tip 55440c42 in origin/main history
+merge/ev0-onto-main	ancestor	tip a13458a0 in origin/main history
+plat/unify-impl	ancestor	tip 99beb8bd in origin/main history
+pr/governed-gui-escalation	merged-PR-head	PR #32 head == tip, diff vs squash empty
+pr129	ancestor	tip fed4076a in origin/main history
+pr212-ro	superseded	EV6/7 shipped files present in origin/main
+step2/a1-chat-escalation-ui-state	merged-PR-head	PR #320 head == tip, diff vs squash empty
+step2/a3-issue-207-simple-queries	merged-PR-head	PR #321 head == tip, diff vs squash empty
+sync/main-origin-p0	ancestor	tip 46f90290 in origin/main history
+test/verdict-shortfall-pin	ancestor	tip 22bb9083 in origin/main history
+wip/stash-hv1-typed-integrations	sha-duplicate	tip 5966d9b9 == stash SHA
+wip/stash-hv4-waist-composition	sha-duplicate	tip 9c617277 == stash SHA
+fix/web-search-subject-relevance	merged-PR-head	PR #341 head == tip, diff vs squash empty

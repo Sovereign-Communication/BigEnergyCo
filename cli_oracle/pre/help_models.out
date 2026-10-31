@@ -1,0 +1,13 @@
+usage: harness models [-h] [--limit LIMIT] [--all] [--out OUT] [--quiet]
+                      [--events FILE] [--no-color]
+
+options:
+  -h, --help     show this help message and exit
+  --limit LIMIT
+  --all          list all live models, not just free
+  --out OUT
+  --quiet        suppress stderr progress notes; report only
+  --events FILE  append typed JSONL progress events to FILE (UI telemetry; the
+                 JSON result is unchanged)
+  --no-color     disable ANSI color in stderr rendering (NO_COLOR is honored
+                 too)

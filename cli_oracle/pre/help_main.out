@@ -1,0 +1,37 @@
+usage: harness [-h]
+               {serve,desktop,verify,apply,continue,offer,defer,ledger,models,bench,lint-claims,capabilities,spend,rankings,trust,dogfood} ...
+
+Cost-bounded multi-model verification & coding harness with AI sovereignty.
+
+positional arguments:
+  {serve,desktop,verify,apply,continue,offer,defer,ledger,models,bench,lint-claims,capabilities,spend,rankings,trust,dogfood}
+    serve               Local web UI + JSON API over the core (loopback;
+                        --auth-token optional, HARNESS_UI_AUTH_TOKEN)
+    desktop             Native desktop window over the same web UI (pywebview;
+                        browser fallback)
+    verify              Panel + judge verification (back-compat with
+                        fusion_lite.py)
+    apply               Scoped code edit with a verification loop + consent
+                        continuation
+    continue            Continue a deferred/incomplete apply task
+    offer               Ask a model for consent on a work item
+    defer               Record a mid-task deferral / consent revocation
+    ledger              Autonomy ledger
+    models              List live free OpenRouter models (refreshed)
+    bench               Run a manifest of known-answer tasks through the free
+                        tier
+    lint-claims         Lint a claims manifest against its quoted source
+                        (hermetic: no network)
+    capabilities        Model capability profiles + reliability (hypothesis
+                        from /models, corrected by observed evidence)
+    spend               Key identity & spend status
+    rankings            Daily OpenRouter rankings: top models, climbers, and
+                        evidence-driven pool-candidate proposals
+    trust               Trust & correctness standing from ledger history
+                        (read-only: no key, no network)
+    dogfood             Self-hosting loop: ground -> live panel verify ->
+                        gated self-apply (exit 0 only if every phase proved
+                        its claim)
+
+options:
+  -h, --help            show this help message and exit

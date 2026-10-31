@@ -1,0 +1,59 @@
+{
+    "snapshot":  "84f26fac4266442dc6070e2fb735c2c561f5b1c0",
+    "node":  "v22.23.3",
+    "artifacts":  "C:\\tmp\\pr232-exact-checks-20261018\\artifacts",
+    "jobs":  {
+                 "test":  {
+                              "conclusion":  "failure",
+                              "steps":  {
+                                            "syntax":  "success",
+                                            "plan":  "success",
+                                            "seo":  "success",
+                                            "prettier":  "failure",
+                                            "secret_scan":  "success",
+                                            "deploy_allowlist":  "success",
+                                            "flow":  "success",
+                                            "unit_tests":  "failure"
+                                        }
+                          },
+                 "web-smoke":  {
+                                   "conclusion":  "failure",
+                                   "steps":  {
+                                                 "smoke":  "failure",
+                                                 "budget_stage":  "success",
+                                                 "byte_budgets":  "failure",
+                                                 "privacyBrowser":  "failure",
+                                                 "resilience_stage":  "success",
+                                                 "resilienceBrowser":  "success",
+                                                 "experience_stage":  "success",
+                                                 "experienceBrowser":  "success"
+                                             }
+                               },
+                 "quality-lab":  {
+                                     "conclusion":  "success",
+                                     "steps":  {
+                                                   "a11y_stage":  "success",
+                                                   "a11y-matrix":  "success"
+                                               }
+                                 },
+                 "lighthouse":  {
+                                    "conclusion":  "failure",
+                                    "steps":  {
+                                                  "lighthouse_stage":  "success",
+                                                  "lighthouse":  "failure"
+                                              }
+                                },
+                 "quality-evidence":  {
+                                          "conclusion":  "success",
+                                          "steps":  {
+                                                        "quality_evidence":  "success"
+                                                    }
+                                      },
+                 "coverage":  {
+                                  "conclusion":  "success",
+                                  "steps":  {
+                                                "coverage":  "success"
+                                            }
+                              }
+             }
+}

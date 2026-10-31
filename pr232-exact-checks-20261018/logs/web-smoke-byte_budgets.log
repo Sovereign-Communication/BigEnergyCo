@@ -1,0 +1,8 @@
+node.exe : check-byte-budgets: ledger line 1: a baseline row (P0) carries no numeric metrics, so it sets no bar
+At C:\tmp\pr232-run-exact-checks-20261018.ps1:22 char:5
++     & $Executable @Arguments *> $log
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (check-byte-budg... it sets no bar:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
