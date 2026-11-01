@@ -1,0 +1,21 @@
+
+=== USERS: C:/Users ===
+  C:/Users\SCM\.config\freebuff-desktop\runtimes\harness-mcp\Lib\site-packages\sovereign_harness-0.4.2.dist-info\RECORD | 20722 | 2af7970c39271461814f75e1021cbd9cd3fbaa7a | no-match
+  C:/Users\SCM\.scm-purge-backup-20260914\claude-dot\projects\C--Users-SCM-Documents-GitHub-SCMessenger\52e50f8d-ffe2-4532-ba28-c58ae7a17aed.jsonl | 20722 | 1190a284d5a618c359b1f090880392ec3927c2b1 | no-match
+  C:/Users\SCM\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\datasets\utils\_dill.py | 20722 | 88607c18db6675c1420f97bf7d963583fe9e5012 | no-match
+  C:/Users\SCM\AppData\Roaming\npm\node_modules\repomix\node_modules\gpt-tokenizer\cjs\models.d.ts | 24977 | cd0ad6147e8b1d9d0b2a09244e597309360e0e26 | no-match
+  C:/Users\SCM\AppData\Roaming\npm\node_modules\repomix\node_modules\gpt-tokenizer\esm\models.d.ts | 24977 | cd0ad6147e8b1d9d0b2a09244e597309360e0e26 | no-match
+  C:/Users\SCM\Documents\GitHub\OxAlphaAPI\.git\objects\80\b7cc63cae1bc97146003fd17272099a623345e | 24977 | 0b4e05c253b1bff3f85e7c0e001356d2c03fe330 | no-match
+  C:/Users\SCM\Downloads\civicscope-portal-deploy (1)\civicscope-portal-deploy\portal\README.md | 20722 | 9a5b98baf5f4dd118107500650ea41df4d179adb | no-match
+  -- USERS size-exact candidates: 7; matches: 0; stat/read errors: 1114
+
+=== SOFTWAREDISTRIBUTION-CAT: C:/Windows/SoftwareDistribution/Download ===
+  C:/Windows/SoftwareDistribution/Download\b459411c135c4ad4\Metadata\Windows11.0-KB5127648-x64\Microsoft-Windows-WinPE-SKU-Foundation-merged-Package~31bf3856ad364e35~amd64~vi-VN~10.0.26100.9549.cat | 20722 | 02143eaab6cde22d4ef433bbbea294f44735701d | no-match
+  C:/Windows/SoftwareDistribution/Download\b459411c135c4ad4\Package_for_RollupFix~~amd64~~26100.9711.1.30\Microsoft-Windows-WinPE-SKU-Foundation-merged-Package~31bf3856ad364e35~amd64~vi-VN~10.0.26100.9549.cat | 20722 | 02143eaab6cde22d4ef433bbbea294f44735701d | no-match
+  -- SOFTWAREDISTRIBUTION-CAT size-exact candidates: 2; matches: 0; stat/read errors: 0
+
+=== WINSXS-DIAGSVC: C:/Windows/WinSxS ===
+  C:/Windows/WinSxS\amd64_microsoft-windows-d..ticexecution-server_31bf3856ad364e35_10.0.26100.9278_none_672a9da32ef497c1\r\DiagSvc.dll | 24977 | f1f375c01a15f93f28ec4d8d4151635774ce8aab | no-match
+  -- WINSXS-DIAGSVC size-exact candidates: 1; matches: 0; stat/read errors: 0
+
+TOTAL size-exact candidates: 10; exact blob matches: 0; errors: 1114
