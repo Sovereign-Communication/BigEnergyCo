@@ -1,0 +1,55 @@
+{
+  "packet_status": "UNREVIEWED",
+  "source_revision": "eabb378c2900d4e315eb97845cffef0f5d822ba8",
+  "source_files": [
+    "assets/js/shared/locales.js",
+    "assets/js/shared/home-copy.js"
+  ],
+  "english_string_key_count": 436,
+  "locale_metadata_excluded_from_text_rows": {
+    "ar": {
+      "rtl": true,
+      "reason": "Direction metadata, not a translatable string."
+    }
+  },
+  "locales": {
+    "es": {
+      "language": "Spanish",
+      "string_count": 436,
+      "corpus_sha256": "aca20507a0518e2396a1894d3beb199c2cd7f43fbdaffdc0e160c54197ddb2c2",
+      "file": "es.csv"
+    },
+    "pt": {
+      "language": "Portuguese",
+      "string_count": 436,
+      "corpus_sha256": "b4fbcfc786f3ab13643575554bf9aea2d61b1d072cb49ede2964b36fdd2e0ed0",
+      "file": "pt.csv"
+    },
+    "fr": {
+      "language": "French",
+      "string_count": 436,
+      "corpus_sha256": "10ab8129b5b7cbd4a652c2210476190d4a220665eda97e2b7c232604ce021804",
+      "file": "fr.csv"
+    },
+    "de": {
+      "language": "German",
+      "string_count": 436,
+      "corpus_sha256": "ef122ec87eedb1efebef5457781c1d966c529ad366d9402a4c202b84a7b5f965",
+      "file": "de.csv"
+    },
+    "nl": {
+      "language": "Dutch",
+      "string_count": 436,
+      "corpus_sha256": "1d40cee8a37196af829d3767ad171e38998038ec966dd56e12d8cd528787c910",
+      "file": "nl.csv"
+    },
+    "ar": {
+      "language": "Arabic",
+      "string_count": 436,
+      "corpus_sha256": "1f7f8c50da5b491d555578fa11c313ffb15b4644ad96e606a3d5196487449546",
+      "file": "ar.csv"
+    }
+  },
+  "review_fields_initial_state": "Every row says UNREVIEWED; correction, notes, and signoff fields are blank.",
+  "corpus_digest_definition": "SHA-256 of UTF-8 JSON.stringify(sorted array of [key, English source, current translation]); keys sorted by JavaScript string ordering."
+}
