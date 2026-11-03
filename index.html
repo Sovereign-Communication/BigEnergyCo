@@ -1138,13 +1138,8 @@
                     aria-describedby="rateError"
                   />
 
-                  <!-- Why: a price that cannot be a price (negative, zero,
-                    text) used to be silently replaced by the location estimate
-                    while the results still rendered — the visitor was never
-                    told their number was ignored. This line says so, in their
-                    language, next to the field, and it is wired to the input
-                    through aria-describedby so it is announced. Hidden until
-                    the value is actually wrong. -->
+                  <!-- Says why a rejected price was rejected, in the visitor's
+                    language, wired to the input through aria-describedby. -->
                   <p id="rateError" class="field-error" role="alert" hidden></p>
 
                   <details

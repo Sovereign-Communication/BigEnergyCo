@@ -1422,19 +1422,12 @@ function getTariff() {
   return Number.isFinite(v) && v > 0 ? v : null;
 }
 
-// The smallest price the field accepts, in the same display currency the input
-// is expressed in. Kept as one constant so the HTML `min`, the message's {min}
-// and the check below cannot drift apart.
+// One constant for the HTML `min`, the message's {min} and the check.
 const TARIFF_MIN = 0.01;
 
 /**
- * Whether the price field holds a value that cannot be a price.
- *
- * An EMPTY field is valid: the location estimate fills it, and clearing it is
- * how a visitor says "use the local estimate". A non-empty value that is text,
- * zero or negative is NOT valid — it used to be silently swapped for the
- * estimate while the run continued, so a visitor who typed -5 was shown
- * results that had ignored their number and said nothing about it.
+ * A non-empty price that is text, zero or negative cannot be a price. Empty is
+ * valid: clearing the field means "use the local estimate".
  */
 function tariffFieldInvalid() {
   const input = $("customRateVal");
@@ -1445,13 +1438,7 @@ function tariffFieldInvalid() {
   return !Number.isFinite(v) || v < TARIFF_MIN;
 }
 
-/**
- * Paint (or clear) the field's own error line and its aria state.
- *
- * One writer, so the visible text and the announced state can never disagree:
- * the input carries aria-invalid and points at the message through
- * aria-describedby, and the message is a live role="alert" element.
- */
+/** One writer for the visible text and the announced aria state. */
 function showTariffError(show) {
   const input = $("customRateVal");
   const box = $("rateError");
