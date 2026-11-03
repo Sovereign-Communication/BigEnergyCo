@@ -180,8 +180,15 @@ const REGION_ROWS = {
   // derived, not measured.
   row: {
     label: "Rest of world",
-    grade: "C",
-    source: "Derived from the blocks above; the weakest input on every card",
+    // GRADE D, not C (plan P1.1). This block is not a benchmark of any
+    // country's installer market: it is derived from the three blocks above,
+    // so the weakest input on every card that reads it is a derivation. The
+    // card says so in words (`pathsNoInstallerBenchmark`) rather than letting
+    // a derived band pass as a survey of the visitor's own market.
+    grade: "D",
+    benchmarkMissing: true,
+    source:
+      "Derived from the regional blocks above; no installer benchmark is published for this country",
     escalationPct: 0.02,
     values: [
       [2.2, 3.0, 4.0],
@@ -213,6 +220,7 @@ function expandRegion(row) {
   const out = {
     label: row.label,
     grade: row.grade,
+    benchmarkMissing: row.benchmarkMissing === true,
     source: row.source,
     escalationPct: row.escalationPct,
     // No verified escalation source for every region, so the default is
@@ -496,6 +504,20 @@ export function blockedReasonKey(blockedBy) {
   }
 }
 
+/** Grade order, strongest first. An unrecognised grade reads as the weakest. */
+const GRADE_ORDER = { A: 0, B: 1, C: 2, D: 3 };
+
+/**
+ * The weaker of two confidence grades. A card built from an install-cost basis
+ * AND a terms sheet is only as good as its worse half, so a lease priced from
+ * the derived block (grade D) must not report its terms sheet's better grade.
+ */
+function weakerGrade(a, b) {
+  const ga = Object.hasOwn(GRADE_ORDER, a) ? a : "D";
+  const gb = Object.hasOwn(GRADE_ORDER, b) ? b : "D";
+  return GRADE_ORDER[ga] >= GRADE_ORDER[gb] ? ga : gb;
+}
+
 /** Midpoint of a [low, mid, high] triple; a malformed entry reads 0. */
 export function bandMid(triple) {
   if (!Array.isArray(triple)) return 0;
@@ -714,6 +736,11 @@ function newPath(id, registry) {
     ownershipKey: null,
     included: (INCLUDED_BY_PATH[id] || []).slice(),
     grade: registry.grade,
+    // True when the registry block is a derivation rather than a benchmark of
+    // this country's market (plan P1.1). The card must say so instead of
+    // presenting the band as a survey.
+    benchmarkMissing: registry.benchmarkMissing === true,
+    benchmarkCountry: null,
     source: registry.source,
     notes: [],
     horizonYears: HORIZON_YEARS,
@@ -724,6 +751,9 @@ function newPath(id, registry) {
 
 function priceOne(id, sys, ctx, region, registry, legality) {
   const p = newPath(id, registry);
+  p.benchmarkCountry = ctx.country
+    ? String(ctx.country).trim().toLowerCase() || null
+    : null;
   if (sys.pvKw <= 0 && sys.battKwh <= 0) {
     p.blockedBy = "no-system";
     return p;
@@ -808,7 +838,9 @@ function priceOne(id, sys, ctx, region, registry, legality) {
     p.notes.push(schedule.endOfTerm.noteKey);
     p.ownershipKey =
       instrument === "ppa" ? "pathsOwnershipPpa" : "pathsOwnershipLease";
-    p.grade = schedule.terms.grade;
+    // The lease prices off the same installed-cost registry the turnkey path
+    // uses, so its grade is the weaker of that basis and its own terms sheet.
+    p.grade = weakerGrade(schedule.terms.grade, p.grade);
     p.source = schedule.terms.source;
     return finish(p, sys);
   }
@@ -1078,6 +1110,8 @@ export function describePaths(result, moneyFn, tFn = (k) => k) {
         available: false,
         labelKey: LABEL_KEYS[p.id] || "pathsUnavailable",
         reasonKey: blockedReasonKey(p.blockedBy),
+        benchmarkMissing: false,
+        benchmarkText: null,
         notes,
       };
     const incentivesText =
@@ -1113,6 +1147,18 @@ export function describePaths(result, moneyFn, tFn = (k) => k) {
       included: p.included,
       notes,
       grade: p.grade,
+      benchmarkMissing: p.benchmarkMissing === true,
+      benchmarkCountry: p.benchmarkCountry || null,
+      // The disclosure itself, rendered by the card next to the number it
+      // qualifies. One owner, so no surface can show a derived band without it.
+      benchmarkText:
+        p.benchmarkMissing === true
+          ? tr("pathsNoInstallerBenchmark", {
+              country: p.benchmarkCountry
+                ? p.benchmarkCountry.toUpperCase()
+                : tr("pathsUnknown"),
+            })
+          : null,
       source: p.source,
       escalationPct: p.escalationPct,
       escalationGraded: p.escalationGraded,

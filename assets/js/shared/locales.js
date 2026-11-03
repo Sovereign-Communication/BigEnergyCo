@@ -514,6 +514,8 @@ export const LOCALES = {
     pathsInstrumentLabel: "Third-party route:",
     pathsGradeNote:
       "Every figure above comes from one regional price registry with a named source and a confidence grade. Hardware is your own build estimate; labour, permits, incentives and replacements are registry figures. Nothing here is a vendor's quote.",
+    pathsNoInstallerBenchmark:
+      "No published installer benchmark for {country}. The installed-cost band shown is derived from our regional blocks and carries grade D, so treat it as a planning band, not a survey of this market.",
     pathsWhy:
       "{cheaper} is {gap} cheaper than {dearer} over 20 years, driven mostly by {driver}.",
     pathsWhyCombined: " No single item explains the whole gap.",
@@ -1139,6 +1141,8 @@ export const LOCALES = {
     pathsInstrumentLabel: "Vía de terceros:",
     pathsGradeNote:
       "Todas las cifras provienen de un único registro de precios regional con fuente indicada y grado de confianza. El hardware es tu propia estimación; la mano de obra, los permisos, los incentivos y las sustituciones son datos del registro. Nada de esto es una oferta de un vendedor.",
+    pathsNoInstallerBenchmark:
+      "No hay ninguna referencia publicada de instaladores para {country}. La banda de coste instalado que se muestra se deriva de nuestros bloques regionales y tiene grado D, así que tómala como una banda de planificación, no como un estudio de este mercado.",
     pathsWhy:
       "{cheaper} sale {gap} menos que {dearer} en 20 años, sobre todo por {driver}.",
     pathsWhyCombined:
@@ -1767,6 +1771,8 @@ export const LOCALES = {
     pathsInstrumentLabel: "Via de terceiros:",
     pathsGradeNote:
       "Todos os números vêm de um único registro regional de preços com fonte declarada e grau de confiança. O hardware é a sua própria estimativa; mão de obra, licenças, incentivos e substituições são dados do registro. Nada aqui é a oferta de um fornecedor.",
+    pathsNoInstallerBenchmark:
+      "Não existe referência publicada de instaladores para {country}. A faixa de custo instalado apresentada é derivada dos nossos blocos regionais e tem grau D, por isso trate-a como uma faixa de planeamento, não como um estudo deste mercado.",
     pathsWhy:
       "{cheaper} sai {gap} menos que {dearer} em 20 anos, principalmente por causa de {driver}.",
     pathsWhyCombined: " Nenhum item isolado explica toda a diferença.",
@@ -2403,6 +2409,8 @@ export const LOCALES = {
     pathsInstrumentLabel: "Voie tierce :",
     pathsGradeNote:
       "Tous les chiffres proviennent d'un même registre régional de prix avec source nommée et niveau de confiance. Le matériel est votre propre estimation ; la main-d'œuvre, les permis, les subventions et les remplacements viennent du registre. Rien ici n'est un devis de fournisseur.",
+    pathsNoInstallerBenchmark:
+      "Aucun référentiel d'installateur publié pour {country}. La fourchette de coût installé affichée est dérivée de nos blocs régionaux et porte le grade D : traitez-la comme une fourchette de planification, pas comme une étude de ce marché.",
     pathsWhy:
       "{cheaper} coûte {gap} de moins que {dearer} sur 20 ans, surtout à cause de {driver}.",
     pathsWhyCombined: " Aucun poste n'explique à lui seul tout l'écart.",
@@ -3035,6 +3043,8 @@ export const LOCALES = {
     pathsInstrumentLabel: "Drittanbieter-Weg:",
     pathsGradeNote:
       "Alle Zahlen stammen aus einem regionalen Preisregister mit genannter Quelle und Vertrauensstufe. Die Hardware ist Ihre eigene Schätzung; Arbeitszeit, Genehmigungen, Förderungen und Austausch kommen aus dem Register. Nichts davon ist ein Angebot eines Anbieters.",
+    pathsNoInstallerBenchmark:
+      "Kein veröffentlichter Installateur-Benchmark für {country}. Die angezeigte Bandbreite der Installationskosten ist aus unseren regionalen Blöcken abgeleitet und trägt Grad D; behandeln Sie sie als Planungsband, nicht als Erhebung dieses Marktes.",
     pathsWhy:
       "{cheaper} ist über 20 Jahre {gap} günstiger als {dearer}, vor allem wegen {driver}.",
     pathsWhyCombined: " Kein Einzelposten erklärt die ganze Differenz.",
@@ -3586,6 +3596,8 @@ export const LOCALES = {
     pathsInstrumentLabel: "Route via derden:",
     pathsGradeNote:
       "Elk cijfer hierboven komt uit één regionaal prijsregister met een genoemde bron en een betrouwbaarheidsgraad. Hardware is uw eigen bouwschatting; arbeid, vergunningen, subsidies en vervangingen zijn registercijfers. Niets hier is een leveranciersofferte.",
+    pathsNoInstallerBenchmark:
+      "Geen gepubliceerde installateursbenchmark voor {country}. De getoonde band voor geïnstalleerde kosten is afgeleid van onze regionale blokken en heeft graad D; behandel die als een planningsband, niet als een onderzoek van deze markt.",
     pathsWhy:
       "{cheaper} is {gap} goedkoper dan {dearer} over 20 jaar, voornamelijk gedreven door {driver}.",
     pathsWhyCombined: " Geen enkel item verklaart het hele verschil.",
@@ -4372,6 +4384,8 @@ export const LOCALES = {
     pathsInstrumentLabel: "طريق الغير:",
     pathsGradeNote:
       "كل رقم أعلاه يأتي من سجل أسعار إقليمي واحد بمصدر مذكور ودرجة ثقة. العتاد هو تقديرك أنت؛ أما العمل والتراخيص والحوافز والاستبدال فهي أرقام السجل. ولا شيء هنا عرض سعر من بائع.",
+    pathsNoInstallerBenchmark:
+      "لا يوجد مرجع منشور لتكلفة التركيب في {country}. النطاق المعروض للتكلفة المركّبة مشتق من كتلنا الإقليمية ويحمل الدرجة D، فاعتبره نطاق تخطيط لا مسحًا لهذا السوق.",
     pathsWhy:
       "{cheaper} أرخص بمقدار {gap} من {dearer} على 20 عامًا، والسبب الأهم هو {driver}.",
     pathsWhyCombined: " لا يفسّر عنصر واحد وحده الفرق كاملًا.",
