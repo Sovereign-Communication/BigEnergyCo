@@ -350,11 +350,22 @@ test("GATE: the heatmap app runs from a versioned module, not the markup", () =>
     /L\.map\(/,
     "the extracted module must still build the map",
   );
+<<<<<<< HEAD
   // Pre-rendered PNG architecture: versioned PNG manifest or on-demand data
   assert.ok(
     /heatmap-grid\.min\.json\?v=/.test(app) ||
       /assets\/img\/heatmap\/manifest\.json/.test(app),
     "the heatmap module must reference versioned data (min.json) or PNG manifest",
+=======
+  // The grid the page waits on is packed binary, not JSON: the columnar JSON it
+  // replaced still cost 39ms (mobile) / 29ms (desktop) of `JSON.parse` on the
+  // staged build, which under the gate's CPU throttling was most of the TBT.
+  assert.match(app, /heatmap-grid\.bin\?v=/);
+  assert.match(
+    app,
+    /\.arrayBuffer\(\)/,
+    "a binary payload is read as bytes, never parsed as a document",
+>>>>>>> origin/fix/slider-workflow-canonical
   );
 });
 

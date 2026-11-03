@@ -16,8 +16,13 @@ import {
   searchCities,
   shouldAutoResolve,
   typedCityCandidates,
+<<<<<<< HEAD
 } from "./cities.js?v=20261022p";
 import { byId, el } from "../shared/dom.js?v=20261022p";
+=======
+} from "./cities.js?v=20261008a";
+import { byId, el } from "../shared/dom.js?v=20261008a";
+>>>>>>> origin/fix/slider-workflow-canonical
 
 export function setupCitySearch({
   onPick,

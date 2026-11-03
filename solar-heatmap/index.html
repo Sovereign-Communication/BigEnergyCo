@@ -116,12 +116,19 @@
         ]
       }
     </script>
+<<<<<<< HEAD
     <link
       rel="stylesheet"
       href="../assets/vendor/leaflet/leaflet.css?v=20261022p"
       integrity="sha256-M3v8pcq9A7OYFbJwD+vis7ft9VkhxZzUn4jssyghIwM="
       crossorigin="anonymous"
     />
+=======
+    <!-- No <link> for Leaflet's CSS here on purpose: as a stylesheet it is
+         render-blocking and it sat in front of the intro paragraph below, the
+         LCP element. assets/js/sizing/leaflet-styles.js fetches it as a preload
+         and promotes it, reading the URL and SRI from map-provider.js. -->
+>>>>>>> origin/fix/slider-workflow-canonical
     <style>
       :root {
         color-scheme: dark;
@@ -813,7 +820,11 @@
       integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
       crossorigin="anonymous"
     ></script>
+<<<<<<< HEAD
     <script defer src="../assets/js/heatmap-palette.js?v=20261022p"></script>
     <script defer src="../assets/js/heatmap.js?v=20261022p"></script>
+=======
+    <script type="module" src="../assets/js/heatmap.js?v=20261008a"></script>
+>>>>>>> origin/fix/slider-workflow-canonical
   </body>
 </html>

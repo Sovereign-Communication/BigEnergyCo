@@ -3,7 +3,9 @@
 // Pure math — no NASA API calls, no network.
 //
 // Usage:  node scripts/generate-heatmap-data.mjs
-// Output: assets/data/heatmap-grid.json
+// Output: assets/data/heatmap-grid.bin (first paint, packed binary)
+//         assets/data/heatmap-names.json (city names + LCOE, deferred)
+//         assets/data/heatmap-years.bin (year matrix, deferred, packed binary)
 //
 // For each city in city-data/*.json, look up the nearest offline profile,
 // compute annual yield per kWp, look up the regional tariff, and compute
@@ -33,6 +35,11 @@ import {
   landedMidBattKwhFor,
 } from "../assets/js/sizing/pricing.js";
 import { batteryReplacements } from "../assets/js/sizing/money.js";
+import {
+  encodeGrid,
+  encodeGridBinary,
+  encodeYearsBinary,
+} from "../assets/js/sizing/heatmap-grid.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, "..");
@@ -406,20 +413,54 @@ results.sort((a, b) => (a.pr[1] ?? 999) - (b.pr[1] ?? 999));
 const outDir = join(ROOT, "assets/data");
 mkdirSync(outDir, { recursive: true });
 
-const output = {
-  generated: new Date().toISOString(),
-  usageTiersKwhDay: USAGE_TIERS,
-  metric:
-    "ESTIMATE (not a sizing): 80% bill-cut rule-of-thumb, LFP, landed-DIY costs, exactly one bank replacement assumed, generator/grid-deficit aware. Run the calculator for hourly-simulated sizing.",
-  count: results.length,
-  points: results,
-};
+// The grid is written COLUMNAR and QUANTIZED, not as an array of objects. The
+// page measured the difference: 39,707 objects with thirteen key names each is
+// 6.66 MiB and cost 245ms (mobile) / 600ms (desktop) of JSON.parse on the
+// staged build, which was the whole of the heatmap's TBT breach. The
+// quantization scales live in assets/js/sizing/heatmap-grid.js so the page
+// dequantizes exactly what this script quantized.
+const encoded = encodeGrid(results, { usageTiersKwhDay: USAGE_TIERS });
 
-const outPath = join(outDir, "heatmap-grid.json");
-writeFileSync(outPath, JSON.stringify(output));
+// The first-paint half is PACKED BINARY: twelve fixed-width bytes per point,
+// read by the page as typed-array views over the response body. Both the
+// quantization scales and the column layout live in
+// assets/js/sizing/heatmap-grid.js, so the page decodes exactly what this
+// script encoded — one owner, two encodings that cannot drift apart.
+const outPath = join(outDir, "heatmap-grid.bin");
 
-const sizeKB = Math.round(readFileSync(outPath).length / 1024);
-console.log(`\nWrote ${results.length} points to ${outPath} (${sizeKB} KB)`);
+// The two deferred files carry what the first paint does not read: the city
+// names and LCOE (a ranking row or a popup) and the year matrix (a metric
+// switch or a popup). Nothing is dropped — names, lq, yrs and the estimate
+// note are all still written, just not on the path the map needs.
+//
+// The names stay JSON because they are text and the browser reads them in
+// about 6ms. The year matrix does NOT: as JSON it was 1.86 MB that the page
+// had to JSON.parse, one long task inside the load window, and packed as u16
+// it is a file the page reads as a view — smaller on the wire too, because it
+// is almost all constant runs (brotli q11: 2.5 KB packed, 2.8 KB as JSON).
+const namesPath = join(outDir, "heatmap-names.json");
+const yearsPath = join(outDir, "heatmap-years.bin");
+
+writeFileSync(outPath, Buffer.from(encodeGridBinary(encoded)));
+writeFileSync(
+  namesPath,
+  JSON.stringify({
+    v: encoded.header.v,
+    generated: new Date().toISOString(),
+    count: encoded.header.count,
+    metric: encoded.header.metric,
+    names: encoded.hot.names,
+    lq: encoded.hot.lq,
+  }),
+);
+writeFileSync(yearsPath, Buffer.from(encodeYearsBinary(encoded)));
+
+const kb = (p) => Math.round(readFileSync(p).length / 1024);
+console.log(
+  `\nWrote ${results.length} points to ${outPath} (${kb(outPath)} KB)`,
+);
+console.log(`Wrote the names to ${namesPath} (${kb(namesPath)} KB)`);
+console.log(`Wrote the year matrix to ${yearsPath} (${kb(yearsPath)} KB)`);
 
 // Verification checks
 const lagos = results.find(

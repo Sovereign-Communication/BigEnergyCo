@@ -51,7 +51,7 @@ export const TURNSTILE_CSP_REQUIREMENTS = Object.freeze({
 });
 
 /** The placeholder wrangler.json ships with. Never a real site key. */
-export const TURNSTILE_PLACEHOLDER_SITE_KEY = "REPLACE_WITH_TURNSTILE_SITE_KEY";
+const TURNSTILE_PLACEHOLDER_SITE_KEY = "REPLACE_WITH_TURNSTILE_SITE_KEY";
 
 /**
  * Where the PUBLIC site key comes from, in precedence order:
@@ -87,7 +87,7 @@ export function resolveTurnstileSiteKey(doc, win) {
  * into. Used to decide "unconfigured" (widget absent, sends no token, the
  * endpoint stays unguarded) versus "configured" (token expected).
  */
-export function turnstileIsConfigured(doc, win) {
+function turnstileIsConfigured(doc, win) {
   return !!resolveTurnstileSiteKey(doc, win);
 }
 

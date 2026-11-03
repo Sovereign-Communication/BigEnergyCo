@@ -14,7 +14,11 @@
 // carry a stream tag ("run"/"slice"/"unknown") for the same stale check.
 // Unknown types answer with an error instead of hanging the spinner.
 //
+<<<<<<< HEAD
 import { runSizing, prefetchSiteWeather } from "./run.js?v=20261022p";
+=======
+import { runSizing, prefetchSiteWeather } from "./run.js?v=20261008a";
+>>>>>>> origin/fix/slider-workflow-canonical
 
 self.onmessage = async (ev) => {
   const msg = ev.data;

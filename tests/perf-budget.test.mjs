@@ -215,12 +215,32 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
   // declined, because the portable and backup panels ARE the fields that make
   // those two cases real.
   //
+<<<<<<< HEAD
   // The eager graph and the first-result graph intentionally have different
   // scopes. The former measures code needed before the page responds; the
   // latter also follows the result modules preloadRunModules awaits before
   // renderResults paints. Both readings are derived from staged files.
   // The owner-approved +2 KB allowance (130,000 to 132,000 bytes) covers the
   // generator-runtime question added per the 2026-10-19 direction.
+=======
+  // What changed on the same pass, with the number left at 895,000: the eager
+  // set stopped being a hand-written list and became the graph. The old list
+  // CLAIMED 893,785. The real first-load payload, measured off the committed
+  // bytes with charts.js and thirteen other genuine first-load modules counted
+  // and locales.js (167,850 B, dynamically imported by i18n.js) taken out, is
+  // 837,156 across 39 files — 56,629 B BELOW what the hand list asserted,
+  // without one byte of the feature having shrunk. The budget is now harder to
+  // satisfy than it was, not easier: it simply measures its own subject
+  // instead of a stale guess at it.
+  //
+  // The slider-workflow canonical-state work then landed on top of this
+  // bar WITHOUT moving it: the drag preview's curve projection moved out
+  // of the eager graph into budget-span.js, the chemistry/cell model moved
+  // out of engine.js into chem-model.js (the whole search engine is now
+  // worker-only), and the worker's feasibility-sims memo moved to
+  // sim-cache.js. The eager payload ended up 7.8 KB BELOW the declared
+  // baseline; no budget above was relaxed for it.
+>>>>>>> origin/fix/slider-workflow-canonical
   assert.ok(
     htmlBytes <= 132_000,
     `index.html ${htmlBytes} bytes exceeds 132,000 budget`,

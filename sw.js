@@ -10,7 +10,11 @@
 // here), so after one visit a location keeps working fully offline. Bump
 // CACHE_VERSION to force every client to refresh on next visit.
 
+<<<<<<< HEAD
 const CACHE_VERSION = "beco-v140";
+=======
+const CACHE_VERSION = "beco-v110";
+>>>>>>> origin/fix/slider-workflow-canonical
 
 // Every cache operation races this budget; a slower one degrades to its
 // fallback instead of hanging the request that waited on it.

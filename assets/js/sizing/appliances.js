@@ -124,5 +124,5 @@ export const APPLIANCES = [
   },
 ];
 
-export const APPLIANCE_ITEMS = APPLIANCES.flatMap((group) => group.items);
+const APPLIANCE_ITEMS = APPLIANCES.flatMap((group) => group.items);
 export const APPLIANCE_NAMES = new Set(APPLIANCE_ITEMS.map((item) => item.n));

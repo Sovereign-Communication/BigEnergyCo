@@ -20,7 +20,7 @@
 //
 // Pure on purpose: every branch is unit-tested, and the UI owns formatting.
 
-export const AGM_CHEM = "agm";
+const AGM_CHEM = "agm";
 
 /**
  * @returns {null|{direction:"save"|"cheaper", deltaUsd:number, agmSwaps:number,
