@@ -41,7 +41,14 @@
 // Exit: 0 = verified, 1 = verification failed, 2 = could not verify.
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+// The promote/verify gate spawns this script from a working dir that is *not*
+// the repo root, so every path-relative read is rooted at the repository root
+// derived from this file's own location. In ES modules, __dirname is not
+// available; use import.meta.url instead.
+const ROOT = resolve(resolve(fileURLToPath(import.meta.url), ".."), "..");
 
 import {
   FETCH_TIMEOUT_MS,
@@ -228,7 +235,16 @@ if (!files.length) {
         : `CLI ${d.cli} vs manifest ${d.manifest}; missing from CLI: ${(d.missingFromCli || []).join(", ")}`,
     );
 }
-const expected = artifactStamp(readFileSync("index.html", "utf8"));
+// The stamp must be derived from the committed blob, not the working tree.
+// The promote/verify gate spawns this script from a test working dir that is
+// *not* the repo root, so reading index.html from disk would hit the wrong tree.
+// Read git show :index.html from the repo root instead.
+const committedIndexHtml = execFileSync("git", ["show", ":index.html"], {
+  cwd: ROOT,
+  encoding: "utf8",
+  maxBuffer: 10 * 1024 * 1024,
+});
+const expected = artifactStamp(committedIndexHtml);
 if (!expected.ok) {
   record(
     "checkout declares exactly one asset stamp",
@@ -303,18 +319,20 @@ const isText = (f) =>
 const HTML_FILE = /\.html$/i;
 
 const parity = await mapPool(parityTargets, CONCURRENCY, async (file) => {
-  // Read the local copy INSIDE the guarded path. It used to sit above the
-  // try, so a file that vanished between enumeration and read (ENOUT/ENOENT)
-  // escaped as an uncaught exception, the top-level await rejected, and the
-  // gate exited on a stack trace with NO verdict at all. That is the one thing
-  // a gate must never do: the caller learns nothing about whether staging
-  // matched, and "crashed" is indistinguishable from "silently skipped".
-  // The deploy manifest enumerates from the git INDEX, so a file can genuinely
-  // be named-but-absent on disk - a concurrent test's mutation tooth, or a
-  // half-copied checkout. That is a finding, so it is reported as one.
+  // Read the local copy INSIDE the guarded path, rooted at the repository
+  // root: the script may be spawned from another working directory, and a
+  // relative read there would silently hit the wrong tree (ENOENT reported
+  // as a parity finding). It used to sit above the try, so a file that
+  // vanished between enumeration and read escaped as an uncaught exception,
+  // the top-level await rejected, and the gate exited on a stack trace with
+  // NO verdict at all — "crashed" indistinguishable from "silently skipped".
+  // A concurrent deletion is a cross-process concern handled by the mutation
+  // lock (tests/deploy-manifest.test.mjs), not by process-spawning here:
+  // one `git show` per parity target measures ~350 extra processes per run
+  // and pushed this budget-bound verifier past its own watchdog.
   let localBuf;
   try {
-    localBuf = readFileSync(file);
+    localBuf = readFileSync(join(ROOT, file));
   } catch (e) {
     return {
       file,

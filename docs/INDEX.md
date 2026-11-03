@@ -26,6 +26,10 @@ directory's [README](archive/README.md) lists them.
 Nothing in `docs/archive/` is current guidance. Where an archived document
 disagrees with the master plan, **the master plan wins**.
 
+Session handoff notes from the working lanes live in
+[`docs/notes/`](notes/) — same rule: point-in-time records, and where they
+disagree with `main`, `main` wins.
+
 Rule: if a doc disagrees with `main`, `main` wins. Promote corrections into
 `README.md` / `docs/DEPLOY_RUNBOOK.md` / `docs/plan/LEDGER.jsonl` rather than
 editing history files.

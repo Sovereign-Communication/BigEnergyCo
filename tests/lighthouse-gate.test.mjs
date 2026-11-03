@@ -36,7 +36,7 @@ test("GATE: Lighthouse is a pinned devDependency behind a declared script", () =
   // gate must never have.
   assert.equal(
     PKG.devDependencies?.lighthouse,
-    "13.5.0",
+    "13.6.0",
     "lighthouse must be pinned exactly, like playwright and axe-core",
   );
   assert.equal(

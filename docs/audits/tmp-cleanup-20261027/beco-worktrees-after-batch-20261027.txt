@@ -1,0 +1,440 @@
+worktree C:/Users/SCM/Documents/GitHub/BigEnergyCo/BigEnergyCo
+HEAD 5d002fd383c3f6373c86bde68ce6d0831595d945
+branch refs/heads/docs/ledger-p1-3
+
+worktree C:/tmp/be-b1-20261023
+HEAD da5ac282a93f7e0d243821e28a97280aadf41bad
+branch refs/heads/codex/jev-b1-staging-gate-20261023
+
+worktree C:/tmp/be-issue196-20261023
+HEAD fc604032929737bdd27b761bdd4af57f3e106f5f
+branch refs/heads/fix/issue-196-input-validation-20261023
+
+worktree C:/tmp/be-issue198-20261023
+HEAD afc1a33c2a893295c6783e3e878a86dc767cc288
+branch refs/heads/fix/graph-walk-vanished-entries
+
+worktree C:/tmp/be-issue199-20261023
+HEAD a24c54decac2da23430327724eec400a88a2d40b
+branch refs/heads/fix/issue-199-error-discipline
+
+worktree C:/tmp/be-jev-burndown-20261026
+HEAD 4bcc9497161d3a3581d1a6cdb9f16286352ae9f0
+branch refs/heads/codex/jev-burndown-20261026
+
+worktree C:/tmp/be-jev-translation-20261024
+HEAD df70dbfa7cfd21d91d4bcfecbef2e0631395d707
+branch refs/heads/fix/translation-suggestion-path-20261024
+
+worktree C:/tmp/be-mission-pr211
+HEAD 2c4360821a5d77c627c5f74a0272f9f33e684ea7
+branch refs/heads/fix/issue-211-test-mutation-race
+
+worktree C:/tmp/be-mission-pr212-20261022
+HEAD 8eaf86acf13056baeab22821baeb39c85aefbf8e
+branch refs/heads/codex/mission-pr212-rebase-20261022
+
+worktree C:/tmp/be-mission-pr212-tight-20261022
+HEAD 39d29868177350d44c512e6bb437b8449df87c58
+branch refs/heads/codex/mission-pr212-tight-20261022
+
+worktree C:/tmp/be-mission-pr215-20261022
+HEAD ff39efb3f1790d946a4a68e7425a272a7f254a18
+branch refs/heads/codex/mission-pr215-rebase-20261022
+
+worktree C:/tmp/be-mission-pr230-20261022
+HEAD d06fd42a6c3e1ecee98763dede914160000b45cf
+branch refs/heads/codex/mission-pr230-rebase-20261022
+
+worktree C:/tmp/be-mission-pr231-20261022
+HEAD 5548a6799295c8acf422077b45d108ad092cfbdf
+branch refs/heads/codex/mission-pr231-rebase-20261022
+
+worktree C:/tmp/be-mission-pr232-20261022
+HEAD 10ed1e7e72b2b1238693c77ddc182264413fd33a
+branch refs/heads/codex/mission-pr232-20261022
+
+worktree C:/tmp/be-mission-pr233-20261022
+HEAD d631efc58b36941828d2c8f37a2fa8fbb1977574
+branch refs/heads/codex/mission-pr233-20261022
+
+worktree C:/tmp/be-mission-pr235
+HEAD 816bfbcf84c234c6d5a8960a2cb8644707575a5a
+branch refs/heads/codex/mission-pr235-rebase-20261022
+
+worktree C:/tmp/be-mission-pr242
+HEAD b3ea041dd6549081e95fdffb313b38c72696f9cc
+branch refs/heads/codex/mission-pr242-rebase-20261022
+
+worktree C:/tmp/be-mission-pr243
+HEAD 484e66a4e42c14e0816de90e704ba6a561535394
+branch refs/heads/codex/mission-pr243-rebase-20261022
+
+worktree C:/tmp/be-mission-pr244
+HEAD 479d2b3556e20ed2c143ae26161d3c115eeec6be
+branch refs/heads/codex/mission-244-rebase-20261021
+
+worktree C:/tmp/be-mission-pr250-20261022
+HEAD 9a44ca2611444147c7376d1796cdc34555677433
+branch refs/heads/codex/mission-pr250-20261022
+
+worktree C:/tmp/be-mission-pr252
+HEAD c4e0814081f8117c8f6a93f8b1a2ea92314a1d93
+branch refs/heads/codex/mission-252-rebase-20261022
+
+worktree C:/tmp/be-mission-pr255
+HEAD f1956234dceee1caa4fd47d0c40677246cd54a12
+branch refs/heads/codex/mission-pr255-rebase-20261022
+
+worktree C:/tmp/be-mission-pr256-20261022
+HEAD f8cf63c5487f005dca34cc7f2b71d6276f3be664
+branch refs/heads/codex/mission-pr256-20261022
+
+worktree C:/tmp/be-mission-pr257-20261022
+HEAD e04fa524f744b121c8cb0bd059ec332ca8f23484
+branch refs/heads/codex/mission-pr257-20261022
+
+worktree C:/tmp/beco-171
+HEAD 61806cd43f61d296ca66fa023d09c2be61be17bf
+detached
+
+worktree C:/tmp/beco-audit-burndown
+HEAD cb974d5cecb2b58db38725772ee8be98486d2db4
+branch refs/heads/codex/jev-cars-burndown-20261023
+
+worktree C:/tmp/beco-dom-helper-20261022
+HEAD 89f1219365442750e279792216d50eef586c5986
+branch refs/heads/codex/p0_4-dom-helper-20261022
+
+worktree C:/tmp/beco-f20-slider-canonical-20261022
+HEAD e4ba2ad488c9c361ba7f47bdf4770b1708dfcd36
+branch refs/heads/mission/f20-slider-canonical-20261022
+
+worktree C:/tmp/beco-i18n-noop-20261022
+HEAD 0a532190a2bb90b1329fe30a2747fe945a3e2c8d
+branch refs/heads/codex/p0_4-i18n-noop-20261022
+
+worktree C:/tmp/beco-issue211-staging-lock-20261022
+HEAD 645918d5304d4ba8dbb6a401e6f98643969ae6c8
+branch refs/heads/codex/issue211-staging-lock-20261022
+
+worktree C:/tmp/beco-issue287-evidence-20261023
+HEAD e5fb86b2111d19e45702da3f4c1bfd885eb43260
+branch refs/heads/codex/issue-287-evidence-stability-20261023
+
+worktree C:/tmp/beco-issue287-i18n-20261023
+HEAD 6e9998891bbd2f36a0095ea0621363820aae1665
+branch refs/heads/codex/issue287-i18n-dom-snapshot-20261023
+
+worktree C:/tmp/beco-issue287-performance-20261023
+HEAD 21de9796aa8546f6bde54976ebf29be310ea4584
+branch refs/heads/codex/issue287-performance-evidence-20261023
+
+worktree C:/tmp/beco-issue287-phase5-proposal-20261022
+HEAD 42ebcf9347a36146d75491d50350bdfd1e7ef226
+branch refs/heads/codex/issue287-phase5-policy-proposal-20261022
+
+worktree C:/tmp/beco-issue287-proven-criteria-20261023
+HEAD 25597aae4cc1ac0a0645352a17aa38aafcb0eb42
+branch refs/heads/codex/issue287-proven-criteria-20261023
+
+worktree C:/tmp/beco-issue287-quality-20261023
+HEAD d2075d4f8d819d29bf540361274b6d21ab6ec7fe
+branch refs/heads/codex/issue287-quality-hidden-class-20261023
+
+worktree C:/tmp/beco-issue287-terminology-20261023
+HEAD 35e912c0e9b8212c600135c4c6bcd9c96a2fbea0
+branch refs/heads/codex/issue287-terminology-20261023
+
+worktree C:/tmp/beco-main-20261023
+HEAD 43f5378bb580c1a15a9ba66b50fd5b12402ed6c1
+detached
+
+worktree C:/tmp/beco-p10-performance-20261022
+HEAD 3f1f786a650af70186c250f8239810d14418868e
+branch refs/heads/mission/p10-performance-20261022
+
+worktree C:/tmp/beco-p15-leaflet-20261022
+HEAD 84cff9e7009835da3400de6d3b3a1af74b9cab5d
+branch refs/heads/mission/p15-leaflet-self-host-20261022
+
+worktree C:/tmp/beco-p95-battery-audit-20261022
+HEAD 448e8bfb8163ffa32d7bce288315bbf6cc397860
+branch refs/heads/mission/p95-battery-worth-20261022
+
+worktree C:/tmp/beco-p95-battery-bank-20261022
+HEAD c5af34a089a2cd865874f86b3a849b14c9d92abd
+branch refs/heads/mission/p95-battery-bank-20261022
+
+worktree C:/tmp/beco-p95-battery-chemistry-20261022
+HEAD b1fb685afeb6a0429fc3f67493152aeb6508538f
+branch refs/heads/codex/p95-battery-chemistry-claims-20261022
+
+worktree C:/tmp/beco-p95-battery-claims-20261022
+HEAD e9ad85884d6b163d1043b6e5e50ff41d13586d1c
+branch refs/heads/codex/p95-battery-claims-20261022
+
+worktree C:/tmp/beco-p95-battery-compare-20261022
+HEAD cc3aaaa0d1950f3398859aa5f1917cd641eb6db8
+branch refs/heads/codex/p95-battery-comparison-guide-20261022
+
+worktree C:/tmp/beco-p95-battery-faq-20261022
+HEAD 53625a2d21c0a1a25cf1e228630ed0f16acd8417
+branch refs/heads/codex/p95-battery-faq-audit-20261022
+
+worktree C:/tmp/beco-p95-battery-rebase-20261022
+HEAD 49acd89edf0251d233ec20ba6e9c317b3181a2fd
+branch refs/heads/codex/p95-battery-claims-rebase-20261022
+
+worktree C:/tmp/beco-p95-battery-references-20261022
+HEAD a522d8125ec10d6f75baf96a3ebac575ac36e0b6
+branch refs/heads/codex/p95-battery-reference-audit-20261022
+
+worktree C:/tmp/beco-p95-battery-reviewed-date-20261022
+HEAD 5ab9f35b8f54b575063ec34c46be13e42cdc2d8d
+branch refs/heads/codex/p95-battery-reviewed-date-20261022
+
+worktree C:/tmp/beco-p95-battery-setup-20261022
+HEAD 31c9c600149c232c751d544c68e55beb12cd65de
+branch refs/heads/codex/p95-battery-setup-audit-20261022
+
+worktree C:/tmp/beco-p95-blog-audit-20261022
+HEAD 28f1414339a58489f55b65e1e37aa89df9f9a4b1
+branch refs/heads/codex/mission-p95-blog-audit-20261022
+
+worktree C:/tmp/beco-p95-diy-chemistry-20261022
+HEAD db940a6987a210124a626e0cbe89346ca80b962c
+branch refs/heads/codex/p95-diy-chemistry-claims-20261022
+
+worktree C:/tmp/beco-p95-diy-safety-20261022
+HEAD 6a721b600ab88ee63e9dacd81ac3b974e8f60024
+branch refs/heads/codex/p95-diy-safety-legal-20261022
+
+worktree C:/tmp/beco-p95-diy-source-hygiene-20261022
+HEAD 1f7382e79d1e14d74f12644206376ddfda5acaeb
+branch refs/heads/codex/p95-diy-source-hygiene-20261022
+
+worktree C:/tmp/beco-p95-escape-load-20261022
+HEAD 1c1b1d6c49691284a73ab384b6303eabf8e4ff17
+branch refs/heads/mission/p95-escape-load-20261022
+
+worktree C:/tmp/beco-p95-home-battery-audit-20261022
+HEAD 013662b64baa875ed8df8e324e1b545599a52d24
+branch refs/heads/mission/p95-home-battery-audit-20261022
+
+worktree C:/tmp/beco-p95-howto-cut-20261022
+HEAD 3a895bbc74dfd13276598ee36665de9254fda035
+branch refs/heads/mission/p95-howto-cut-20261022
+
+worktree C:/tmp/beco-p95-offgrid-gridtie-20261023
+HEAD b972c3d5a5fdd12b969007d32e5e82b2b266683a
+branch refs/heads/mission/p95-offgrid-gridtie-20261023
+
+worktree C:/tmp/beco-p95-offgrid-sizing-20261023
+HEAD 98113879af4d87306c2dec3f1464e33d9c74d560
+branch refs/heads/mission/p95-offgrid-sizing-20261023
+
+worktree C:/tmp/beco-p95-saldering-20261022
+HEAD 76313c957ad7c65f5728492663b03c8a55e4d5dc
+branch refs/heads/mission/p95-salderingsregeling-20261022
+
+worktree C:/tmp/beco-p95-scams-20261022
+HEAD a563820e321ace260696b2d0d3af6e2d949ec6eb
+branch refs/heads/mission/p95-hawaii-scams-20261022
+
+worktree C:/tmp/beco-p95-storm-20261022
+HEAD 8aac07c47f53bf49bc7b39c21702fb3d7fcaa14a
+branch refs/heads/mission/i18n-backread-20261022
+
+worktree C:/tmp/beco-pr171-canonical-current-20261022
+HEAD 4c828a3dee08918902d482ebcdd668c0e5b8e275
+branch refs/heads/codex/pr171-canonical-current-20261022
+
+worktree C:/tmp/beco-pr171-rebase-20261023
+HEAD d2c24299fd24a1c764a6d6d9289d1c94e6a89162
+branch refs/heads/codex/pr171-rebase-20261023
+
+worktree C:/tmp/beco-pr171-rebase-check-20261022
+HEAD f81d64a42caa32cd7d419e326b83e74612da6940
+branch refs/heads/mission/pr171-rebase-check-20261022
+
+worktree C:/tmp/beco-pr171-squash-20261023
+HEAD 53888bfbd30d22d17a4639e136abf8df9b35fcb1
+branch refs/heads/codex/pr171-squash-20261023
+
+worktree C:/tmp/beco-pr192-lazy-current-20261022
+HEAD 5b229a97acd7ba978054b6b73da21336775aae0c
+branch refs/heads/codex/pr192-lazy-current-20261022
+
+worktree C:/tmp/beco-pr283-jev-diagnostics
+HEAD df4c2fae0a80ea58dfe3dddd3f44cda98a269bb5
+branch refs/heads/mission/pr283-jev-diagnostics-20261023
+
+worktree C:/tmp/beco-scope-fix-20261022
+HEAD 1ee9a6fbd835ee7757e54e16b40d73d51263c884
+branch refs/heads/main
+
+worktree C:/tmp/beco-task-203-20261022
+HEAD 07f51ea4712acbd5d8688470be5b9889001e4b59
+branch refs/heads/codex/mission-pr203-clean-20261022
+
+worktree C:/tmp/beco-task-206-20261022
+HEAD 972592ae1943bfeacdd0c42806fbe8b6e2b16f72
+branch refs/heads/codex/mission-pr206-clean-20261022
+
+worktree C:/tmp/beco-task-234-20261022
+HEAD bffed2a7a09868fb630c886a0f7697ccecfdb1f1
+branch refs/heads/codex/mission-pr234-clean-20261022
+
+worktree C:/tmp/bigenergyco-287-fluent-review-20261024
+HEAD eabb378c2900d4e315eb97845cffef0f5d822ba8
+detached
+
+worktree C:/tmp/cleanwt
+HEAD 0ce411ab76fdae28c32fe79934c525b6e8a15ed7
+detached
+
+worktree C:/tmp/fix-main-audit
+HEAD bc6dac39a590e25680371cb6fb070839a988e1da
+branch refs/heads/fix/main-audit-pr-delivery
+
+worktree C:/tmp/gate-freshness
+HEAD 0e78b099ec3cbfdb38e73d451097b603b7f87521
+branch refs/heads/fix/evidence-freshness-facts
+
+worktree C:/tmp/gate-scope
+HEAD 2439861bfc9d65d3e9c2dadc7d779a433ff5ff92
+branch refs/heads/fix/gate-drift-pins
+
+worktree C:/tmp/jev-95-facets
+HEAD b313f619fb159895c76cd8dd996d8621e0619de9
+branch refs/heads/codex/jev-95-facets
+
+worktree C:/tmp/p5-4-i18n
+HEAD c11ecc49cb86029f77d1276816e3c133ab1b10bb
+branch refs/heads/fix/p5.4-i18n
+
+worktree C:/tmp/pr-translation-semantic-audit
+HEAD 3298b017b583dae71734f7040147ebd8ceeb70b1
+branch refs/heads/codex/translation-canvas-i18n
+
+worktree C:/tmp/pr215-fix
+HEAD 65a6874951bc15dba151f1bb33e3058fdc216cf5
+branch refs/heads/codex/pr215-budget-motion
+
+worktree C:/tmp/pr215-p04
+HEAD eafab7371147bb79713e41bffcc40071e7260dce
+branch refs/heads/codex/pr215-p04
+
+worktree C:/tmp/pr232-base-20261018
+HEAD 32374c01482055f82686172592340eae072b93f7
+detached
+
+worktree C:/tmp/pr232-codeql-worktree-f3b3209
+HEAD f3b32094928c47330609a03bbb0074af97c8e2e6
+detached
+
+worktree C:/tmp/pr232-jev-quality
+HEAD 674e838f6ad48bdb14ada41de2b3229228a3c376
+branch refs/heads/codex/pr232-p97-quality-evidence
+
+worktree C:/tmp/pr232-jev-snapshot
+HEAD 008a1166fc134fd99b8a6b8f2a3cad8ee2a6d885
+detached
+
+worktree C:/tmp/pr232-jev-snapshot-20261017-222757
+HEAD f3b32094928c47330609a03bbb0074af97c8e2e6
+detached
+
+worktree C:/tmp/pr232-jev-snapshot-20261018-p97-formatted
+HEAD d94a9055fc0abaf790c01e2e93ae644043e7f884
+detached
+
+worktree C:/tmp/pr232-jev-snapshot-20261018-p97fix
+HEAD 84f26fac4266442dc6070e2fb735c2c561f5b1c0
+detached
+
+worktree C:/tmp/sitemap-gate
+HEAD 5e96521f407da76f8666ed549c9b8b978bc0c5da
+branch refs/heads/feat/sitemap-lastmod-gate
+
+worktree C:/tmp/world-calc
+HEAD c76721e6cdb1a1bb910666e6351bdf9598cc0b1b
+detached
+
+worktree C:/tmp/world-fix
+HEAD 597bf4047a1575c821d048dead4bd8558f0e55be
+branch refs/heads/fix/worldwide-market-copy
+
+worktree C:/Users/SCM/Documents/GitHub/BigEnergyCo/beco-next
+HEAD e317af5b0c349c846b8e4de1167e2b1826df7675
+branch refs/heads/next/google-grade
+
+worktree C:/Users/SCM/Documents/GitHub/BigEnergyCo/BigEnergyCo/.worktrees/feature-preflight
+HEAD 972592ae1943bfeacdd0c42806fbe8b6e2b16f72
+detached
+
+worktree C:/Users/SCM/Documents/GitHub/BigEnergyCo/BigEnergyCo/.worktrees/fix-diy-price
+HEAD ff53c994cd4bcd4d0a8392e39ee41970cbee60d1
+branch refs/heads/fix/diy-battery-price
+
+worktree C:/Users/SCM/Documents/GitHub/BigEnergyCo/BigEnergyCo/.worktrees/fix-prettier-cf-pages
+HEAD 960cdb81050ce1005455f629bad416f8f4f2e454
+branch refs/heads/fix/prettier-cf-pages-workflow
+
+worktree C:/Users/SCM/Documents/GitHub/BigEnergyCo/BigEnergyCo/.worktrees/fix-sitemap-lastmod
+HEAD 9156a1e1d71faecb0f0a6de15efe9822093afeb2
+branch refs/heads/fix/sitemap-lastmod-freshness
+
+worktree C:/Users/SCM/Documents/GitHub/BigEnergyCo/BigEnergyCo/.worktrees/main-landing
+HEAD f73a28d5ec20da9991e6914fb09de3dff015ce89
+detached
+
+worktree C:/Users/SCM/Documents/GitHub/BigEnergyCo/BigEnergyCo/.worktrees/main-measure
+HEAD 61ebcd0e84dc86bf4665b0ef8d46333edeae32b4
+detached
+
+worktree C:/Users/SCM/Documents/GitHub/BigEnergyCo/BigEnergyCo/.worktrees/mission-diy-battery-20261019
+HEAD 27cd8609dbd62bc16d7934c8a12fed67b9de28b6
+branch refs/heads/fix/mission-diy-battery-20261019
+
+worktree C:/Users/SCM/Documents/GitHub/BigEnergyCo/BigEnergyCo/.worktrees/mission-pr212
+HEAD 91bbfcae2dee9b3d795cc04d27eff5ec8e85cd93
+branch refs/heads/fix/blog-seo-optimization
+
+worktree C:/Users/SCM/Documents/GitHub/BigEnergyCo/BigEnergyCo/.worktrees/p0.4-first-paint
+HEAD a6bfb8a1501f4f37a72fc92a4e717a52212e48ee
+branch refs/heads/feat/p0.4-first-paint-weight
+
+worktree C:/Users/SCM/Documents/GitHub/BigEnergyCo/BigEnergyCo/.worktrees/p0.4-quality
+HEAD 64a6d664e13ca727e2f872590aa413fad2ec49eb
+branch refs/heads/fix/p0.4-performance-evidence
+
+worktree C:/Users/SCM/Documents/GitHub/BigEnergyCo/BigEnergyCo/.worktrees/release-main-20260929a
+HEAD 1371ef169647406c3a3a55e07b47bd56b8ef4dc9
+branch refs/heads/chore/release-ledger-20260929a
+
+worktree C:/Users/SCM/Documents/GitHub/BigEnergyCo/BigEnergyCo/.worktrees/slider-canonical
+HEAD 10f2c102ab257c3c0e47199c6739b00b69d83a72
+branch refs/heads/fix/slider-workflow-canonical
+
+worktree C:/Users/SCM/Documents/GitHub/BigEnergyCo/BigEnergyCo/landing-p1-use-case-tmp
+HEAD f73a28d5ec20da9991e6914fb09de3dff015ce89
+detached
+
+worktree C:/Users/SCM/Documents/GitHub/BigEnergyCo/BigEnergyCo/tmp/lane-base-check
+HEAD 80390fe4e385a0d2f5d2ac013c7510e648052012
+detached
+
+worktree C:/Users/SCM/Documents/GitHub/BigEnergyCo/BigEnergyCo/tmp/lane-worktree
+HEAD e5ed20900ee5a8fb8164bd36005a21d9338b2260
+branch refs/heads/docs/jev-translation-backread
+
+worktree C:/Users/SCM/Documents/GitHub/BigEnergyCo/BigEnergyCo/wip/pr203-canonical-repair
+HEAD 07f51ea4712acbd5d8688470be5b9889001e4b59
+branch refs/heads/fix/pr203-canonical-usecases
+
+worktree C:/Users/SCM/Documents/GitHub/BigEnergyCo/domain-migration
+HEAD e8aa1d0734dd54fe25564ffcd2f4cfe08379923c
+branch refs/heads/domain-migration
+

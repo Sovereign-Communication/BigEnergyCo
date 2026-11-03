@@ -1,0 +1,3 @@
+Post-#294 measurement on main `4a5a6689` (Tests run `39947674004`): **97.50/100, 11/21 facets proven, 21/21 facets below 0.95 confidence, max confidence 0.86.** `translation` stayed at 60 (confidence 0.55) even with the deterministic term anchors and figure checks now merged, which is exactly what the judge's "native judgement" demand predicts: lexical and numeric evidence cannot raise a meaning assessment.
+
+That makes five consecutive merged-main runs and 105 facet-confidence samples, none at or above 0.95. The staging gate's confidence clause remains unreachable by evidence work, and translation remains unreachable at the proposed 85 floor by automation this program has.
