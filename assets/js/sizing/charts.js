@@ -38,6 +38,11 @@ function money(usd) {
   return _money(usd);
 }
 
+function updateCanvasCopy(canvas, label) {
+  canvas.setAttribute("aria-label", label);
+  canvas.textContent = label;
+}
+
 // ── chart state: single owner (moved from ui.js verbatim) ──────────────────
 
 // SOC chart zoom state: null = full view; { start: number, end: number } = sliced
@@ -145,6 +150,7 @@ export function drawSocChart(history, chemLabel, hasPv = true) {
   }
 
   cachedChartState = { type: "soc", history, chemLabel };
+  updateCanvasCopy(canvas, `Battery charge chart for ${chemLabel}.`);
 
   wrap.style.display = "block";
 
@@ -642,6 +648,14 @@ export function drawCumCostChart(p, chosenEntry = null) {
 
   wrap.style.display = "block";
   canvas.style.display = "";
+  const pvLabel =
+    Number(seriesEntry.pvKw) > 0
+      ? `${fmt(seriesEntry.pvKw)} kW solar`
+      : "battery only";
+  updateCanvasCopy(
+    canvas,
+    `Cumulative 20-year cost chart for ${seriesEntry.chemLabel || seriesEntry.label || "the selected system"} (${pvLabel}).`,
+  );
   const dpr = window.devicePixelRatio || 1;
   const W = Math.max(
     200,
@@ -1067,6 +1081,11 @@ export function drawAutoChart(p) {
   cachedChartState = { type: "auto", p };
 
   wrap.style.display = "block";
+
+  updateCanvasCopy(
+    canvas,
+    `Battery charge comparison chart for ${entries.map((a) => a.chemLabel).join(", ")}.`,
+  );
 
   const dpr = window.devicePixelRatio || 1;
 
