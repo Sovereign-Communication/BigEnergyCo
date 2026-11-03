@@ -7,15 +7,15 @@ says so.
 
 ## Tally
 
-| class | count in window | time lost (est.) | cure | owner |
-|---|---|---|---|---|
-| GATE_LOOP | 2 | ~30 min (two CI round trips) | applied — see G-1 | lane |
-| OTHER: premature rule-out | 1 | ~9 h of lane idle | applied — see O-1 | lane |
-| SESSION_DEATH / TRUNCATION | 1 recorded resumption | ~5 h | applied — see S-1 | lane |
-| STEERING_LATENCY / WAITING_RESERVED | 3 gaps | ~42 h elapsed, not lost work | recorded — not a defect | owner |
-| INFRA: command time cap | 1 (this session, 2 calls) | ~8 min | applied — see I-1 | lane |
-| CONTENTION | 0 observed | — | — | — |
-| DISK | 0 | — | 13 GB free at pre-flight, above the 5 GB floor | — |
+| class                               | count in window           | time lost (est.)             | cure                                           | owner |
+| ----------------------------------- | ------------------------- | ---------------------------- | ---------------------------------------------- | ----- |
+| GATE_LOOP                           | 2                         | ~30 min (two CI round trips) | applied — see G-1                              | lane  |
+| OTHER: premature rule-out           | 1                         | ~9 h of lane idle            | applied — see O-1                              | lane  |
+| SESSION_DEATH / TRUNCATION          | 1 recorded resumption     | ~5 h                         | applied — see S-1                              | lane  |
+| STEERING_LATENCY / WAITING_RESERVED | 3 gaps                    | ~42 h elapsed, not lost work | recorded — not a defect                        | owner |
+| INFRA: command time cap             | 1 (this session, 2 calls) | ~8 min                       | applied — see I-1                              | lane  |
+| CONTENTION                          | 0 observed                | —                            | —                                              | —     |
+| DISK                                | 0                         | —                            | 13 GB free at pre-flight, above the 5 GB floor | —     |
 
 ## The stops, one by one
 

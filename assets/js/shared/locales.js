@@ -3,7 +3,7 @@
 // `ar` flips the document to RTL automatically.
 // Keys not present in a locale fall back to English silently.
 
-import { HOME_COPY } from "./home-copy.js?v=20261103c";
+import { HOME_COPY } from "./home-copy.js?v=20261103d";
 
 export const LOCALES = {
   en: {
@@ -18,6 +18,12 @@ export const LOCALES = {
     printResult: "Print / save PDF",
     socZoomFull: "Full 5-Yr",
     socZoomWorst: "Worst Month",
+    assumeNoIncentives:
+      "No incentives or subsidies are included — these are unsubsidised costs.",
+    assumeFlatPrices:
+      "Electricity prices are assumed flat for 20 years — no rate rises are projected.",
+    assumeHourlyExport:
+      "Surplus is credited at the hourly tariff — not at a time-of-use schedule or annual netting.",
     invalidTariff:
       "Enter a price above {min} per kWh, or clear the field to use the local estimate.",
     navSizing: "Size Your System",
@@ -625,6 +631,12 @@ export const LOCALES = {
     printResult: "Imprimir / guardar PDF",
     socZoomFull: "5 años completos",
     socZoomWorst: "Peor mes",
+    assumeNoIncentives:
+      "No se incluyen incentivos ni subvenciones: estos son costes sin subvención.",
+    assumeFlatPrices:
+      "Se supone que el precio de la electricidad no cambia en 20 años: no se proyectan subidas.",
+    assumeHourlyExport:
+      "El excedente se valora a la tarifa horaria, no con un horario por tramos ni con compensación anual.",
     invalidTariff:
       "Introduce un precio superior a {min} por kWh, o deja el campo vacío para usar la estimación local.",
     navSizing: "Dimensiona tu sistema",
@@ -1251,6 +1263,12 @@ export const LOCALES = {
     printResult: "Imprimir / salvar PDF",
     socZoomFull: "5 anos completos",
     socZoomWorst: "Pior mês",
+    assumeNoIncentives:
+      "Não há incentivos nem subsídios incluídos: estes são custos sem subsídio.",
+    assumeFlatPrices:
+      "Assume-se que o preço da eletricidade fica fixo durante 20 anos: não se projetam aumentos.",
+    assumeHourlyExport:
+      "O excedente é creditado à tarifa horária, não por horário de ponta nem por compensação anual.",
     invalidTariff:
       "Informe um preço acima de {min} por kWh, ou limpe o campo para usar a estimativa local.",
     navSizing: "Dimensione seu sistema",
@@ -1868,6 +1886,12 @@ export const LOCALES = {
     printResult: "Imprimer / enregistrer en PDF",
     socZoomFull: "5 ans complets",
     socZoomWorst: "Pire mois",
+    assumeNoIncentives:
+      "Aucune subvention n'est incluse : ce sont des coûts non subventionnés.",
+    assumeFlatPrices:
+      "Le prix de l'électricité est supposé constant sur 20 ans : aucune hausse n'est projetée.",
+    assumeHourlyExport:
+      "Le surplus est valorisé au tarif horaire, pas selon un horaire heures creuses ni une compensation annuelle.",
     invalidTariff:
       "Saisissez un prix supérieur à {min} par kWh, ou videz le champ pour utiliser l'estimation locale.",
     navSizing: "Dimensionner mon système",
@@ -2498,6 +2522,12 @@ export const LOCALES = {
     printResult: "Drucken / als PDF speichern",
     socZoomFull: "Volle 5 Jahre",
     socZoomWorst: "Schlechtester Monat",
+    assumeNoIncentives:
+      "Es sind keine Förderungen oder Zuschüsse eingerechnet – das sind ungeförderte Kosten.",
+    assumeFlatPrices:
+      "Der Strompreis wird über 20 Jahre als konstant angenommen – es werden keine Preissteigerungen prognostiziert.",
+    assumeHourlyExport:
+      "Überschuss wird zum Stundentarif vergütet – nicht nach Hoch-/Niedertarif oder Jahresverrechnung.",
     invalidTariff:
       "Geben Sie einen Preis über {min} pro kWh ein oder leeren Sie das Feld, um die lokale Schätzung zu verwenden.",
     navSizing: "System dimensionieren",
@@ -3119,6 +3149,12 @@ export const LOCALES = {
     printResult: "Afdrukken / opslaan als pdf",
     socZoomFull: "Volledige 5 jaar",
     socZoomWorst: "Slechtste maand",
+    assumeNoIncentives:
+      "Er zijn geen subsidies meegerekend: dit zijn kosten zonder subsidie.",
+    assumeFlatPrices:
+      "De elektriciteitsprijs wordt 20 jaar gelijk verondersteld: er worden geen prijsstijgingen verwacht.",
+    assumeHourlyExport:
+      "Overschot wordt vergoed tegen het uurtarief, niet volgens een dal-/piektarief of jaarlijkse verrekening.",
     invalidTariff:
       "Vul een prijs boven {min} per kWh in, of maak het veld leeg om de lokale schatting te gebruiken.",
     navSizing: "Systeem dimensioneren",
@@ -3848,6 +3884,11 @@ export const LOCALES = {
     printResult: "طباعة / حفظ PDF",
     socZoomFull: "خمس سنوات كاملة",
     socZoomWorst: "أسوأ شهر",
+    assumeNoIncentives: "لا تُحتسب أي حوافز أو دعم: هذه تكاليف بدون دعم.",
+    assumeFlatPrices:
+      "يُفترض أن سعر الكهرباء ثابت لمدة 20 عامًا: لا تُحتسب أي زيادات.",
+    assumeHourlyExport:
+      "يُحتسب الفائض بسعر الساعة، لا بجدول ساعات الذروة ولا بتسوية سنوية.",
     invalidTariff:
       "أدخل سعرًا أعلى من {min} لكل kWh، أو امسح الحقل لاستخدام التقدير المحلي.",
     navSizing: "صمّم نظامك",
