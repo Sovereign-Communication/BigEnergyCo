@@ -180,11 +180,8 @@ const REGION_ROWS = {
   // derived, not measured.
   row: {
     label: "Rest of world",
-    // GRADE D, not C (plan P1.1). This block is not a benchmark of any
-    // country's installer market: it is derived from the three blocks above,
-    // so the weakest input on every card that reads it is a derivation. The
-    // card says so in words (`pathsNoInstallerBenchmark`) rather than letting
-    // a derived band pass as a survey of the visitor's own market.
+    // P1.1: grade D because this is derived from the blocks above, not
+    // benchmarked in any country; the card says so in words.
     grade: "D",
     benchmarkMissing: true,
     source:
@@ -507,16 +504,9 @@ export function blockedReasonKey(blockedBy) {
 /** Grade order, strongest first. An unrecognised grade reads as the weakest. */
 const GRADE_ORDER = { A: 0, B: 1, C: 2, D: 3 };
 
-/**
- * The weaker of two confidence grades. A card built from an install-cost basis
- * AND a terms sheet is only as good as its worse half, so a lease priced from
- * the derived block (grade D) must not report its terms sheet's better grade.
- */
-function weakerGrade(a, b) {
-  const ga = Object.hasOwn(GRADE_ORDER, a) ? a : "D";
-  const gb = Object.hasOwn(GRADE_ORDER, b) ? b : "D";
-  return GRADE_ORDER[ga] >= GRADE_ORDER[gb] ? ga : gb;
-}
+/** The weaker of two confidence grades: a card is as good as its worse half. */
+const weakerGrade = (a, b) =>
+  (GRADE_ORDER[a] ?? 3) >= (GRADE_ORDER[b] ?? 3) ? a || "D" : b || "D";
 
 /** Midpoint of a [low, mid, high] triple; a malformed entry reads 0. */
 export function bandMid(triple) {
@@ -736,11 +726,8 @@ function newPath(id, registry) {
     ownershipKey: null,
     included: (INCLUDED_BY_PATH[id] || []).slice(),
     grade: registry.grade,
-    // True when the registry block is a derivation rather than a benchmark of
-    // this country's market (plan P1.1). The card must say so instead of
-    // presenting the band as a survey.
+    // P1.1: a derivation, not a benchmark of this country's market.
     benchmarkMissing: registry.benchmarkMissing === true,
-    benchmarkCountry: null,
     source: registry.source,
     notes: [],
     horizonYears: HORIZON_YEARS,
@@ -751,9 +738,6 @@ function newPath(id, registry) {
 
 function priceOne(id, sys, ctx, region, registry, legality) {
   const p = newPath(id, registry);
-  p.benchmarkCountry = ctx.country
-    ? String(ctx.country).trim().toLowerCase() || null
-    : null;
   if (sys.pvKw <= 0 && sys.battKwh <= 0) {
     p.blockedBy = "no-system";
     return p;
@@ -838,8 +822,7 @@ function priceOne(id, sys, ctx, region, registry, legality) {
     p.notes.push(schedule.endOfTerm.noteKey);
     p.ownershipKey =
       instrument === "ppa" ? "pathsOwnershipPpa" : "pathsOwnershipLease";
-    // The lease prices off the same installed-cost registry the turnkey path
-    // uses, so its grade is the weaker of that basis and its own terms sheet.
+    // Lease and turnkey share one installed-cost basis, so the weaker grade.
     p.grade = weakerGrade(schedule.terms.grade, p.grade);
     p.source = schedule.terms.source;
     return finish(p, sys);
@@ -1148,17 +1131,14 @@ export function describePaths(result, moneyFn, tFn = (k) => k) {
       notes,
       grade: p.grade,
       benchmarkMissing: p.benchmarkMissing === true,
-      benchmarkCountry: p.benchmarkCountry || null,
-      // The disclosure itself, rendered by the card next to the number it
-      // qualifies. One owner, so no surface can show a derived band without it.
-      benchmarkText:
-        p.benchmarkMissing === true
-          ? tr("pathsNoInstallerBenchmark", {
-              country: p.benchmarkCountry
-                ? p.benchmarkCountry.toUpperCase()
-                : tr("pathsUnknown"),
-            })
-          : null,
+      // P1.1: the disclosure, rendered beside the number it qualifies.
+      benchmarkText: p.benchmarkMissing
+        ? tr("pathsNoInstallerBenchmark", {
+            country: result.country
+              ? String(result.country).toUpperCase()
+              : tr("pathsUnknown"),
+          })
+        : null,
       source: p.source,
       escalationPct: p.escalationPct,
       escalationGraded: p.escalationGraded,
