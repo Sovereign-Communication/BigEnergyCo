@@ -5303,6 +5303,9 @@ function renderPathsSection(p, sys) {
         `<div class="paths-card${c.id === cheapest ? " paths-card-best" : ""}">` +
         `<h4>${escapeHtml(t(c.labelKey))}${c.id === cheapest ? ` <span class="paths-best-tag">${escapeHtml(t("pathsCheapest"))}</span>` : ""}</h4>` +
         `<p class="paths-upfront">${escapeHtml(c.year0RangeText)}</p>` +
+        (c.benchmarkMissing
+          ? `<p class="paths-benchmark-missing">${escapeHtml(c.benchmarkText)}</p>`
+          : "") +
         `<p class="paths-total">${escapeHtml(t("pathsSpend20"))} <strong>${escapeHtml(c.spend20Text)}</strong></p>` +
         `<dl class="paths-rows">` +
         `<dt>${escapeHtml(t("pathsRowIncentives"))}</dt><dd>${escapeHtml(c.incentivesText)}</dd>` +

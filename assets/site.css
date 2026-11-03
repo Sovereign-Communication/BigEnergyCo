@@ -2053,6 +2053,16 @@ footer {
   line-height: 1.5;
   margin-top: 0.7rem;
 }
+/* Plan P1.1: a band derived from regional blocks is not a benchmark of the
+   visitor's own market, so the card says so next to the number it qualifies. */
+.paths-benchmark-missing {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+  margin-top: 0.35rem;
+  border-left: 2px solid var(--warning-orange);
+  padding-left: 0.5rem;
+}
 
 /* Balance-of-System Checklist */
 .bos-checklist-card {
