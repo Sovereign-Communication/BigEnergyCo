@@ -846,3 +846,32 @@ test("P1.1: every shipped locale carries the disclosure with its placeholder", (
     assert.ok(/\bD\b/.test(s), `${lang} does not state grade D`);
   }
 });
+
+// ── P1.2: electrician labour is region-scaled, not a flat hookup ──────────
+//
+// P1.2 replaced a flat $1,500-$3,000 hookup literal — the same number on a
+// 2 kW system and a 20 kW one — with a labour model: a base visit plus hours
+// per kW and per battery kWh, priced at the region's hourly rate. Nothing
+// pinned that, so this does: the labour figure must move with the market AND
+// with the size of the job, which a flat literal could not.
+
+test("P1.2: electrician labour varies by region and by the size of the job", () => {
+  const priced = (country, pvKw) =>
+    priceAllPaths({ ...SYSTEM, pvKw }, { country }).by.selfpurchase.labour;
+
+  const us = priced("us", 6);
+  const eu = priced("de", 6);
+  const row = priced("ke", 6);
+  assert.ok(us > 0 && eu > 0 && row > 0, "each market prices labour");
+  assert.notEqual(us, eu, "the US and the EU cannot share one labour figure");
+  assert.notEqual(eu, row, "a derived block must not borrow the EU rate");
+
+  // The same market, a bigger array: more hours, so more labour. A flat
+  // hookup literal passes the region test above and fails this one.
+  const small = priced("us", 4);
+  const large = priced("us", 12);
+  assert.ok(
+    large > small,
+    `labour must scale with system size: 12 kW ${large} vs 4 kW ${small}`,
+  );
+});
