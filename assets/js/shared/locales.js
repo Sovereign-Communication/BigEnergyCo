@@ -3,7 +3,7 @@
 // `ar` flips the document to RTL automatically.
 // Keys not present in a locale fall back to English silently.
 
-import { HOME_COPY } from "./home-copy.js?v=20261103u";
+import { HOME_COPY } from "./home-copy.js?v=20261104b";
 
 export const LOCALES = {
   en: {
@@ -619,7 +619,11 @@ export const LOCALES = {
     worstMonthNote:
       "Darkest month: {month} — about {avg} kWh/m²/day of average sun. Size for this month, not the yearly average, or the system will fall short on gray weeks.",
     bomSelectedSystem: "Selected system",
-    fxAsOfNote: "Live rates as of {asOf}.",
+    fxAsOfNote: "Live rates from open.er-api.com as of {asOf}.",
+    fxStaleNote:
+      "Rates last updated {asOf}, {days} days ago - conversions from open.er-api.com are indicative.",
+    fxIndicativeNote:
+      "Indicative built-in rates (live rates from open.er-api.com unavailable): no as-of date.",
     advisorIntakeBillLabel: "Monthly Electric Bill ($ USD):",
     advisorIntakeKwhLabel: "Daily Energy Consumption (kWh / day):",
     advisorIntakeBillPh: "e.g. 400",
@@ -1261,7 +1265,11 @@ export const LOCALES = {
     worstMonthNote:
       "Mes más oscuro: {month} — unos {avg} kWh/m²/día de sol medio. Dimensiona para este mes, no para la media anual, o el sistema se quedará corto en semanas grises.",
     bomSelectedSystem: "Sistema seleccionado",
-    fxAsOfNote: "Tipos en vivo a fecha de {asOf}.",
+    fxAsOfNote: "Tipos en vivo de open.er-api.com a fecha de {asOf}.",
+    fxStaleNote:
+      "Tipos actualizados por última vez el {asOf}, hace {days} días - las conversiones de open.er-api.com son indicativas.",
+    fxIndicativeNote:
+      "Tipos integrados indicativos (tipos en vivo de open.er-api.com no disponibles): sin fecha de referencia.",
     advisorIntakeBillLabel: "Factura eléctrica mensual ($ USD):",
     advisorIntakeKwhLabel: "Consumo energético diario (kWh / día):",
     advisorIntakeBillPh: "p. ej. 400",
@@ -1894,7 +1902,11 @@ export const LOCALES = {
     worstMonthNote:
       "Mês mais escuro: {month} — cerca de {avg} kWh/m²/dia de sol médio. Dimensione para este mês, não para a média anual, ou o sistema ficará aquém em semanas cinzentas.",
     bomSelectedSystem: "Sistema selecionado",
-    fxAsOfNote: "Câmbio ao vivo em {asOf}.",
+    fxAsOfNote: "Câmbio ao vivo de open.er-api.com em {asOf}.",
+    fxStaleNote:
+      "Taxas atualizadas pela última vez em {asOf}, há {days} dias - as conversões de open.er-api.com são indicativas.",
+    fxIndicativeNote:
+      "Taxas integradas indicativas (taxas ao vivo de open.er-api.com indisponíveis): sem data de referência.",
     advisorIntakeBillLabel: "Conta mensal de energia ($ USD):",
     advisorIntakeKwhLabel: "Consumo diário de energia (kWh / dia):",
     advisorIntakeBillPh: "ex. 400",
@@ -2540,7 +2552,11 @@ export const LOCALES = {
     worstMonthNote:
       "Mois le plus sombre : {month} — environ {avg} kWh/m²/jour de soleil moyen. Dimensionnez pour ce mois, pas pour la moyenne annuelle, sinon le système manquera lors des semaines grises.",
     bomSelectedSystem: "Système sélectionné",
-    fxAsOfNote: "Taux en cours au {asOf}.",
+    fxAsOfNote: "Taux en direct de open.er-api.com au {asOf}.",
+    fxStaleNote:
+      "Taux mis à jour le {asOf}, il y a {days} jours - les conversions de open.er-api.com sont indicatives.",
+    fxIndicativeNote:
+      "Taux intégrés indicatifs (taux en direct de open.er-api.com indisponibles) : pas de date de référence.",
     advisorIntakeBillLabel: "Facture d'électricité mensuelle ($ USD) :",
     advisorIntakeKwhLabel: "Consommation d'énergie quotidienne (kWh / jour) :",
     advisorIntakeBillPh: "p. ex. 400",
@@ -3178,7 +3194,11 @@ export const LOCALES = {
     worstMonthNote:
       "Dunkelster Monat: {month} — etwa {avg} kWh/m²/Tag durchschnittliche Sonne. Plane für diesen Monat, nicht für den Jahresdurchschnitt, sonst reicht das System in grauen Wochen nicht.",
     bomSelectedSystem: "Ausgewähltes System",
-    fxAsOfNote: "Live-Kurse Stand {asOf}.",
+    fxAsOfNote: "Live-Kurse von open.er-api.com, Stand {asOf}.",
+    fxStaleNote:
+      "Kurse zuletzt aktualisiert am {asOf}, vor {days} Tagen - Umrechnungen von open.er-api.com sind indikativ.",
+    fxIndicativeNote:
+      "Indikative eingebaute Kurse (Live-Kurse von open.er-api.com nicht verfügbar): kein Stand.",
     advisorIntakeBillLabel: "Monatliche Stromrechnung ($ USD):",
     advisorIntakeKwhLabel: "Täglicher Energieverbrauch (kWh / Tag):",
     advisorIntakeBillPh: "z. B. 400",
@@ -3921,7 +3941,11 @@ export const LOCALES = {
     worstMonthNote:
       "Donkerste maand: {month} — ongeveer {avg} kWh/m²/dag gemiddelde zon. Dimensioneer voor deze maand, niet voor het jaargemiddelde, anders schiet het systeem tekort in grijze weken.",
     bomSelectedSystem: "Geselecteerd systeem",
-    fxAsOfNote: "Live koersen per {asOf}.",
+    fxAsOfNote: "Live koersen van open.er-api.com per {asOf}.",
+    fxStaleNote:
+      "Koersen laatst bijgewerkt op {asOf}, {days} dagen geleden - omrekeningen van open.er-api.com zijn indicatief.",
+    fxIndicativeNote:
+      "Indicatieve ingebouwde koersen (live koersen van open.er-api.com niet beschikbaar): geen peildatum.",
     advisorIntakeBillLabel: "Maandelijkse energierekening ($ USD):",
     advisorIntakeKwhLabel: "Dagelijks energieverbruik (kWh / dag):",
     advisorIntakeBillPh: "bijv. 400",
@@ -4520,7 +4544,11 @@ export const LOCALES = {
     worstMonthNote:
       "الأشهر الأكثر عتمة: {month} — نحو {avg} كيلوواط ساعة/م²/يوم من الشمس المتوسطة. صمّم لهذا الشهر، لا للمتوسط السنوي، وإلا لن يكفِ النظام في الأسابيع الغائمة.",
     bomSelectedSystem: "النظام المحدد",
-    fxAsOfNote: "أسعار مباشرة حتى {asOf}.",
+    fxAsOfNote: "أسعار مباشرة من open.er-api.com حتى {asOf}.",
+    fxStaleNote:
+      "آخر تحديث للأسعار في {asOf}، قبل {days} يومًا - التحويلات من open.er-api.com استرشادية.",
+    fxIndicativeNote:
+      "أسعار مدمجة استرشادية (الأسعار المباشرة من open.er-api.com غير متاحة): بدون تاريخ مرجعي.",
     advisorIntakeBillLabel: "فاتورة الكهرباء الشهرية ($ دولار أمريكي):",
     advisorIntakeKwhLabel: "استهلاك الطاقة اليومي (كيلوواط ساعة / اليوم):",
     advisorIntakeBillPh: "مثال: 400",
