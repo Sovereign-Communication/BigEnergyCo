@@ -13,11 +13,11 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20261029a";
+import { APPLIANCES } from "./appliances.js?v=20261103e";
 import {
   INSTALL_NAV_BREAKPOINT_PX,
   installReveal,
-} from "./pwa-install.js?v=20261029a";
+} from "./pwa-install.js?v=20261103e";
 import {
   USE_CASES,
   USE_CASE_IDS,
@@ -28,26 +28,26 @@ import {
   normaliseOutageTarget,
   DEFAULT_RESERVE_PCT,
   DEFAULT_TOU,
-} from "./usecases.js?v=20261029a";
+} from "./usecases.js?v=20261103e";
 import {
   createRunChannel,
   staleRunAction,
   errorReleasesRunChannel,
   RUN_REPLY_DEADLINE_MS,
-} from "./run-coordinator.js?v=20261029a";
+} from "./run-coordinator.js?v=20261103e";
 import {
   cutRowVisible,
   tierForGeneratorRuntime,
   generatorRuntimeForTier,
   generatorAllowedForRuntime,
-} from "./mode-chrome.js?v=20261029a";
-import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261029a";
-import { bestAffordableCurvePoint } from "../shared/budget-targets.js?v=20261029a";
+} from "./mode-chrome.js?v=20261103e";
+import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261103e";
+import { bestAffordableCurvePoint } from "../shared/budget-targets.js?v=20261103e";
 import {
   locateMe,
   purgeLegacyCityCache,
   setupCitySearch,
-} from "./location-picker.js?v=20261029a";
+} from "./location-picker.js?v=20261103e";
 
 import {
   estimateTariff,
@@ -55,14 +55,14 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20261029a";
+} from "./pricing.js?v=20261103e";
 // The country -> currency table. Static, not lazy: it is consulted the moment
 // a location resolves, so a dynamic import would only add a round trip to the
 // one path that must not wait. Its 11.5 KB is data, and the first-load budget
 // below records the deliberate trade.
-import { currencyForCountry } from "./country-currency.js?v=20261029a";
+import { currencyForCountry } from "./country-currency.js?v=20261103e";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261029a";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261103e";
 
 // THE FOUR WAYS TO PAY FOR ONE SYSTEM (master plan D-01 §6.4, R-PATH-01..10).
 //
@@ -94,7 +94,7 @@ let pathsLoading = null;
 function loadPaths() {
   if (pathsApi) return Promise.resolve(pathsApi);
   if (!pathsLoading)
-    pathsLoading = import("./paths.js?v=20261029a").then((mod) => {
+    pathsLoading = import("./paths.js?v=20261103e").then((mod) => {
       pathsApi = mod;
       PATHS_HORIZON_YEARS = mod.HORIZON_YEARS;
       return mod;
@@ -105,15 +105,15 @@ import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20261029a";
+} from "./lead-acid.js?v=20261103e";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20261029a";
+} from "./bom.js?v=20261103e";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20261029a";
+import { BOM_ITEMS } from "../shared/content.js?v=20261103e";
 
 import {
   applyI18n,
@@ -122,18 +122,18 @@ import {
   // uses, so `t` is a binding to the one implementation rather than a second
   // copy of the placeholder contract.
   translate as t,
-} from "../shared/i18n.js?v=20261029a";
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261029a";
-import { byId as $, el } from "../shared/dom.js?v=20261029a";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261029a";
+} from "../shared/i18n.js?v=20261103e";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261103e";
+import { byId as $, el } from "../shared/dom.js?v=20261103e";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261103e";
 import {
   isSimpleMode,
   initSimpleMode,
   setSimpleMode,
   onSimpleModeChange,
   modeLabel,
-} from "../shared/simple-mode.js?v=20261029a";
-import { buildSimpleView } from "../shared/simple-view.js?v=20261029a";
+} from "../shared/simple-mode.js?v=20261103e";
+import { buildSimpleView } from "../shared/simple-view.js?v=20261103e";
 import {
   advisorJevContext,
   interpretSanity,
@@ -141,29 +141,29 @@ import {
   renderSanityBadge,
   requestSanity,
   sanityState,
-} from "./validate.js?v=20261029a";
+} from "./validate.js?v=20261103e";
 import {
   CUT_TARGET_PCT,
   sliderStateDrifted,
   targetForPct,
-} from "../shared/cut-targets.js?v=20261029a";
+} from "../shared/cut-targets.js?v=20261103e";
 import {
   SHARE_PREFIX,
   b64urlEncode,
   parseShareHash,
-} from "./share-codec.js?v=20261029a";
+} from "./share-codec.js?v=20261103e";
 import {
   hasInfeasibleCopy,
   infeasibleCopyKeys,
-} from "./infeasible-copy.js?v=20261029a";
-import { csvDocument, partsListRows } from "./parts-csv.js?v=20261029a";
+} from "./infeasible-copy.js?v=20261103e";
+import { csvDocument, partsListRows } from "./parts-csv.js?v=20261103e";
 import {
   fuelBurnPerKwh,
   fuelDisplay,
   fuelRateUsd,
   fuelTypeName,
   isImperialLocation,
-} from "./fuel-units.js?v=20261029a";
+} from "./fuel-units.js?v=20261103e";
 
 import {
   createLeafletProvider,
@@ -171,18 +171,18 @@ import {
   rotatedRectangleAreaM2,
   rotatedRectangleCorners,
   manualRoofHint,
-} from "./map-provider.js?v=20261029a";
+} from "./map-provider.js?v=20261103e";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20261029a";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20261029a";
+} from "./wizard.js?v=20261103e";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20261103e";
 import {
   interpolateCurveTarget,
   surplusAnchor,
   budgetSpanMax,
-} from "./budget-span.js?v=20261029a";
+} from "./budget-span.js?v=20261103e";
 // Heavy modules used only after a sizing result stay outside the initial UI graph.
 let _engine = null;
 let _charts = null;
@@ -194,10 +194,10 @@ let _chartsInitialized = false;
 function preloadRunModules() {
   if (!_runModulesPromise) {
     _runModulesPromise = Promise.all([
-      import("./engine.js?v=20261029a"),
-      import("./charts.js?v=20261029a"),
-      import("./frontier-chart.js?v=20261029a"),
-      import("./rescale.js?v=20261029a"),
+      import("./engine.js?v=20261103e"),
+      import("./charts.js?v=20261103e"),
+      import("./frontier-chart.js?v=20261103e"),
+      import("./rescale.js?v=20261103e"),
     ])
       .then(([engine, charts, frontierChart, rescale]) => {
         _engine = engine;
@@ -265,9 +265,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20261029a";
+} from "./money.js?v=20261103e";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261029a";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261103e";
 
 let worker = null;
 
@@ -1420,6 +1420,41 @@ function getTariff() {
   const v = parseFloat($("customRateVal")?.value);
 
   return Number.isFinite(v) && v > 0 ? v : null;
+}
+
+// One constant for the HTML `min`, the message's {min} and the check.
+const TARIFF_MIN = 0.01;
+
+/**
+ * A non-empty price that is text, zero or negative cannot be a price. Empty is
+ * valid: clearing the field means "use the local estimate".
+ */
+function tariffFieldInvalid() {
+  const input = $("customRateVal");
+  if (!input) return false;
+  const raw = String(input.value ?? "").trim();
+  if (raw === "") return false;
+  const v = parseFloat(raw);
+  return !Number.isFinite(v) || v < TARIFF_MIN;
+}
+
+/** One writer for the visible text and the announced aria state. */
+function showTariffError(show) {
+  const input = $("customRateVal");
+  const box = $("rateError");
+  if (show) {
+    if (input) input.setAttribute("aria-invalid", "true");
+    if (box) {
+      box.textContent = t("invalidTariff", { min: TARIFF_MIN.toFixed(2) });
+      box.hidden = false;
+    }
+  } else {
+    if (input) input.removeAttribute("aria-invalid");
+    if (box) {
+      box.hidden = true;
+      box.textContent = "";
+    }
+  }
 }
 
 // Fixed monthly connection fee, display currency like the tariff (a number
@@ -2835,6 +2870,19 @@ function run(quiet = false, explicit = false) {
     runTimer = null;
   }
 
+  // A price that cannot be a price blocks the run and says why, next to the
+  // field and in the status line. This is checked BEFORE readInputs() so the
+  // run never proceeds with a tariff the field rejected.
+  if (tariffFieldInvalid()) {
+    runChannel.dropPending();
+    setResultsHidden(true);
+    showTariffError(true);
+    setStatus(t("invalidTariff", { min: TARIFF_MIN.toFixed(2) }));
+    if (!quiet) $("customRateVal")?.focus();
+    return;
+  }
+  showTariffError(false);
+
   const inp = readInputs();
 
   if (
@@ -3918,7 +3966,7 @@ function restoreRunButton() {
 function ensureWorker() {
   if (!worker) {
     const runWorker = new Worker(
-      "./assets/js/sizing/sizing-worker.js?v=20261029a",
+      "./assets/js/sizing/sizing-worker.js?v=20261103e",
       {
         type: "module",
       },
@@ -8467,6 +8515,9 @@ async function initSizingUI() {
     if (customVal)
       customVal.addEventListener("input", () => {
         tariffTouched = true;
+        // Correcting the value clears the error immediately: an error that
+        // lingers after the fix reads as a second, unexplained failure.
+        if (!tariffFieldInvalid()) showTariffError(false);
         syncBillSlider();
         markPrecalcDirty();
       });
@@ -8837,11 +8888,11 @@ async function initSizingUI() {
     // can click, and the browser smoke gate polls for the ready flag
     // rather than assuming it. Without the loader the CTA is a plain
     // link — the same fallback the loader's own catch takes.
-    import("../shared/translation-suggestion-loader.js?v=20261029a")
+    import("../shared/translation-suggestion-loader.js?v=20261103e")
       .then(({ installTranslationSuggestionLoader }) => {
         installTranslationSuggestionLoader(
           document.querySelector("[data-translation-suggestion]"),
-          () => import("../translation-suggestion.js?v=20261029a"),
+          () => import("../translation-suggestion.js?v=20261103e"),
         );
       })
       .catch(() => {});

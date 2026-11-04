@@ -3,11 +3,23 @@
 // `ar` flips the document to RTL automatically.
 // Keys not present in a locale fall back to English silently.
 
-import { HOME_COPY } from "./home-copy.js?v=20261029a";
+import { HOME_COPY } from "./home-copy.js?v=20261103e";
 
 export const LOCALES = {
   en: {
     ...HOME_COPY.en,
+    sizingFor: "What are you sizing for?",
+    goalCutBill: "Cut My Electric Bill",
+    goalOffgrid: "Off-grid / Backup",
+    buildMadeOf: "What a ~100 kWh Build Is Made Of",
+    commonQuestions: "Common Questions",
+    askAdvisorAction: "Ask the AI advisor about this result",
+    copyShareLink: "Copy share link",
+    printResult: "Print / save PDF",
+    socZoomFull: "Full 5-Yr",
+    socZoomWorst: "Worst Month",
+    invalidTariff:
+      "Enter a price above {min} per kWh, or clear the field to use the local estimate.",
     navSizing: "Size Your System",
     navSupport: "Support",
     cutLabel: "Your bill-cut target",
@@ -601,6 +613,18 @@ export const LOCALES = {
   },
   es: {
     ...HOME_COPY.es,
+    sizingFor: "¿Qué estás dimensionando?",
+    goalCutBill: "Reducir mi factura eléctrica",
+    goalOffgrid: "Aislado / Respaldo",
+    buildMadeOf: "De qué se compone un sistema de ~100 kWh",
+    commonQuestions: "Preguntas frecuentes",
+    askAdvisorAction: "Preguntar al asesor de IA sobre este resultado",
+    copyShareLink: "Copiar enlace para compartir",
+    printResult: "Imprimir / guardar PDF",
+    socZoomFull: "5 años completos",
+    socZoomWorst: "Peor mes",
+    invalidTariff:
+      "Introduce un precio superior a {min} por kWh, o deja el campo vacío para usar la estimación local.",
     navSizing: "Dimensiona tu sistema",
     navSupport: "Soporte",
     cutLabel: "Tu objetivo de reducción de factura",
@@ -1213,6 +1237,18 @@ export const LOCALES = {
   },
   pt: {
     ...HOME_COPY.pt,
+    sizingFor: "O que você está dimensionando?",
+    goalCutBill: "Reduzir minha conta de luz",
+    goalOffgrid: "Isolado / Backup",
+    buildMadeOf: "Do que é feito um sistema de ~100 kWh",
+    commonQuestions: "Perguntas frequentes",
+    askAdvisorAction: "Perguntar ao consultor de IA sobre este resultado",
+    copyShareLink: "Copiar link de compartilhamento",
+    printResult: "Imprimir / salvar PDF",
+    socZoomFull: "5 anos completos",
+    socZoomWorst: "Pior mês",
+    invalidTariff:
+      "Informe um preço acima de {min} por kWh, ou limpe o campo para usar a estimativa local.",
     navSizing: "Dimensione seu sistema",
     navSupport: "Suporte",
     cutLabel: "Sua meta de redução da conta",
@@ -1816,6 +1852,18 @@ export const LOCALES = {
   },
   fr: {
     ...HOME_COPY.fr,
+    sizingFor: "Que dimensionnez-vous ?",
+    goalCutBill: "Réduire ma facture d'électricité",
+    goalOffgrid: "Autonome / Secours",
+    buildMadeOf: "De quoi se compose une installation de ~100 kWh",
+    commonQuestions: "Questions fréquentes",
+    askAdvisorAction: "Demander au conseiller IA à propos de ce résultat",
+    copyShareLink: "Copier le lien de partage",
+    printResult: "Imprimer / enregistrer en PDF",
+    socZoomFull: "5 ans complets",
+    socZoomWorst: "Pire mois",
+    invalidTariff:
+      "Saisissez un prix supérieur à {min} par kWh, ou videz le champ pour utiliser l'estimation locale.",
     navSizing: "Dimensionner mon système",
     navSupport: "Assistance",
     cutLabel: "Votre objectif de réduction de facture",
@@ -2432,6 +2480,18 @@ export const LOCALES = {
   },
   de: {
     ...HOME_COPY.de,
+    sizingFor: "Was möchten Sie dimensionieren?",
+    goalCutBill: "Meine Stromrechnung senken",
+    goalOffgrid: "Insel / Notstrom",
+    buildMadeOf: "Woraus eine Anlage mit ~100 kWh besteht",
+    commonQuestions: "Häufige Fragen",
+    askAdvisorAction: "Die KI-Beratung zu diesem Ergebnis fragen",
+    copyShareLink: "Freigabe-Link kopieren",
+    printResult: "Drucken / als PDF speichern",
+    socZoomFull: "Volle 5 Jahre",
+    socZoomWorst: "Schlechtester Monat",
+    invalidTariff:
+      "Geben Sie einen Preis über {min} pro kWh ein oder leeren Sie das Feld, um die lokale Schätzung zu verwenden.",
     navSizing: "System dimensionieren",
     navSupport: "Hilfe",
     cutLabel: "Ziel für die Rechnungssenkung",
@@ -3039,6 +3099,18 @@ export const LOCALES = {
     advisorIntakeKwhPh: "z. B. 35",
   },
   nl: {
+    sizingFor: "Waar dimensionneert u voor?",
+    goalCutBill: "Mijn energierekening verlagen",
+    goalOffgrid: "Off-grid / Noodstroom",
+    buildMadeOf: "Waaruit een installatie van ~100 kWh bestaat",
+    commonQuestions: "Veelgestelde vragen",
+    askAdvisorAction: "Vraag de AI-adviseur over dit resultaat",
+    copyShareLink: "Deellink kopiëren",
+    printResult: "Afdrukken / opslaan als pdf",
+    socZoomFull: "Volledige 5 jaar",
+    socZoomWorst: "Slechtste maand",
+    invalidTariff:
+      "Vul een prijs boven {min} per kWh in, of maak het veld leeg om de lokale schatting te gebruiken.",
     navSizing: "Systeem dimensioneren",
     navSupport: "Ondersteuning",
     cutLabel: "Uw besparingsdoel voor de energierekening",
@@ -3754,6 +3826,18 @@ export const LOCALES = {
   ar: {
     ...HOME_COPY.ar,
     rtl: true,
+    sizingFor: "ما الذي تحدد حجمه؟",
+    goalCutBill: "تقليل فاتورة الكهرباء",
+    goalOffgrid: "منفصل عن الشبكة / احتياطي",
+    buildMadeOf: "مم يتكون نظام بسعة ~100 kWh",
+    commonQuestions: "أسئلة شائعة",
+    askAdvisorAction: "اسأل مستشار الذكاء الاصطناعي عن هذه النتيجة",
+    copyShareLink: "نسخ رابط المشاركة",
+    printResult: "طباعة / حفظ PDF",
+    socZoomFull: "خمس سنوات كاملة",
+    socZoomWorst: "أسوأ شهر",
+    invalidTariff:
+      "أدخل سعرًا أعلى من {min} لكل kWh، أو امسح الحقل لاستخدام التقدير المحلي.",
     navSizing: "صمّم نظامك",
     navSupport: "الدعم",
     cutLabel: "هدف خفض الفاتورة",

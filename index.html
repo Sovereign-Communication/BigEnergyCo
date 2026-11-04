@@ -259,10 +259,10 @@
     <!-- Early Hints prep: these two are on every page's critical path. When
          the zone's Early Hints setting is on, Cloudflare turns them into a
          103 response so the browser starts fetching before the HTML lands. -->
-    <link rel="preload" href="./assets/site.css?v=20261029a" as="style" />
-    <link rel="modulepreload" href="./assets/js/sizing/ui.js?v=20261029a" />
+    <link rel="preload" href="./assets/site.css?v=20261103e" as="style" />
+    <link rel="modulepreload" href="./assets/js/sizing/ui.js?v=20261103e" />
 
-    <link rel="stylesheet" href="./assets/site.css?v=20261029a" />
+    <link rel="stylesheet" href="./assets/site.css?v=20261103e" />
 
     <!-- Preconnect to weather, tariff, and geocoding APIs during parsing. -->
     <link rel="preconnect" href="https://power.larc.nasa.gov" crossorigin />
@@ -566,6 +566,7 @@
                     display: block;
                     margin-bottom: 0.4rem;
                   "
+                  data-i18n="sizingFor"
                   >What are you sizing for?</span
                 >
                 <div
@@ -581,14 +582,16 @@
                     id="btnGoalGridtie"
                     class="btn btn-segmented active goal-mode-control"
                   >
-                    <span>🏠</span> Cut My Electric Bill
+                    <span>🏠</span>
+                    <span data-i18n="goalCutBill">Cut My Electric Bill</span>
                   </button>
                   <button
                     type="button"
                     id="btnGoalOffgrid"
                     class="btn btn-segmented goal-mode-control"
                   >
-                    <span>🌲</span> Off-grid / Backup
+                    <span>🌲</span>
+                    <span data-i18n="goalOffgrid">Off-grid / Backup</span>
                   </button>
                 </div>
               </div>
@@ -1132,7 +1135,12 @@
                     placeholder="e.g. 0.31"
                     step="0.01"
                     min="0.01"
+                    aria-describedby="rateError"
                   />
+
+                  <!-- Says why a rejected price was rejected, in the visitor's
+                    language, wired to the input through aria-describedby. -->
+                  <p id="rateError" class="field-error" role="alert" hidden></p>
 
                   <details
                     id="genHelper"
@@ -2413,6 +2421,7 @@
                         id="btnSocZoomReset"
                         class="btn btn-outline btn-xs soc-zoom-button"
                         title="Full 5-year simulation"
+                        data-i18n="socZoomFull"
                       >
                         Full 5-Yr
                       </button>
@@ -2421,6 +2430,7 @@
                         id="btnSocZoomWorst"
                         class="btn btn-outline btn-xs soc-zoom-button"
                         title="Zoom into the worst 30-day streak"
+                        data-i18n="socZoomWorst"
                       >
                         Worst Month
                       </button>
@@ -2646,6 +2656,7 @@
                     class="btn btn-secondary"
                     type="button"
                     style="display: none"
+                    data-i18n="askAdvisorAction"
                   >
                     Ask the AI advisor about this result
                   </button>
@@ -2655,6 +2666,7 @@
                     class="btn btn-outline"
                     type="button"
                     style="display: none"
+                    data-i18n="copyShareLink"
                   >
                     Copy share link
                   </button>
@@ -2664,6 +2676,7 @@
                     class="btn btn-outline"
                     type="button"
                     style="display: none"
+                    data-i18n="printResult"
                   >
                     Print / save PDF
                   </button>
@@ -2679,7 +2692,9 @@
       <section id="bom" class="bom-section">
         <div class="container">
           <div class="section-header">
-            <h2 class="section-title">What a ~100 kWh Build Is Made Of</h2>
+            <h2 class="section-title" data-i18n="buildMadeOf">
+              What a ~100 kWh Build Is Made Of
+            </h2>
 
             <p class="section-desc" data-i18n="partsListIntro">
               A reference parts list so you know what the pieces are and roughly
@@ -2768,7 +2783,9 @@
       <section id="faq" class="legal-section">
         <div class="container">
           <div class="section-header">
-            <h2 class="section-title">Common Questions</h2>
+            <h2 class="section-title" data-i18n="commonQuestions">
+              Common Questions
+            </h2>
 
             <p class="section-desc" data-i18n="faqIntro">
               Short answers to what people ask most. The AI advisor can go
@@ -3481,15 +3498,15 @@
 
     <!-- Browser helpers (classic script: advisor + modal globals) -->
 
-    <script type="module" src="./assets/js/sizing/ui.js?v=20261029a"></script>
+    <script type="module" src="./assets/js/sizing/ui.js?v=20261103e"></script>
 
     <!-- Turnstile client (B1/R-CF-02). Harmless with no site key configured;
          the advisor posts without a token in that case, exactly as before. -->
     <script
       type="module"
-      src="./assets/js/turnstile-client.js?v=20261029a"
+      src="./assets/js/turnstile-client.js?v=20261103e"
     ></script>
-    <script defer src="./assets/js/chat.js?v=20261029a"></script>
+    <script defer src="./assets/js/chat.js?v=20261103e"></script>
   </body>
 </html>
 
