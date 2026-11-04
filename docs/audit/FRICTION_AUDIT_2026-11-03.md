@@ -175,3 +175,25 @@ new `hardwareForRun()` honors solar/both on unlocked cases and keeps locked pair
 load the hash with a full navigation, then read `lastInputs` before trusting a
 result. Cost: two diagnostic turns; the first receipt (solar-only) and the
 standard-sizing receipt came only after the fix.
+
+**R-3 · The last two C4 keys are a cycle-band branch, and the branch build could not render them (2026-11-04).**
+The two remaining callouts are not reachable by "trying more loads": both sit behind
+an AGM cycle band. The oversize estimate is only cheaper on paper while the bank's
+annual equivalent cycles stay under 25 x (1 + replacements); Phoenix cycles its
+bank at ~620-700/yr, so the estimate can never favour oversizing there, which is
+why the earlier 20/60/120/200 kWh/day drives all landed on natural zero-swap or
+standard-sizing-cheapest. Reading the emission sites first, then constructing the
+state, found both: off-grid AGM tier99 at 10 kWh/day (no-figures flip) and 15
+kWh/day (beyond-search) in a pinned synthetic year, and real one-year NASA series
+at Bergen/Anchorage (8-10 kWh/day) and London/Seattle (25-30 kWh/day). The page's
+five-year series at the same sites and loads did not land on either branch, so no
+DOM receipt is claimed for this pass. Two drive defects cost turns and are worth
+recording: a hash-only navigation stays same-document and re-runs the previous
+cached configuration (use a query for a full load), and seeding the page's
+IndexedDB weather cache (`beco-weather-v2`, store `series`, key
+`beco-power-v2:<lat>,<lon>,5y`) still left the run in the weather stage while the
+render path threw `Cannot read properties of undefined (reading 'toFixed')` in
+`populatePrintSheet` (`ui.js:8224`, `p.meta.latitude`). **Cure:** the branch
+conditions and fixtures are in the ledger C4 row and the pinning test; the surface
+drive needs a branch build that completes a run and a payload carrying `meta`
+latitude/longitude, then the same share states can be read from `#tierResults`.
