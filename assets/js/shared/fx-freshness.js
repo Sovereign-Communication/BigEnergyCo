@@ -1,19 +1,12 @@
-// The FX notice's rule, in one place: where a converted figure's rate came
-// from, what as-of date to show, and whether that date is old enough to call
-// the conversion indicative (master plan P1.4, defect F-10).
-//
-// WHY THIS EXISTS AS A MODULE. The page had the sentence and did not print it:
-// `fxNote()` computed an `asOf` local and returned a string that never used it,
-// so a visitor reading a converted amount was told neither the source nor the
-// date. The form-level field was worse - it was written only on a successful
-// fetch, so the offline path (the static built-in table) showed nothing at all.
-// Both surfaces now ask this one function, so they cannot disagree.
+// The FX notice rule (plan P1.4, F-10): the source, the as-of date, and
+// whether a fetched rate is old enough to call the conversion indicative.
+// Both surfaces - the assumptions paragraph and the #fxAsOf field - ask this
+// one function, so they cannot disagree. Before it, fxNote() computed the
+// as-of sentence and returned a string that never used it.
 export const FX_SOURCE = "open.er-api.com";
 
-// Seven days is the notice threshold, not a data-quality claim: the built-in
-// table is already "indicative", and a week-old fetched rate is close enough
-// for a planning estimate while a month-old one is not close enough to present
-// without saying so.
+// A week-old fetched rate is close enough for a planning estimate; an older
+// one is not close enough to present without saying so.
 export const FX_STALE_DAYS = 7;
 
 const DAY_MS = 86400000;
@@ -28,16 +21,13 @@ export function fxAgeDays(asOf, now = Date.now()) {
 }
 
 /**
- * The notice state for one as-of value.
- *
- * - `indicative`: no as-of at all - the live fetch never succeeded this session
- *   and the static table is pricing the page.
- * - `stale`: the provider's date parsed and is older than FX_STALE_DAYS.
- * - `live`: fresh, or present but unparseable (a provider format change must
- *   still show its own date rather than claim a freshness nobody measured).
+ * live: fresh, or a date we cannot parse (show it rather than invent an age).
+ * stale: parsed and older than FX_STALE_DAYS.
+ * indicative: no as-of at all - the static table is pricing the page.
  */
 export function fxFreshness(asOf, now = Date.now()) {
-  if (!asOf) return { state: "indicative", days: null, key: "fxIndicativeNote" };
+  if (!asOf)
+    return { state: "indicative", days: null, key: "fxIndicativeNote" };
   const days = fxAgeDays(asOf, now);
   if (days !== null && days > FX_STALE_DAYS)
     return { state: "stale", days, key: "fxStaleNote" };

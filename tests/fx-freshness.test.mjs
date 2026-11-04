@@ -74,7 +74,10 @@ test("P1.4: every locale carries the source and the placeholders it needs", () =
       );
     }
     assert.ok(d.fxAsOfNote.includes("{asOf}"), `${lang} drops the as-of date`);
-    assert.ok(d.fxStaleNote.includes("{asOf}"), `${lang} stale line drops date`);
+    assert.ok(
+      d.fxStaleNote.includes("{asOf}"),
+      `${lang} stale line drops date`,
+    );
     assert.ok(d.fxStaleNote.includes("{days}"), `${lang} stale line drops age`);
   }
 });
@@ -90,7 +93,11 @@ test("P1.4: both render paths ask the rule, and the notice renders before the fe
     /fxFreshness\(fxMeta\.asOf\)/,
     "the assumptions paragraph asks the shared rule",
   );
-  assert.match(ui, /FX_SOURCE/, "the paragraph names the source from the module");
+  assert.match(
+    ui,
+    /FX_SOURCE/,
+    "the paragraph names the source from the module",
+  );
   assert.match(
     ui,
     /function renderFxNotice\(\)/,
