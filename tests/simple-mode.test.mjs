@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import { buildSimpleView } from "../assets/js/shared/simple-view.js";
 import { LOCALES } from "../assets/js/shared/locales.js";
+import { interpolate } from "../assets/js/shared/interpolate.js";
 
 // One grid-tie auto entry, shaped exactly like run.js emits it.
 const ENTRY = {
@@ -24,12 +25,15 @@ const FMT = {
   fmtPaybackRange: (lo) => lo + " years",
 };
 
+const T = (key, vars = {}) => interpolate(LOCALES.en[key], vars);
+
 test("simple view: heroes carry the headline figures from the same entry", () => {
   const view = buildSimpleView({
     p: { mode: "gridtie" },
     entry: ENTRY,
     saved: 21000,
     fmt: FMT,
+    t: T,
   });
 
   assert.ok(view.feasible);
@@ -69,6 +73,7 @@ test("simple view: battery-only states the peak offset, never a bill cut", () =>
     entry: BATTERY_ONLY,
     saved: -1190,
     fmt: FMT,
+    t: T,
   });
 
   assert.ok(view.feasible);
@@ -97,6 +102,7 @@ test("simple view: the same entry WITH panels still reads as a bill cut", () => 
     entry: { ...BATTERY_ONLY, pvKw: 6.6 },
     saved: 21000,
     fmt: FMT,
+    t: T,
   });
   const goal = view.heroes.find((h) => h.label === "What it does");
   assert.equal(goal.value, "cuts about 92% off your bill");
@@ -138,6 +144,7 @@ test("simple view: off-grid goal line reads coverage, not bill-cut", () => {
     entry: { ...ENTRY, unmetHoursPerYear: 876 },
     saved: NaN,
     fmt: FMT,
+    t: T,
   });
   const goal = view.heroes.find((h) => h.label === "What it does");
   assert.equal(goal.value, "90% of the year covered");
@@ -148,7 +155,7 @@ test("simple view: off-grid goal line reads coverage, not bill-cut", () => {
 
 test("simple view: infeasible or unsized entries produce nothing to render", () => {
   assert.deepEqual(
-    buildSimpleView({ p: { mode: "gridtie" }, entry: null, fmt: FMT }),
+    buildSimpleView({ p: { mode: "gridtie" }, entry: null, fmt: FMT, t: T }),
     { feasible: false },
   );
   assert.deepEqual(
@@ -156,6 +163,7 @@ test("simple view: infeasible or unsized entries produce nothing to render", () 
       p: { mode: "gridtie" },
       entry: { ...ENTRY, solvable: false },
       fmt: FMT,
+      t: T,
     }),
     { feasible: false },
   );
@@ -174,6 +182,7 @@ test("simple view: never renders NaN or missing figures", () => {
     },
     saved: NaN,
     fmt: FMT,
+    t: T,
   });
   const labels = view.heroes.map((h) => h.label);
   assert.ok(!labels.includes("First cost"));

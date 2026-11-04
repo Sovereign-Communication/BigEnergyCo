@@ -55,8 +55,10 @@ const entry = {
   paybackYearsHi: 7,
 };
 
-const translator = (locale) => (key, vars = {}) =>
-  interpolate(LOCALES[locale][key], vars);
+const translator =
+  (locale) =>
+  (key, vars = {}) =>
+    interpolate(LOCALES[locale][key], vars);
 
 test("every Simple-mode runtime key exists in all seven locales", () => {
   for (const locale of Object.keys(LOCALES)) {
@@ -156,10 +158,7 @@ test("the Simple mode label and chrome strings are dictionary lookups", () => {
       `ui.js still ships the unkeyed chrome literal: ${literal}`,
     );
   }
-  for (const key of [
-    "analysisFullBill",
-    "analysisFullSystem",
-  ]) {
+  for (const key of ["analysisFullBill", "analysisFullSystem"]) {
     assert.ok(ui.includes(`"${key}"`), `ui.js does not name ${key}`);
   }
   assert.match(
