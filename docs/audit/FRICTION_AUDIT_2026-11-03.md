@@ -176,24 +176,39 @@ load the hash with a full navigation, then read `lastInputs` before trusting a
 result. Cost: two diagnostic turns; the first receipt (solar-only) and the
 standard-sizing receipt came only after the fix.
 
-**R-3 · The last two C4 keys are a cycle-band branch, and the branch build could not render them (2026-11-04).**
+**R-3 · The last two C4 keys are a cycle-band branch, and the surface drive needed a correctly shaped fixture (2026-11-04).**
 The two remaining callouts are not reachable by "trying more loads": both sit behind
 an AGM cycle band. The oversize estimate is only cheaper on paper while the bank's
 annual equivalent cycles stay under 25 x (1 + replacements); Phoenix cycles its
 bank at ~620-700/yr, so the estimate can never favour oversizing there, which is
 why the earlier 20/60/120/200 kWh/day drives all landed on natural zero-swap or
 standard-sizing-cheapest. Reading the emission sites first, then constructing the
-state, found both: off-grid AGM tier99 at 10 kWh/day (no-figures flip) and 15
-kWh/day (beyond-search) in a pinned synthetic year, and real one-year NASA series
-at Bergen/Anchorage (8-10 kWh/day) and London/Seattle (25-30 kWh/day). The page's
-five-year series at the same sites and loads did not land on either branch, so no
-DOM receipt is claimed for this pass. Two drive defects cost turns and are worth
-recording: a hash-only navigation stays same-document and re-runs the previous
-cached configuration (use a query for a full load), and seeding the page's
-IndexedDB weather cache (`beco-weather-v2`, store `series`, key
-`beco-power-v2:<lat>,<lon>,5y`) still left the run in the weather stage while the
-render path threw `Cannot read properties of undefined (reading 'toFixed')` in
-`populatePrintSheet` (`ui.js:8224`, `p.meta.latitude`). **Cure:** the branch
-conditions and fixtures are in the ledger C4 row and the pinning test; the surface
-drive needs a branch build that completes a run and a payload carrying `meta`
-latitude/longitude, then the same share states can be read from `#tierResults`.
+state, found both: off-grid AGM at 10 kWh/day (no-figures flip) and 15 kWh/day
+(beyond-search) in a pinned synthetic year, and real one-year NASA series at
+Bergen/Anchorage (8-10 kWh/day) and London/Seattle (25-30 kWh/day). The page's
+five-year fixture now renders the beyond-search sentence through the ordinary
+surface at 8-10 kWh/day (see C4). Three drive defects cost turns and are worth
+recording. A share hash does not auto-run: restore sets `shareLoaded` and waits for
+the Run button, so a drive that only waits reads as a stalled weather stage. A
+hash-only change stays same-document and re-runs the previous cached
+configuration; use a query for a full load. And the first IndexedDB seed carried
+`{ghi,tAmb,meta}` with no `meta.latitude/longitude`, so the run's print sheet threw
+`Cannot read properties of undefined (reading 'toFixed')` at `ui.js:8224`; with
+the cache's real shape (Float32Array pairs plus meta carrying latitude, longitude
+and the 2021-2025 window) the same drive completes, the status reads "5 ans de
+donnees horaires (2021-2025)", and the print sheet fills (3,629 chars at 8 kWh/day)
+— a harness-shape defect, not a product defect. **Cure:** seed typed arrays plus
+full meta, navigate with a query, press Dimensionner, and allow minutes for the
+five-year search; the share states are recorded in the C4 row.
+
+**R-4 · An off-grid share link sized the previous slider load (2026-11-04, fixed).**
+Opening an off-grid `#s=` link wrote `dailyKwhInput` but never
+`offgridKwhSlider`; `readInputs()` reads the slider first for off-grid, so the
+link silently sized whatever load the slider already held. The drive showed it
+plainly: shares naming 4, 8 and 10 kWh/day all produced the identical 41 kW /
+138 kWh, 432 h/yr system because the slider held 20. `restoreFromShare` now
+writes the slider when the shared value fits its range and clears it when it
+does not, so the numeric input wins instead of a stale thumb;
+`tests/playtest-guards.test.mjs` pins the slider write and the clear.
+**Cure:** every control `readInputs()` prefers over the numeric input must be
+restored by the share path.
