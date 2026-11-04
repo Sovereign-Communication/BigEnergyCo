@@ -102,3 +102,21 @@ the stamp commit is created, which reads like a content error and is not one.
 **Cure applied:** bump the stamp in the same commit as any asset edit, and run
 `bump-asset-tokens --check` _after_ committing, never before. Two CI round trips
 cost today (~25 min including queue).
+
+**G-3 · The byte gate tripped again on the first P1.4 cut (2026-11-04).**
+`js_to_first_result` read 204,845 against the unchanged 204,800 limit - 45
+bytes over - because the new module shipped its explanation whole. Cured the
+repo's way: the module prose was trimmed once (behavior unchanged, tests
+still pin it) and a `baseline` row recorded the measured 204,608 with
+`was`/`delta` and the reason. One build-and-measure round trip, no CI round
+trip, no limit touched. This is G-2 recurring exactly as recorded; the lane
+habit that works is measure locally with `deploy:check` + the byte gate
+before the first push of any slice that adds shipped bytes.
+
+**T-1 · A tracker tick claimed a record that did not exist (2026-11-04).**
+The P1.6 box was ticked with "ledger row carried by #341" while #341 was
+carrying only the P1.1 and P1.2 rows. Caught in the same session by reading
+the ledger line back, and corrected on #145 to "ledger row still open"; the
+missing `P1.6` row is now an explicit EVIDENCE ONLY entry. **Cure:** a tick's
+parenthetical names an artifact that exists at the moment of writing, or it
+names the gap. Read the artifact back before posting the tick.
