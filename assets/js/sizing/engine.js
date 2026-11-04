@@ -1230,7 +1230,9 @@ export function sizeForBillCut({
       opt.useOversized = false;
       opt.oversizeScenario = "swaps_cheaper";
       opt.bestPriceCallout = `Best 20-year price: standard sizing with battery replacements is cheaper over 20 years than paying upfront to oversize.`;
-      opt.bestPriceCalloutI18n = oversizeCalloutI18n("swaps_cheaper_no_figures");
+      opt.bestPriceCalloutI18n = oversizeCalloutI18n(
+        "swaps_cheaper_no_figures",
+      );
     } else if (pvMax === 0) {
       const r = evaluate(0, b);
       if (meets(r)) {
