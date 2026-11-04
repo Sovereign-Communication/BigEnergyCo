@@ -104,3 +104,25 @@ test("validation feedback exists in every supported language", () => {
     );
   }
 });
+
+test("an off-grid share link sizes the load it names, not the old slider", () => {
+  const restoreStart = ui.indexOf("function restoreFromShare() {");
+  const restoreEnd = ui.indexOf(
+    "function populatePrintSheet(p, inp)",
+    restoreStart,
+  );
+  const restore = ui.slice(restoreStart, restoreEnd);
+  const readStart = ui.indexOf("function readInputs() {");
+  const readEnd = ui.indexOf("function readPercentInput", readStart);
+  const readInputs = ui.slice(readStart, readEnd);
+  // Off-grid preference order: the slider wins over the numeric input. That
+  // makes the slider a control the share path must write, or the link sizes
+  // whatever load the previous visitor left behind.
+  assert.match(
+    readInputs,
+    /offgridKwhSlider"\)\?\.value[\s\S]{0,200}dailyKwhInput"\)\?\.value/,
+  );
+  assert.match(restore, /const sharedSlider = \$\("offgridKwhSlider"\)/);
+  assert.match(restore, /sharedSlider\.value = String\(kw\)/);
+  assert.match(restore, /else \{\s*sharedSlider\.value = "";\s*\}/);
+});
