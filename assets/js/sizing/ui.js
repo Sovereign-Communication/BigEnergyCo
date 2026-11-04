@@ -13,11 +13,11 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20261103d";
+import { APPLIANCES } from "./appliances.js?v=20261103u";
 import {
   INSTALL_NAV_BREAKPOINT_PX,
   installReveal,
-} from "./pwa-install.js?v=20261103d";
+} from "./pwa-install.js?v=20261103u";
 import {
   USE_CASES,
   USE_CASE_IDS,
@@ -28,27 +28,27 @@ import {
   normaliseOutageTarget,
   DEFAULT_RESERVE_PCT,
   DEFAULT_TOU,
-} from "./usecases.js?v=20261103d";
+} from "./usecases.js?v=20261103u";
 import {
   createRunChannel,
   staleRunAction,
   errorReleasesRunChannel,
   RUN_REPLY_DEADLINE_MS,
-} from "./run-coordinator.js?v=20261103d";
+} from "./run-coordinator.js?v=20261103u";
 import {
   assumptionDisclosureKeys,
   cutRowVisible,
   tierForGeneratorRuntime,
   generatorRuntimeForTier,
   generatorAllowedForRuntime,
-} from "./mode-chrome.js?v=20261103d";
-import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261103d";
-import { bestAffordableCurvePoint } from "../shared/budget-targets.js?v=20261103d";
+} from "./mode-chrome.js?v=20261103u";
+import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261103u";
+import { bestAffordableCurvePoint } from "../shared/budget-targets.js?v=20261103u";
 import {
   locateMe,
   purgeLegacyCityCache,
   setupCitySearch,
-} from "./location-picker.js?v=20261103d";
+} from "./location-picker.js?v=20261103u";
 
 import {
   estimateTariff,
@@ -56,14 +56,14 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20261103d";
+} from "./pricing.js?v=20261103u";
 // The country -> currency table. Static, not lazy: it is consulted the moment
 // a location resolves, so a dynamic import would only add a round trip to the
 // one path that must not wait. Its 11.5 KB is data, and the first-load budget
 // below records the deliberate trade.
-import { currencyForCountry } from "./country-currency.js?v=20261103d";
+import { currencyForCountry } from "./country-currency.js?v=20261103u";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261103d";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261103u";
 
 // THE FOUR WAYS TO PAY FOR ONE SYSTEM (master plan D-01 §6.4, R-PATH-01..10).
 //
@@ -95,7 +95,7 @@ let pathsLoading = null;
 function loadPaths() {
   if (pathsApi) return Promise.resolve(pathsApi);
   if (!pathsLoading)
-    pathsLoading = import("./paths.js?v=20261103d").then((mod) => {
+    pathsLoading = import("./paths.js?v=20261103u").then((mod) => {
       pathsApi = mod;
       PATHS_HORIZON_YEARS = mod.HORIZON_YEARS;
       return mod;
@@ -106,15 +106,15 @@ import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20261103d";
+} from "./lead-acid.js?v=20261103u";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20261103d";
+} from "./bom.js?v=20261103u";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20261103d";
+import { BOM_ITEMS } from "../shared/content.js?v=20261103u";
 
 import {
   applyI18n,
@@ -123,18 +123,18 @@ import {
   // uses, so `t` is a binding to the one implementation rather than a second
   // copy of the placeholder contract.
   translate as t,
-} from "../shared/i18n.js?v=20261103d";
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261103d";
-import { byId as $, el } from "../shared/dom.js?v=20261103d";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261103d";
+} from "../shared/i18n.js?v=20261103u";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261103u";
+import { byId as $, el } from "../shared/dom.js?v=20261103u";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261103u";
 import {
   isSimpleMode,
   initSimpleMode,
   setSimpleMode,
   onSimpleModeChange,
   modeLabel,
-} from "../shared/simple-mode.js?v=20261103d";
-import { buildSimpleView } from "../shared/simple-view.js?v=20261103d";
+} from "../shared/simple-mode.js?v=20261103u";
+import { buildSimpleView } from "../shared/simple-view.js?v=20261103u";
 import {
   advisorJevContext,
   interpretSanity,
@@ -142,29 +142,29 @@ import {
   renderSanityBadge,
   requestSanity,
   sanityState,
-} from "./validate.js?v=20261103d";
+} from "./validate.js?v=20261103u";
 import {
   CUT_TARGET_PCT,
   sliderStateDrifted,
   targetForPct,
-} from "../shared/cut-targets.js?v=20261103d";
+} from "../shared/cut-targets.js?v=20261103u";
 import {
   SHARE_PREFIX,
   b64urlEncode,
   parseShareHash,
-} from "./share-codec.js?v=20261103d";
+} from "./share-codec.js?v=20261103u";
 import {
   hasInfeasibleCopy,
   infeasibleCopyKeys,
-} from "./infeasible-copy.js?v=20261103d";
-import { csvDocument, partsListRows } from "./parts-csv.js?v=20261103d";
+} from "./infeasible-copy.js?v=20261103u";
+import { csvDocument, partsListRows } from "./parts-csv.js?v=20261103u";
 import {
   fuelBurnPerKwh,
   fuelDisplay,
   fuelRateUsd,
   fuelTypeName,
   isImperialLocation,
-} from "./fuel-units.js?v=20261103d";
+} from "./fuel-units.js?v=20261103u";
 
 import {
   createLeafletProvider,
@@ -172,18 +172,18 @@ import {
   rotatedRectangleAreaM2,
   rotatedRectangleCorners,
   manualRoofHint,
-} from "./map-provider.js?v=20261103d";
+} from "./map-provider.js?v=20261103u";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20261103d";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20261103d";
+} from "./wizard.js?v=20261103u";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20261103u";
 import {
   interpolateCurveTarget,
   surplusAnchor,
   budgetSpanMax,
-} from "./budget-span.js?v=20261103d";
+} from "./budget-span.js?v=20261103u";
 // Heavy modules used only after a sizing result stay outside the initial UI graph.
 let _engine = null;
 let _charts = null;
@@ -195,10 +195,10 @@ let _chartsInitialized = false;
 function preloadRunModules() {
   if (!_runModulesPromise) {
     _runModulesPromise = Promise.all([
-      import("./engine.js?v=20261103d"),
-      import("./charts.js?v=20261103d"),
-      import("./frontier-chart.js?v=20261103d"),
-      import("./rescale.js?v=20261103d"),
+      import("./engine.js?v=20261103u"),
+      import("./charts.js?v=20261103u"),
+      import("./frontier-chart.js?v=20261103u"),
+      import("./rescale.js?v=20261103u"),
     ])
       .then(([engine, charts, frontierChart, rescale]) => {
         _engine = engine;
@@ -266,9 +266,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20261103d";
+} from "./money.js?v=20261103u";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261103d";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261103u";
 
 let worker = null;
 
@@ -1423,19 +1423,12 @@ function getTariff() {
   return Number.isFinite(v) && v > 0 ? v : null;
 }
 
-// The smallest price the field accepts, in the same display currency the input
-// is expressed in. Kept as one constant so the HTML `min`, the message's {min}
-// and the check below cannot drift apart.
+// One constant for the HTML `min`, the message's {min} and the check.
 const TARIFF_MIN = 0.01;
 
 /**
- * Whether the price field holds a value that cannot be a price.
- *
- * An EMPTY field is valid: the location estimate fills it, and clearing it is
- * how a visitor says "use the local estimate". A non-empty value that is text,
- * zero or negative is NOT valid — it used to be silently swapped for the
- * estimate while the run continued, so a visitor who typed -5 was shown
- * results that had ignored their number and said nothing about it.
+ * A non-empty price that is text, zero or negative cannot be a price. Empty is
+ * valid: clearing the field means "use the local estimate".
  */
 function tariffFieldInvalid() {
   const input = $("customRateVal");
@@ -1446,13 +1439,7 @@ function tariffFieldInvalid() {
   return !Number.isFinite(v) || v < TARIFF_MIN;
 }
 
-/**
- * Paint (or clear) the field's own error line and its aria state.
- *
- * One writer, so the visible text and the announced state can never disagree:
- * the input carries aria-invalid and points at the message through
- * aria-describedby, and the message is a live role="alert" element.
- */
+/** One writer for the visible text and the announced aria state. */
 function showTariffError(show) {
   const input = $("customRateVal");
   const box = $("rateError");
@@ -2946,7 +2933,11 @@ function run(quiet = false, explicit = false) {
   // A site/option change invalidates an adopted curve point (its hardware was
   // simulated for the old site and load); a bill-only change keeps it — the
   // rescale path already re-based it and the quiet refine re-simulates it.
-  if (lastRunInput && !_rescale.sameSiteOptions(lastRunInput, inp)) {
+  if (
+    lastRunInput &&
+    _rescale &&
+    !_rescale.sameSiteOptions(lastRunInput, inp)
+  ) {
     adoptedEntry = null;
     if (selectedKey === "adopted") selectedKey = "best";
     frontierSelected = null;
@@ -3791,14 +3782,23 @@ function renderFocusPanel(p, entry, isPreview) {
       : "👆 Selected system";
   const chips = $("focusChips");
   chips.innerHTML = "";
+  // Wraps instead of clipping: nowrap put this chip 34px past a 241px parent at
+  // 412px and .results-box{overflow:hidden} cut the tail. The figure keeps
+  // nowrap so a dollar amount never splits.
   const chip = (icon, big, small) => {
     const s = el("span", {
       style:
-        "display:inline-flex;align-items:baseline;gap:0.3rem;white-space:nowrap;",
+        "display:inline-flex;align-items:baseline;gap:0.3rem;flex-wrap:wrap;max-width:100%;",
     });
     s.appendChild(el("span", { style: "font-size:1.15rem;" }, icon));
     s.appendChild(
-      el("strong", { style: "font-size:1.05rem;color:var(--text-main);" }, big),
+      el(
+        "strong",
+        {
+          style: "font-size:1.05rem;color:var(--text-main);white-space:nowrap;",
+        },
+        big,
+      ),
     );
     if (small)
       s.appendChild(
@@ -3980,7 +3980,7 @@ function restoreRunButton() {
 function ensureWorker() {
   if (!worker) {
     const runWorker = new Worker(
-      "./assets/js/sizing/sizing-worker.js?v=20261103d",
+      "./assets/js/sizing/sizing-worker.js?v=20261103u",
       {
         type: "module",
       },
@@ -4281,10 +4281,21 @@ function moneyRange(lo, hi) {
   return money(lo) + "–" + money(hi);
 }
 
-// Oversize notes are generated in USD by the engine; re-render the savings
-// figure through money() so non-USD readers see their own currency. USD
-// readers (or no-FX) get the original prose byte-identical.
-function bestPriceNote(text) {
+// The engine sends a semantic locale key plus numeric inputs for callouts
+// translated in the browser. Keep its English diagnostic sentence as a
+// fallback for callout variants not yet migrated.
+function bestPriceNote(entry) {
+  const message = entry?.bestPriceCalloutI18n;
+  if (message?.key && message.args) {
+    const vars = { ...message.args };
+    if (Number.isFinite(vars.battKwh)) vars.battKwh = fmt(vars.battKwh);
+    if (Number.isFinite(vars.replacements))
+      vars.replacements = fmt(vars.replacements);
+    if (Number.isFinite(vars.savingsUsd)) vars.savings = money(vars.savingsUsd);
+    delete vars.savingsUsd;
+    return t(message.key, vars);
+  }
+  const text = entry?.bestPriceCallout;
   const fx = fxActive();
   if (!fx || fx.code === "USD") return text;
   return _rescale.relocalizeOversizeCallout(text, money);
@@ -5698,7 +5709,9 @@ function matrixHtml(p) {
       ? "Green outline = lowest true 20-year cost in that column. Click any cell to make it the system shown in every chart, the hardware list, and the export figures below. The \u201Cyour target\u201D column follows the slider."
       : 'Green outline = lowest true 20-year cost in that column (every bank swap counted). "Unmet" hours are covered by a generator or the grid.';
   return (
-    `<div class="matrix-wrap"><table class="matrix-table"><thead><tr><th>Battery \u2193 \u00B7 Goal \u2192</th>${head}</tr></thead><tbody>${body}</tbody></table></div>` +
+    // tabindex + role + name: the wrap scrolls sideways and has no focusable
+    // child, so a keyboard could not reach it (WCAG 2.1.1).
+    `<div class="matrix-wrap" tabindex="0" role="region" aria-label="${escapeAttr(t("matrixScroll"))}"><table class="matrix-table"><thead><tr><th>Battery \u2193 \u00B7 Goal \u2192</th>${head}</tr></thead><tbody>${body}</tbody></table></div>` +
     `<p style="font-size:0.78rem;color:var(--text-muted);margin-top:0.6rem;line-height:1.55;">${hint}</p>`
   );
 }
@@ -5993,7 +6006,7 @@ function entryDetailRows(p, e) {
     ]);
   }
   if (e.bestPriceCallout) {
-    rows.push(["Scenario note", bestPriceNote(e.bestPriceCallout)]);
+    rows.push(["Scenario note", bestPriceNote(e)]);
   }
   return rows;
 }
@@ -6143,7 +6156,7 @@ function renderBomPanel() {
         style:
           "margin-bottom:0.8rem;padding:0.75rem 1rem;border-radius:8px;background:rgba(0,230,153,0.08);border:1px solid rgba(0,230,153,0.3);font-size:0.85rem;line-height:1.45;color:var(--text-color);",
       },
-      `💡 ${bestPriceNote(f.bestPriceCallout)}`,
+      `💡 ${bestPriceNote(f)}`,
     );
     body.appendChild(callout);
   }
@@ -6620,11 +6633,7 @@ function renderTierCards(p) {
 
     if (t.bestPriceCallout) {
       card.appendChild(
-        el(
-          "div",
-          { class: "best-price-callout" },
-          `💡 ${bestPriceNote(t.bestPriceCallout)}`,
-        ),
+        el("div", { class: "best-price-callout" }, `💡 ${bestPriceNote(t)}`),
       );
     }
 
@@ -6801,11 +6810,7 @@ function renderTargetCards(p, extraTargets = []) {
 
     if (t.bestPriceCallout) {
       card.appendChild(
-        el(
-          "div",
-          { class: "best-price-callout" },
-          `💡 ${bestPriceNote(t.bestPriceCallout)}`,
-        ),
+        el("div", { class: "best-price-callout" }, `💡 ${bestPriceNote(t)}`),
       );
     }
 
@@ -8921,11 +8926,11 @@ async function initSizingUI() {
     // can click, and the browser smoke gate polls for the ready flag
     // rather than assuming it. Without the loader the CTA is a plain
     // link — the same fallback the loader's own catch takes.
-    import("../shared/translation-suggestion-loader.js?v=20261103d")
+    import("../shared/translation-suggestion-loader.js?v=20261103u")
       .then(({ installTranslationSuggestionLoader }) => {
         installTranslationSuggestionLoader(
           document.querySelector("[data-translation-suggestion]"),
-          () => import("../translation-suggestion.js?v=20261103d"),
+          () => import("../translation-suggestion.js?v=20261103u"),
         );
       })
       .catch(() => {});

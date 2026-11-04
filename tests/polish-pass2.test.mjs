@@ -232,10 +232,10 @@ test("dead preset import stays out of the bundle", () => {
 
 test("oversize notes render through the currency-aware helper", () => {
   const src = read("assets/js/sizing/ui.js");
-  assert.match(src, /function bestPriceNote\(text\)/);
-  assert.match(src, /relocalizeOversizeCallout\(text, money\)/);
+  assert.match(src, /function bestPriceNote\(entry\)/);
+  assert.match(src, /return t\(message\.key, vars\)/);
   assert.equal(
-    [...src.matchAll(/bestPriceNote\(\w+\.bestPriceCallout\)/g)].length,
+    [...src.matchAll(/bestPriceNote\((?:e|f|t)\)/g)].length,
     4,
     "every live render site converts. This was five until the dead " +
       "renderAutoCards() came out \u2014 a 232-line function called from nothing " +

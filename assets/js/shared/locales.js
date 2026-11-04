@@ -3,7 +3,7 @@
 // `ar` flips the document to RTL automatically.
 // Keys not present in a locale fall back to English silently.
 
-import { HOME_COPY } from "./home-copy.js?v=20261103d";
+import { HOME_COPY } from "./home-copy.js?v=20261103u";
 
 export const LOCALES = {
   en: {
@@ -101,6 +101,12 @@ export const LOCALES = {
     lvlBest: "Best pick",
     lvlCompare: "Compare batteries",
     lvlMatrix: "All options",
+    manualModeLabel: "Manual",
+    manualModeHint: "— adjust everything",
+    simpleModeLabel: "Simple mode",
+    simpleModeHint: "just the key numbers",
+    mapDrawAction: "Draw this area on an optional map",
+    matrixScroll: "Scrollable comparison table",
     bomPanelTitle: "Your hardware list — what this system is made of",
     genSummary: "I run a generator — what does its power really cost?",
     genApply: "Use this as my electricity price",
@@ -618,6 +624,10 @@ export const LOCALES = {
     advisorIntakeKwhLabel: "Daily Energy Consumption (kWh / day):",
     advisorIntakeBillPh: "e.g. 400",
     advisorIntakeKwhPh: "e.g. 35",
+    engineOversizedCheaper:
+      "An oversized {battKwh} kWh battery avoids replacements and costs {savings} less over 20 years.",
+    engineSwapsCheaper:
+      "Standard sizing with {replacements} replacements costs {savings} less over 20 years than oversizing.",
   },
   es: {
     ...HOME_COPY.es,
@@ -658,7 +668,7 @@ export const LOCALES = {
     heroTag:
       "🌍 Gratis para todos, en todo el mundo · Sin registro · Nada en venta",
     heroTitle1: "Reduce tu factura de luz.",
-    heroTitle2: "Vea exactamente lo que haría falta.",
+    heroTitle2: "Ve exactamente lo que haría falta.",
     footerAboutPre: "Creada y entregada por",
     heroIntro:
       "Empieza con tu ubicación — tu móvil la sabe — y calculamos cada opción que puede reducir tu factura, del 1% al excedente vendible. La curva de precio muestra qué compra cada presupuesto, en tu moneda. Solo estimaciones educativas, nada en venta. Creada y entregada por",
@@ -792,6 +802,12 @@ export const LOCALES = {
     lvlBest: "Mejor opción",
     lvlCompare: "Comparar baterías",
     lvlMatrix: "Todas las opciones",
+    manualModeLabel: "Manual",
+    manualModeHint: "— ajústalo todo",
+    simpleModeLabel: "Modo simple",
+    simpleModeHint: "solo los números clave",
+    mapDrawAction: "Dibuja esta zona en un mapa opcional",
+    matrixScroll: "Tabla comparativa con desplazamiento",
     bomPanelTitle: "Tu lista de hardware — de qué está hecho este sistema",
     genSummary: "Uso un generador — ¿cuánto cuesta realmente su energía?",
     genApply: "Usar esto como mi precio de electricidad",
@@ -1250,6 +1266,10 @@ export const LOCALES = {
     advisorIntakeKwhLabel: "Consumo energético diario (kWh / día):",
     advisorIntakeBillPh: "p. ej. 400",
     advisorIntakeKwhPh: "p. ej. 35",
+    engineOversizedCheaper:
+      "Una batería de {battKwh} kWh evita reemplazos y cuesta {savings} menos en 20 años.",
+    engineSwapsCheaper:
+      "El tamaño estándar con {replacements} reemplazos cuesta {savings} menos en 20 años que uno mayor.",
   },
   pt: {
     ...HOME_COPY.pt,
@@ -1429,6 +1449,12 @@ export const LOCALES = {
     lvlBest: "Melhor escolha",
     lvlCompare: "Comparar baterias",
     lvlMatrix: "Todas as opções",
+    manualModeLabel: "Manual",
+    manualModeHint: "— ajusta tudo",
+    simpleModeLabel: "Modo simples",
+    simpleModeHint: "só os números-chave",
+    mapDrawAction: "Desenhe esta zona num mapa opcional",
+    matrixScroll: "Tabela comparativa com deslocamento",
     bomPanelTitle: "Sua lista de hardware — do que este sistema é feito",
     genSummary: "Uso um gerador — quanto custa de verdade a energia dele?",
     genApply: "Usar isto como meu preço de eletricidade",
@@ -1873,6 +1899,10 @@ export const LOCALES = {
     advisorIntakeKwhLabel: "Consumo diário de energia (kWh / dia):",
     advisorIntakeBillPh: "ex. 400",
     advisorIntakeKwhPh: "ex. 35",
+    engineOversizedCheaper:
+      "Uma bateria de {battKwh} kWh evita trocas e custa {savings} menos em 20 anos.",
+    engineSwapsCheaper:
+      "O tamanho padrão com {replacements} trocas custa {savings} menos em 20 anos que um maior.",
   },
   fr: {
     ...HOME_COPY.fr,
@@ -2057,6 +2087,12 @@ export const LOCALES = {
     lvlBest: "Meilleur choix",
     lvlCompare: "Comparer les batteries",
     lvlMatrix: "Toutes les options",
+    manualModeLabel: "Manuel",
+    manualModeHint: "— tout ajuster",
+    simpleModeLabel: "Mode simple",
+    simpleModeHint: "juste les chiffres clés",
+    mapDrawAction: "Dessinez cette zone sur une carte facultative",
+    matrixScroll: "Tableau comparatif à faire défiler",
     bomPanelTitle: "Votre liste de matériel — de quoi ce système est composé",
     genSummary:
       "J'utilise un générateur — combien coûte vraiment son électricité ?",
@@ -2509,6 +2545,10 @@ export const LOCALES = {
     advisorIntakeKwhLabel: "Consommation d'énergie quotidienne (kWh / jour) :",
     advisorIntakeBillPh: "p. ex. 400",
     advisorIntakeKwhPh: "p. ex. 35",
+    engineOversizedCheaper:
+      "Une batterie de {battKwh} kWh évite les remplacements et coûte {savings} de moins sur 20 ans.",
+    engineSwapsCheaper:
+      "Le format standard avec {replacements} remplacements coûte {savings} de moins sur 20 ans qu'un format supérieur.",
   },
   de: {
     ...HOME_COPY.de,
@@ -2692,6 +2732,12 @@ export const LOCALES = {
     lvlBest: "Beste Wahl",
     lvlCompare: "Batterien vergleichen",
     lvlMatrix: "Alle Optionen",
+    manualModeLabel: "Manuell",
+    manualModeHint: "— alles anpassen",
+    simpleModeLabel: "Einfacher Modus",
+    simpleModeHint: "nur die Kernzahlen",
+    mapDrawAction: "Diesen Bereich optional auf einer Karte zeichnen",
+    matrixScroll: "Vergleichstabelle zum Scrollen",
     bomPanelTitle: "Deine Hardware-Liste — woraus dieses System besteht",
     genSummary: "Ich habe einen Generator — was kostet sein Strom wirklich?",
     genApply: "Als meinen Strompreis übernehmen",
@@ -3137,6 +3183,10 @@ export const LOCALES = {
     advisorIntakeKwhLabel: "Täglicher Energieverbrauch (kWh / Tag):",
     advisorIntakeBillPh: "z. B. 400",
     advisorIntakeKwhPh: "z. B. 35",
+    engineOversizedCheaper:
+      "Ein {battKwh}-kWh-Akku vermeidet Ersatz und kostet in 20 Jahren {savings} weniger.",
+    engineSwapsCheaper:
+      "Die Standardgröße mit {replacements} Akkuwechseln kostet in 20 Jahren {savings} weniger als Übergröße.",
   },
   nl: {
     sizingFor: "Waar dimensionneert u voor?",
@@ -3236,6 +3286,12 @@ export const LOCALES = {
     lvlBest: "Beste keuze",
     lvlCompare: "Accu's vergelijken",
     lvlMatrix: "Alle opties",
+    manualModeLabel: "Handmatig",
+    manualModeHint: "— alles aanpassen",
+    simpleModeLabel: "Eenvoudige modus",
+    simpleModeHint: "alleen de kerncijfers",
+    mapDrawAction: "Teken dit gebied optioneel op een kaart",
+    matrixScroll: "Vergelijkingstabel om door te scrollen",
     bomPanelTitle: "Uw hardwarelijst — waaruit dit systeem bestaat",
     genSummary: "Ik heb een generator — wat kost zijn stroom echt?",
     genApply: "Gebruik dit als mijn stroomprijs",
@@ -3870,6 +3926,10 @@ export const LOCALES = {
     advisorIntakeKwhLabel: "Dagelijks energieverbruik (kWh / dag):",
     advisorIntakeBillPh: "bijv. 400",
     advisorIntakeKwhPh: "bijv. 35",
+    engineOversizedCheaper:
+      "Een accu van {battKwh} kWh voorkomt vervanging en kost {savings} minder in 20 jaar.",
+    engineSwapsCheaper:
+      "Standaard met {replacements} accuwissels kost {savings} minder in 20 jaar dan groter.",
   },
   ar: {
     ...HOME_COPY.ar,
@@ -4040,6 +4100,12 @@ export const LOCALES = {
     lvlBest: "الاختيار الأفضل",
     lvlCompare: "مقارنة البطاريات",
     lvlMatrix: "كل الخيارات",
+    manualModeLabel: "يدوي",
+    manualModeHint: "— اضبط كل شيء",
+    simpleModeLabel: "الوضع المبسط",
+    simpleModeHint: "الأرقام الأساسية فقط",
+    mapDrawAction: "ارسم هذه المنطقة على خريطة اختيارية",
+    matrixScroll: "جدول مقارنة قابل للتمرير",
     bomPanelTitle: "قائمة المعدات الخاصة بك — مم يتكون هذا النظام",
     genSummary: "أستخدم مولدا — كم تبلغ التكلفة الحقيقية للكهرباء منه؟",
     genApply: "استخدم هذا كسعر الكهرباء لدي",
@@ -4459,5 +4525,9 @@ export const LOCALES = {
     advisorIntakeKwhLabel: "استهلاك الطاقة اليومي (كيلوواط ساعة / اليوم):",
     advisorIntakeBillPh: "مثال: 400",
     advisorIntakeKwhPh: "مثال: 35",
+    engineOversizedCheaper:
+      "بطارية {battKwh} ك.و.س تتجنب الاستبدال وتكلف {savings} أقل خلال 20 عامًا.",
+    engineSwapsCheaper:
+      "الحجم القياسي مع {replacements} استبدال يكلف {savings} أقل خلال 20 عامًا من الحجم الأكبر.",
   },
 };
