@@ -349,11 +349,7 @@ button.btn {
   border-color: var(--primary-accent);
 }
 
-/* All-options comparison matrix */
-.matrix-wrap {
-  overflow-x: auto;
-}
-
+/* All-options comparison matrix (the wrap rule lives with the results box) */
 .matrix-table {
   width: 100%;
 
@@ -2090,8 +2086,7 @@ footer {
   line-height: 1.5;
   margin-top: 0.7rem;
 }
-/* Plan P1.1: a band derived from regional blocks is not a benchmark of the
-   visitor's own market, so the card says so next to the number it qualifies. */
+/* Plans P1.1: a derived band is not a benchmark of the visitor's market. */
 .paths-benchmark-missing {
   font-size: 0.72rem;
   color: var(--text-muted);
