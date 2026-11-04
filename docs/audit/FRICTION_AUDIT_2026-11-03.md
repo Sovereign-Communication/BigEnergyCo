@@ -120,3 +120,16 @@ the ledger line back, and corrected on #145 to "ledger row still open"; the
 missing `P1.6` row is now an explicit EVIDENCE ONLY entry. **Cure:** a tick's
 parenthetical names an artifact that exists at the moment of writing, or it
 names the gap. Read the artifact back before posting the tick.
+
+**X-1 · GitHub Actions stopped starting runners mid-session (2026-11-04).**
+Every job in #342's Tests run failed in about two seconds with zero executed
+steps, and the check-run annotation gave the reason: "The job was not started
+because your account is locked due to a billing issue." main's own Tests and
+CodeQL runs at `7b3c108b` were cancelled at the same moment, and re-running
+either (attempt 2) failed identically. This is an account-level lock the lane
+cannot clear and must not route around: base policy requires green checks, so
+two otherwise-ready PRs (#342, #343) stop at the gate. **Cure:** none available
+in-lane; recorded as an owner-reserved blocker on #330, with local gate
+evidence attached to the blocked heads so the work can be verified immediately
+when runners return. The lane habit that made this cheap: every slice had its
+full local gate run before the push, so the block cost time, not evidence.
