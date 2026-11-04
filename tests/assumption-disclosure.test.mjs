@@ -25,9 +25,15 @@ test("every result carries the two always-true assumptions", () => {
 });
 
 test("the export assumption exists only where export exists", () => {
-  assert.ok(assumptionDisclosureKeys({ mode: "gridtie" }).includes("assumeHourlyExport"));
+  assert.ok(
+    assumptionDisclosureKeys({ mode: "gridtie" }).includes(
+      "assumeHourlyExport",
+    ),
+  );
   assert.equal(
-    assumptionDisclosureKeys({ mode: "offgrid" }).includes("assumeHourlyExport"),
+    assumptionDisclosureKeys({ mode: "offgrid" }).includes(
+      "assumeHourlyExport",
+    ),
     false,
     "an off-grid system cannot export, so claiming export credit there would disclose something that never happens",
   );
