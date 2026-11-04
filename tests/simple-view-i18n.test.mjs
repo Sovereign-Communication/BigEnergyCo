@@ -178,6 +178,17 @@ test("the Simple mode label and chrome strings are dictionary lookups", () => {
   }
 });
 
+test("the language switch repaints the Simple mode chrome", () => {
+  // The toggle's aria-label is built from modeLabel(…, t); a beco:lang switch
+  // that only repaints the card leaves that label in the previous language.
+  const ui = fs.readFileSync("assets/js/sizing/ui.js", "utf8");
+  assert.match(
+    ui,
+    /addEventListener\("beco:lang"[\s\S]{0,320}?applySimpleMode\(\)/,
+    "beco:lang must repaint the Simple mode toggle, not only the results",
+  );
+});
+
 test("ui.js passes the translator into the Simple view render", () => {
   // The view model requires `t`; this call site is the one the real page uses,
   // and omitting it made every Simple result throw "t is not a function" after

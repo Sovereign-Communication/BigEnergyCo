@@ -13,11 +13,11 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20261104f";
+import { APPLIANCES } from "./appliances.js?v=20261104g";
 import {
   INSTALL_NAV_BREAKPOINT_PX,
   installReveal,
-} from "./pwa-install.js?v=20261104f";
+} from "./pwa-install.js?v=20261104g";
 import {
   USE_CASES,
   USE_CASE_IDS,
@@ -28,27 +28,27 @@ import {
   normaliseOutageTarget,
   DEFAULT_RESERVE_PCT,
   DEFAULT_TOU,
-} from "./usecases.js?v=20261104f";
+} from "./usecases.js?v=20261104g";
 import {
   createRunChannel,
   staleRunAction,
   errorReleasesRunChannel,
   RUN_REPLY_DEADLINE_MS,
-} from "./run-coordinator.js?v=20261104f";
+} from "./run-coordinator.js?v=20261104g";
 import {
   assumptionDisclosureKeys,
   cutRowVisible,
   tierForGeneratorRuntime,
   generatorRuntimeForTier,
   generatorAllowedForRuntime,
-} from "./mode-chrome.js?v=20261104f";
-import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261104f";
-import { bestAffordableCurvePoint } from "../shared/budget-targets.js?v=20261104f";
+} from "./mode-chrome.js?v=20261104g";
+import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261104g";
+import { bestAffordableCurvePoint } from "../shared/budget-targets.js?v=20261104g";
 import {
   locateMe,
   purgeLegacyCityCache,
   setupCitySearch,
-} from "./location-picker.js?v=20261104f";
+} from "./location-picker.js?v=20261104g";
 
 import {
   estimateTariff,
@@ -56,14 +56,14 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20261104f";
+} from "./pricing.js?v=20261104g";
 // The country -> currency table. Static, not lazy: it is consulted the moment
 // a location resolves, so a dynamic import would only add a round trip to the
 // one path that must not wait. Its 11.5 KB is data, and the first-load budget
 // below records the deliberate trade.
-import { currencyForCountry } from "./country-currency.js?v=20261104f";
+import { currencyForCountry } from "./country-currency.js?v=20261104g";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261104f";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261104g";
 
 // THE FOUR WAYS TO PAY FOR ONE SYSTEM (master plan D-01 §6.4, R-PATH-01..10).
 //
@@ -95,7 +95,7 @@ let pathsLoading = null;
 function loadPaths() {
   if (pathsApi) return Promise.resolve(pathsApi);
   if (!pathsLoading)
-    pathsLoading = import("./paths.js?v=20261104f").then((mod) => {
+    pathsLoading = import("./paths.js?v=20261104g").then((mod) => {
       pathsApi = mod;
       PATHS_HORIZON_YEARS = mod.HORIZON_YEARS;
       return mod;
@@ -106,15 +106,15 @@ import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20261104f";
+} from "./lead-acid.js?v=20261104g";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20261104f";
+} from "./bom.js?v=20261104g";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20261104f";
+import { BOM_ITEMS } from "../shared/content.js?v=20261104g";
 
 import {
   applyI18n,
@@ -123,18 +123,18 @@ import {
   // uses, so `t` is a binding to the one implementation rather than a second
   // copy of the placeholder contract.
   translate as t,
-} from "../shared/i18n.js?v=20261104f";
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261104f";
-import { byId as $, el } from "../shared/dom.js?v=20261104f";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261104f";
+} from "../shared/i18n.js?v=20261104g";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261104g";
+import { byId as $, el } from "../shared/dom.js?v=20261104g";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261104g";
 import {
   isSimpleMode,
   initSimpleMode,
   setSimpleMode,
   onSimpleModeChange,
   modeLabel,
-} from "../shared/simple-mode.js?v=20261104f";
-import { buildSimpleView } from "../shared/simple-view.js?v=20261104f";
+} from "../shared/simple-mode.js?v=20261104g";
+import { buildSimpleView } from "../shared/simple-view.js?v=20261104g";
 import {
   advisorJevContext,
   interpretSanity,
@@ -142,29 +142,29 @@ import {
   renderSanityBadge,
   requestSanity,
   sanityState,
-} from "./validate.js?v=20261104f";
+} from "./validate.js?v=20261104g";
 import {
   CUT_TARGET_PCT,
   sliderStateDrifted,
   targetForPct,
-} from "../shared/cut-targets.js?v=20261104f";
+} from "../shared/cut-targets.js?v=20261104g";
 import {
   SHARE_PREFIX,
   b64urlEncode,
   parseShareHash,
-} from "./share-codec.js?v=20261104f";
+} from "./share-codec.js?v=20261104g";
 import {
   hasInfeasibleCopy,
   infeasibleCopyKeys,
-} from "./infeasible-copy.js?v=20261104f";
-import { csvDocument, partsListRows } from "./parts-csv.js?v=20261104f";
+} from "./infeasible-copy.js?v=20261104g";
+import { csvDocument, partsListRows } from "./parts-csv.js?v=20261104g";
 import {
   fuelBurnPerKwh,
   fuelDisplay,
   fuelRateUsd,
   fuelTypeName,
   isImperialLocation,
-} from "./fuel-units.js?v=20261104f";
+} from "./fuel-units.js?v=20261104g";
 
 import {
   createLeafletProvider,
@@ -172,18 +172,18 @@ import {
   rotatedRectangleAreaM2,
   rotatedRectangleCorners,
   manualRoofHint,
-} from "./map-provider.js?v=20261104f";
+} from "./map-provider.js?v=20261104g";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20261104f";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20261104f";
+} from "./wizard.js?v=20261104g";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20261104g";
 import {
   interpolateCurveTarget,
   surplusAnchor,
   budgetSpanMax,
-} from "./budget-span.js?v=20261104f";
+} from "./budget-span.js?v=20261104g";
 // Heavy modules used only after a sizing result stay outside the initial UI graph.
 let _engine = null;
 let _charts = null;
@@ -195,10 +195,10 @@ let _chartsInitialized = false;
 function preloadRunModules() {
   if (!_runModulesPromise) {
     _runModulesPromise = Promise.all([
-      import("./engine.js?v=20261104f"),
-      import("./charts.js?v=20261104f"),
-      import("./frontier-chart.js?v=20261104f"),
-      import("./rescale.js?v=20261104f"),
+      import("./engine.js?v=20261104g"),
+      import("./charts.js?v=20261104g"),
+      import("./frontier-chart.js?v=20261104g"),
+      import("./rescale.js?v=20261104g"),
     ])
       .then(([engine, charts, frontierChart, rescale]) => {
         _engine = engine;
@@ -266,9 +266,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20261104f";
+} from "./money.js?v=20261104g";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261104f";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261104g";
 
 let worker = null;
 
@@ -3990,7 +3990,7 @@ function restoreRunButton() {
 function ensureWorker() {
   if (!worker) {
     const runWorker = new Worker(
-      "./assets/js/sizing/sizing-worker.js?v=20261104f",
+      "./assets/js/sizing/sizing-worker.js?v=20261104g",
       {
         type: "module",
       },
@@ -8923,6 +8923,10 @@ async function initSizingUI() {
 
     window.addEventListener("beco:lang", () => {
       repaintRuntimeCopy();
+      // The mode toggle's aria-label names the current mode in the current
+      // language; repaintRuntimeCopy does not own that node, so without this
+      // call the card switched language while the toggle stayed in the old one.
+      applySimpleMode();
     });
 
     // THE SAME REPAINT, once, immediately — and this is the load-bearing call.
@@ -8958,11 +8962,11 @@ async function initSizingUI() {
     // can click, and the browser smoke gate polls for the ready flag
     // rather than assuming it. Without the loader the CTA is a plain
     // link — the same fallback the loader's own catch takes.
-    import("../shared/translation-suggestion-loader.js?v=20261104f")
+    import("../shared/translation-suggestion-loader.js?v=20261104g")
       .then(({ installTranslationSuggestionLoader }) => {
         installTranslationSuggestionLoader(
           document.querySelector("[data-translation-suggestion]"),
-          () => import("../translation-suggestion.js?v=20261104f"),
+          () => import("../translation-suggestion.js?v=20261104g"),
         );
       })
       .catch(() => {});
