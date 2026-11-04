@@ -693,8 +693,10 @@ test("every region resolves to a registry with a stated grade and source", () =>
       reg.source && reg.source.length > 10,
       `${region} states no source`,
     );
+    // D joined the vocabulary with plan P1.1: the derived block is grade D, and
+    // a grade the tests do not know about is a grade nothing can hold honest.
     assert.ok(
-      ["A", "B", "C"].includes(reg.grade),
+      ["A", "B", "C", "D"].includes(reg.grade),
       `${region} grade ${reg.grade}`,
     );
     for (const [band, name] of [
@@ -766,4 +768,81 @@ test("GATE: the comparison gate strips comments without a fail-open regex", () =
     !/\.replace\(\/\\\/\*\[/.test(gate),
     "the gate must not sanitize block comments with a regex again",
   );
+});
+
+// ── P1.1: no benchmark, no borrowed number ────────────────────────────────
+//
+// P1.1 removed the x10/x5 derivation, and this pins the half of it that a
+// derivation makes easy to hide: a country with NO published installer
+// benchmark. The registry answers with a block derived from other regions, so
+// the card has to say that in the visitor's own language rather than let a
+// derived band read as a survey of their market. Grade D is the plan's own
+// word for that band, so it is asserted as D and not as the C it used to be.
+
+/** A `t` stand-in that interpolates like i18n.js does, so text is checkable. */
+const tEn = (k, params) => {
+  let s = LOCALES.en[k] ?? k;
+  for (const [name, value] of Object.entries(params || {}))
+    s = s.replace(`{${name}}`, String(value));
+  return s;
+};
+
+test("P1.1: the derived block is grade D and flagged as unbenchmarked", () => {
+  const row = registryFor("row");
+  assert.equal(row.grade, "D", "a derived band is grade D, not grade C");
+  assert.equal(row.benchmarkMissing, true);
+  for (const id of ["us", "eu", "apac"]) {
+    const r = registryFor(id);
+    assert.equal(r.benchmarkMissing, false, `${id} is a benchmarked block`);
+    assert.ok(
+      ["A", "B"].includes(r.grade),
+      `${id} must keep an A/B grade: ${r.grade}`,
+    );
+  }
+});
+
+test("P1.1: an unlisted country prices from the derived block and discloses on every card", () => {
+  const priced = priceAllPaths(SYSTEM, { country: "ke" });
+  assert.equal(priced.region, "row", "Kenya has no benchmark block");
+  const cards = describePaths(priced, (n) => `$${n}`, tEn);
+  assert.equal(cards.length, PATH_IDS.length);
+  // A card with no price on it (Kenya's DIY path is blocked by an unknown
+  // legality rule) qualifies nothing, so it carries no band to disclose.
+  const pricedCards = cards.filter((c) => c.available);
+  assert.ok(pricedCards.length >= 2, "a priced card must exist to disclose");
+  for (const c of pricedCards) {
+    assert.equal(c.benchmarkMissing, true, `${c.id} must disclose`);
+    assert.equal(c.grade, "D", `${c.id} must not claim a better grade`);
+    assert.ok(
+      c.benchmarkText && c.benchmarkText.includes("KE"),
+      `${c.id} disclosure names the country: ${c.benchmarkText}`,
+    );
+    assert.ok(
+      !/\{country\}/.test(c.benchmarkText),
+      `${c.id} left an unfilled placeholder: ${c.benchmarkText}`,
+    );
+  }
+});
+
+test("P1.1: a benchmarked country carries no disclosure", () => {
+  const cards = describePaths(
+    priceAllPaths(SYSTEM, { country: "us" }),
+    (n) => `$${n}`,
+    tEn,
+  );
+  for (const c of cards) {
+    assert.equal(c.benchmarkMissing, false, `${c.id} is benchmarked`);
+    assert.equal(c.benchmarkText, null);
+  }
+});
+
+test("P1.1: every shipped locale carries the disclosure with its placeholder", () => {
+  const langs = Object.keys(LOCALES);
+  assert.equal(langs.length, 7, "all seven locales ship together");
+  for (const lang of langs) {
+    const s = LOCALES[lang].pathsNoInstallerBenchmark;
+    assert.equal(typeof s, "string", `${lang} is missing the key`);
+    assert.ok(s.includes("{country}"), `${lang} drops the country`);
+    assert.ok(/\bD\b/.test(s), `${lang} does not state grade D`);
+  }
 });
