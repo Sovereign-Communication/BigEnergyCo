@@ -71,6 +71,23 @@ export function oversizeCalloutI18n(
       args: { replacements, savingsUsd },
     };
   }
+  if (scenario === "zero_swap_solar_only")
+    return { key: "engineZeroSwapSolarOnly", args: {} };
+  if (scenario === "zero_swap_natural")
+    return { key: "engineZeroSwapNatural", args: {} };
+  if (scenario === "strategy_off" && Number.isFinite(replacements)) {
+    return replacements > 0
+      ? { key: "engineStrategyOffSwaps", args: { replacements } }
+      : { key: "engineStrategyOffNoSwaps", args: {} };
+  }
+  if (scenario === "swaps_cheaper_no_figures")
+    return { key: "engineSwapsCheaperNoFigures", args: {} };
+  if (scenario === "zero_swap_beyond_search")
+    return { key: "engineZeroSwapBeyondSearch", args: {} };
+  if (scenario === "standard_sizing_cheapest")
+    return { key: "engineStandardSizingCheapest", args: {} };
+  if (scenario === "exact_hardware_swaps" && Number.isFinite(replacements))
+    return { key: "engineExactHardwareSwaps", args: { replacements } };
   return null;
 }
 

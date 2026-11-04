@@ -3,7 +3,7 @@
 // `ar` flips the document to RTL automatically.
 // Keys not present in a locale fall back to English silently.
 
-import { HOME_COPY } from "./home-copy.js?v=20261103u";
+import { HOME_COPY } from "./home-copy.js?v=20261104a";
 
 export const LOCALES = {
   en: {
@@ -628,6 +628,22 @@ export const LOCALES = {
       "An oversized {battKwh} kWh battery avoids replacements and costs {savings} less over 20 years.",
     engineSwapsCheaper:
       "Standard sizing with {replacements} replacements costs {savings} less over 20 years than oversizing.",
+    engineZeroSwapSolarOnly:
+      "Best 20-year price: solar-only setup has zero battery swap or degradation costs.",
+    engineZeroSwapNatural:
+      "Best 20-year price: battery bank naturally outlasts the 20-year horizon with zero replacements.",
+    engineStrategyOffSwaps:
+      "Oversize strategy off: the engine's direct pick — {replacements} bank swap(s) over 20 years are counted in the lifetime cost.",
+    engineStrategyOffNoSwaps:
+      "Oversize strategy off: the engine's direct pick — the bank already lasts the full 20-year horizon with zero swaps.",
+    engineSwapsCheaperNoFigures:
+      "Best 20-year price: standard sizing with battery replacements is cheaper over 20 years than paying upfront to oversize.",
+    engineZeroSwapBeyondSearch:
+      "Best 20-year price: standard sizing with battery replacements is the practical pick — a zero-swap bank is beyond the sizes this tool searches.",
+    engineStandardSizingCheapest:
+      "Best 20-year price: standard sizing is cheaper over 20 years than paying upfront to oversize.",
+    engineExactHardwareSwaps:
+      "Best 20-year price for this exact hardware: standard sizing with {replacements} replacement(s) over 20 years (counted above).",
   },
   es: {
     ...HOME_COPY.es,
@@ -1270,6 +1286,22 @@ export const LOCALES = {
       "Una batería de {battKwh} kWh evita reemplazos y cuesta {savings} menos en 20 años.",
     engineSwapsCheaper:
       "El tamaño estándar con {replacements} reemplazos cuesta {savings} menos en 20 años que uno mayor.",
+    engineZeroSwapSolarOnly:
+      "Mejor precio a 20 años: una instalación solo solar no tiene costes de sustitución ni degradación de batería.",
+    engineZeroSwapNatural:
+      "Mejor precio a 20 años: el banco de baterías supera naturalmente el horizonte de 20 años sin sustituciones.",
+    engineStrategyOffSwaps:
+      "Estrategia de sobredimensionado desactivada: la elección directa del motor — {replacements} sustitución(es) de batería en 20 años se cuentan en el coste total.",
+    engineStrategyOffNoSwaps:
+      "Estrategia de sobredimensionado desactivada: la elección directa del motor — el banco ya dura los 20 años completos sin sustituciones.",
+    engineSwapsCheaperNoFigures:
+      "Mejor precio a 20 años: el tamaño estándar con sustituciones de batería cuesta menos en 20 años que pagar por adelantado para sobredimensionar.",
+    engineZeroSwapBeyondSearch:
+      "Mejor precio a 20 años: el tamaño estándar con sustituciones de batería es la opción práctica — un banco sin sustituciones supera los tamaños que busca esta herramienta.",
+    engineStandardSizingCheapest:
+      "Mejor precio a 20 años: el tamaño estándar cuesta menos en 20 años que pagar por adelantado para sobredimensionar.",
+    engineExactHardwareSwaps:
+      "Mejor precio a 20 años para este equipo exacto: tamaño estándar con {replacements} sustitución(es) en 20 años (contadas arriba).",
   },
   pt: {
     ...HOME_COPY.pt,
@@ -1903,6 +1935,22 @@ export const LOCALES = {
       "Uma bateria de {battKwh} kWh evita trocas e custa {savings} menos em 20 anos.",
     engineSwapsCheaper:
       "O tamanho padrão com {replacements} trocas custa {savings} menos em 20 anos que um maior.",
+    engineZeroSwapSolarOnly:
+      "Melhor preço em 20 anos: uma instalação só solar não tem custos de troca nem de degradação da bateria.",
+    engineZeroSwapNatural:
+      "Melhor preço em 20 anos: o banco de baterias dura naturalmente o horizonte de 20 anos sem trocas.",
+    engineStrategyOffSwaps:
+      "Estratégia de sobredimensionamento desativada: a escolha direta do motor — {replacements} troca(s) de bateria em 20 anos são contadas no custo total.",
+    engineStrategyOffNoSwaps:
+      "Estratégia de sobredimensionamento desativada: a escolha direta do motor — o banco já dura os 20 anos completos sem trocas.",
+    engineSwapsCheaperNoFigures:
+      "Melhor preço em 20 anos: o tamanho padrão com trocas de bateria custa menos em 20 anos do que pagar adiantado para sobredimensionar.",
+    engineZeroSwapBeyondSearch:
+      "Melhor preço em 20 anos: o tamanho padrão com trocas de bateria é a escolha prática — um banco sem trocas excede os tamanhos que esta ferramenta pesquisa.",
+    engineStandardSizingCheapest:
+      "Melhor preço em 20 anos: o tamanho padrão custa menos em 20 anos do que pagar adiantado para sobredimensionar.",
+    engineExactHardwareSwaps:
+      "Melhor preço em 20 anos para este equipamento exato: tamanho padrão com {replacements} troca(s) em 20 anos (contadas acima).",
   },
   fr: {
     ...HOME_COPY.fr,
@@ -2549,6 +2597,22 @@ export const LOCALES = {
       "Une batterie de {battKwh} kWh évite les remplacements et coûte {savings} de moins sur 20 ans.",
     engineSwapsCheaper:
       "Le format standard avec {replacements} remplacements coûte {savings} de moins sur 20 ans qu'un format supérieur.",
+    engineZeroSwapSolarOnly:
+      "Meilleur prix sur 20 ans : une installation solaire seule n'a aucun coût de remplacement ni de dégradation de batterie.",
+    engineZeroSwapNatural:
+      "Meilleur prix sur 20 ans : le parc de batteries dépasse naturellement l'horizon de 20 ans, sans aucun remplacement.",
+    engineStrategyOffSwaps:
+      "Stratégie de surdimensionnement désactivée : le choix direct du moteur — {replacements} remplacement(s) de batterie sur 20 ans sont comptés dans le coût total.",
+    engineStrategyOffNoSwaps:
+      "Stratégie de surdimensionnement désactivée : le choix direct du moteur — le parc tient déjà l'horizon complet de 20 ans sans aucun remplacement.",
+    engineSwapsCheaperNoFigures:
+      "Meilleur prix sur 20 ans : le dimensionnement standard avec remplacements de batteries coûte moins cher sur 20 ans que de payer d'avance pour surdimensionner.",
+    engineZeroSwapBeyondSearch:
+      "Meilleur prix sur 20 ans : le dimensionnement standard avec remplacements de batteries est le choix pratique — un parc sans remplacement dépasse les tailles que cet outil recherche.",
+    engineStandardSizingCheapest:
+      "Meilleur prix sur 20 ans : le dimensionnement standard coûte moins cher sur 20 ans que de payer d'avance pour surdimensionner.",
+    engineExactHardwareSwaps:
+      "Meilleur prix sur 20 ans pour ce matériel exact : dimensionnement standard avec {replacements} remplacement(s) sur 20 ans (comptés ci-dessus).",
   },
   de: {
     ...HOME_COPY.de,
@@ -3187,6 +3251,22 @@ export const LOCALES = {
       "Ein {battKwh}-kWh-Akku vermeidet Ersatz und kostet in 20 Jahren {savings} weniger.",
     engineSwapsCheaper:
       "Die Standardgröße mit {replacements} Akkuwechseln kostet in 20 Jahren {savings} weniger als Übergröße.",
+    engineZeroSwapSolarOnly:
+      "Bester 20-Jahres-Preis: eine reine Solaranlage hat keine Batteriewechsel- oder Degradationskosten.",
+    engineZeroSwapNatural:
+      "Bester 20-Jahres-Preis: der Batteriespeicher überdauert den 20-Jahres-Horizont von selbst ohne Wechsel.",
+    engineStrategyOffSwaps:
+      "Übergrößen-Strategie aus: die direkte Wahl der Engine — {replacements} Batteriewechsel über 20 Jahre sind in den Lebenszykluskosten enthalten.",
+    engineStrategyOffNoSwaps:
+      "Übergrößen-Strategie aus: die direkte Wahl der Engine — der Speicher hält bereits die vollen 20 Jahre ohne Wechsel.",
+    engineSwapsCheaperNoFigures:
+      "Bester 20-Jahres-Preis: die Standardgröße mit Batteriewechseln ist über 20 Jahre günstiger als der Vorabkauf einer Übergröße.",
+    engineZeroSwapBeyondSearch:
+      "Bester 20-Jahres-Preis: die Standardgröße mit Batteriewechseln ist die praktische Wahl — ein Speicher ohne Wechsel liegt jenseits der Größen, die dieses Tool sucht.",
+    engineStandardSizingCheapest:
+      "Bester 20-Jahres-Preis: die Standardgröße ist über 20 Jahre günstiger als der Vorabkauf einer Übergröße.",
+    engineExactHardwareSwaps:
+      "Bester 20-Jahres-Preis für genau diese Hardware: Standardgröße mit {replacements} Wechsel(n) über 20 Jahre (oben gezählt).",
   },
   nl: {
     sizingFor: "Waar dimensionneert u voor?",
@@ -3930,6 +4010,22 @@ export const LOCALES = {
       "Een accu van {battKwh} kWh voorkomt vervanging en kost {savings} minder in 20 jaar.",
     engineSwapsCheaper:
       "Standaard met {replacements} accuwissels kost {savings} minder in 20 jaar dan groter.",
+    engineZeroSwapSolarOnly:
+      "Beste 20-jaarsprijs: een installatie met alleen zonnepanelen heeft geen batterijvervangings- of degradatiekosten.",
+    engineZeroSwapNatural:
+      "Beste 20-jaarsprijs: het batterijpakket overleeft de 20-jaarshorizon vanzelf zonder vervangingen.",
+    engineStrategyOffSwaps:
+      "Vergrotingsstrategie uit: de directe keuze van de engine — {replacements} batterijvervanging(en) over 20 jaar zijn in de levensduurkosten meegerekend.",
+    engineStrategyOffNoSwaps:
+      "Vergrotingsstrategie uit: de directe keuze van de engine — het pakket gaat al de volledige 20 jaar mee zonder vervangingen.",
+    engineSwapsCheaperNoFigures:
+      "Beste 20-jaarsprijs: standaardformaat met batterijvervangingen is over 20 jaar goedkoper dan vooraf betalen voor vergroting.",
+    engineZeroSwapBeyondSearch:
+      "Beste 20-jaarsprijs: standaardformaat met batterijvervangingen is de praktische keuze — een pakket zonder vervangingen valt buiten de formaten die dit hulpmiddel zoekt.",
+    engineStandardSizingCheapest:
+      "Beste 20-jaarsprijs: standaardformaat is over 20 jaar goedkoper dan vooraf betalen voor vergroting.",
+    engineExactHardwareSwaps:
+      "Beste 20-jaarsprijs voor precies deze hardware: standaardformaat met {replacements} vervanging(en) over 20 jaar (hierboven geteld).",
   },
   ar: {
     ...HOME_COPY.ar,
@@ -4529,5 +4625,21 @@ export const LOCALES = {
       "بطارية {battKwh} ك.و.س تتجنب الاستبدال وتكلف {savings} أقل خلال 20 عامًا.",
     engineSwapsCheaper:
       "الحجم القياسي مع {replacements} استبدال يكلف {savings} أقل خلال 20 عامًا من الحجم الأكبر.",
+    engineZeroSwapSolarOnly:
+      "أفضل سعر على 20 عامًا: النظام الشمسي وحده لا يتكبد تكاليف استبدال أو تدهور للبطارية.",
+    engineZeroSwapNatural:
+      "أفضل سعر على 20 عامًا: بنك البطاريات يدوم طبيعيًا طوال أفق العشرين عامًا دون أي استبدال.",
+    engineStrategyOffSwaps:
+      "استراتيجية التكبير معطلة: اختيار المحرك المباشر — تُحتسب {replacements} عمليات استبدال للبطارية خلال 20 عامًا ضمن التكلفة الإجمالية.",
+    engineStrategyOffNoSwaps:
+      "استراتيجية التكبير معطلة: اختيار المحرك المباشر — البنك يدوم بالفعل طوال العشرين عامًا دون أي استبدال.",
+    engineSwapsCheaperNoFigures:
+      "أفضل سعر على 20 عامًا: الحجم القياسي مع استبدال البطاريات أرخص على 20 عامًا من الدفع مقدمًا للتكبير.",
+    engineZeroSwapBeyondSearch:
+      "أفضل سعر على 20 عامًا: الحجم القياسي مع استبدال البطاريات هو الخيار العملي — بنك بلا استبدال يتجاوز الأحجام التي يبحث عنها هذا البرنامج.",
+    engineStandardSizingCheapest:
+      "أفضل سعر على 20 عامًا: الحجم القياسي أرخص على 20 عامًا من الدفع مقدمًا للتكبير.",
+    engineExactHardwareSwaps:
+      "أفضل سعر على 20 عامًا لهذه المعدات تحديدًا: الحجم القياسي مع {replacements} استبدال خلال 20 عامًا (محتسبة أعلاه).",
   },
 };

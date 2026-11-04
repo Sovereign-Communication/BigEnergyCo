@@ -2,15 +2,15 @@
 // Pure functions only: no DOM, no network, no globals. Every constant is
 // exported so the UI can render a complete "show the arithmetic" panel.
 
-import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20261103u";
-import { oversizeCallout, oversizeCalloutI18n } from "./rescale.js?v=20261103u";
+import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20261104a";
+import { oversizeCallout, oversizeCalloutI18n } from "./rescale.js?v=20261104a";
 import {
   CHEMISTRIES,
   coldCapacityScale,
   capacityScaleFor,
   CYCLE_LIFE_CURVES,
   cycleLifeForDoD,
-} from "./chem-model.js?v=20261103u";
+} from "./chem-model.js?v=20261104a";
 //
 // Units:
 //   irradiance  GHI(h) in W/m²  (NASA POWER hourly ALLSKY_SFC_SW_DWN, local solar time)
@@ -453,6 +453,7 @@ export function evaluateOversizeOptimization({
       oversizeSavingsUsd: 0,
       bestPriceCallout:
         "Best 20-year price: solar-only setup has zero battery swap or degradation costs.",
+      bestPriceCalloutI18n: oversizeCalloutI18n("zero_swap_solar_only"),
     };
   }
 
@@ -478,6 +479,7 @@ export function evaluateOversizeOptimization({
       oversizeSavingsUsd: 0,
       bestPriceCallout:
         "Best 20-year price: battery bank naturally outlasts the 20-year horizon with zero replacements.",
+      bestPriceCalloutI18n: oversizeCalloutI18n("zero_swap_natural"),
     };
   }
 
@@ -554,6 +556,9 @@ function strategyOffOpt(best, chemistry, years) {
       replacements > 0
         ? `Oversize strategy off: the engine's direct pick — ${replacements} bank swap(s) over 20 years are counted in the lifetime cost.`
         : `Oversize strategy off: the engine's direct pick — the bank already lasts the full 20-year horizon with zero swaps.`,
+    bestPriceCalloutI18n: oversizeCalloutI18n("strategy_off", {
+      replacements,
+    }),
   };
 }
 
@@ -760,6 +765,9 @@ export function sizeForTier({
         opt.oversizeScenario = "swaps_cheaper";
         opt.oversizeSavingsUsd = obj - best.obj;
         opt.bestPriceCallout = `Best 20-year price: standard sizing with battery replacements is cheaper over 20 years than paying upfront to oversize.`;
+        opt.bestPriceCalloutI18n = oversizeCalloutI18n(
+          "swaps_cheaper_no_figures",
+        );
       }
     } else {
       // Zero-swap is unreachable inside the searched envelope (the estimate
@@ -769,10 +777,8 @@ export function sizeForTier({
       opt.oversizeScenario = "swaps_cheaper";
       opt.oversizeSavingsUsd = 0;
       opt.bestPriceCallout = `Best 20-year price: standard sizing with battery replacements is the practical pick — a zero-swap bank is beyond the sizes this tool searches.`;
+      opt.bestPriceCalloutI18n = oversizeCalloutI18n("zero_swap_beyond_search");
     }
-  }
-  if (!String(opt.bestPriceCallout || "").includes("~$")) {
-    opt.bestPriceCalloutI18n = null;
   }
   best.oversizeScenario = opt.oversizeScenario;
   best.bestPriceCallout = opt.bestPriceCallout;
@@ -1224,6 +1230,7 @@ export function sizeForBillCut({
       opt.useOversized = false;
       opt.oversizeScenario = "swaps_cheaper";
       opt.bestPriceCallout = `Best 20-year price: standard sizing with battery replacements is cheaper over 20 years than paying upfront to oversize.`;
+      opt.bestPriceCalloutI18n = oversizeCalloutI18n("swaps_cheaper_no_figures");
     } else if (pvMax === 0) {
       const r = evaluate(0, b);
       if (meets(r)) {
@@ -1246,6 +1253,9 @@ export function sizeForBillCut({
           opt.useOversized = false;
           opt.oversizeScenario = "swaps_cheaper";
           opt.bestPriceCallout = `Best 20-year price: standard sizing is cheaper over 20 years than paying upfront to oversize.`;
+          opt.bestPriceCalloutI18n = oversizeCalloutI18n(
+            "standard_sizing_cheapest",
+          );
         }
       } else {
         // Verified bank misses the peak-cut target: fall back so the note
@@ -1253,6 +1263,9 @@ export function sizeForBillCut({
         opt.useOversized = false;
         opt.oversizeScenario = "swaps_cheaper";
         opt.bestPriceCallout = `Best 20-year price: standard sizing with battery replacements is cheaper over 20 years than paying upfront to oversize.`;
+        opt.bestPriceCalloutI18n = oversizeCalloutI18n(
+          "swaps_cheaper_no_figures",
+        );
       }
     } else {
       let lo = 0.05,
@@ -1279,6 +1292,9 @@ export function sizeForBillCut({
           opt.useOversized = false;
           opt.oversizeScenario = "swaps_cheaper";
           opt.bestPriceCallout = `Best 20-year price: standard sizing with battery replacements is cheaper over 20 years than paying upfront to oversize.`;
+          opt.bestPriceCalloutI18n = oversizeCalloutI18n(
+            "swaps_cheaper_no_figures",
+          );
         }
       } else {
         // Defensive: the verification loop already proved meets() at
@@ -1287,11 +1303,11 @@ export function sizeForBillCut({
         opt.useOversized = false;
         opt.oversizeScenario = "swaps_cheaper";
         opt.bestPriceCallout = `Best 20-year price: standard sizing with battery replacements is cheaper over 20 years than paying upfront to oversize.`;
+        opt.bestPriceCalloutI18n = oversizeCalloutI18n(
+          "swaps_cheaper_no_figures",
+        );
       }
     }
-  }
-  if (!String(opt.bestPriceCallout || "").includes("~$")) {
-    opt.bestPriceCalloutI18n = null;
   }
   best.oversizeScenario = opt.oversizeScenario;
   best.bestPriceCallout = opt.bestPriceCallout;

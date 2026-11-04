@@ -28,7 +28,7 @@ import {
   billCutFraction,
   simulateOutage,
   simulatePortable,
-} from "./engine.js?v=20261103u";
+} from "./engine.js?v=20261104a";
 
 import {
   isUseCaseId,
@@ -39,23 +39,23 @@ import {
   normaliseReservePct,
   normaliseOutageTarget,
   outcomeFor,
-} from "./usecases.js?v=20261103u";
-import { memoizeSimulate } from "./sim-cache.js?v=20261103u";
+} from "./usecases.js?v=20261104a";
+import { memoizeSimulate } from "./sim-cache.js?v=20261104a";
 
 import {
   fetchHourlyCached,
   synthesizeFromProfile,
-} from "./nasa.js?v=20261103u";
-import { buildFrontier } from "./frontier.js?v=20261103u";
-import { oversizeCallout, oversizeCalloutI18n } from "./rescale.js?v=20261103u";
-import { climateSummary } from "./climate.js?v=20261103u";
+} from "./nasa.js?v=20261104a";
+import { buildFrontier } from "./frontier.js?v=20261104a";
+import { oversizeCallout, oversizeCalloutI18n } from "./rescale.js?v=20261104a";
+import { climateSummary } from "./climate.js?v=20261104a";
 import {
   fullRange,
   getScope,
   POWMR_CATALOG,
   estimateTariff,
   landedMidBattKwhFor,
-} from "./pricing.js?v=20261103u";
+} from "./pricing.js?v=20261104a";
 import {
   annualGridSpendUsd,
   paybackYears,
@@ -66,7 +66,7 @@ import {
   trueBreakEvenYear,
   cumulativeCostSeries,
   INSTALL_LABOR_PER_KWH_USABLE,
-} from "./money.js?v=20261103u";
+} from "./money.js?v=20261104a";
 
 const TIER_BASIS = {
   tier100: "100% independence — never needs a generator",
@@ -308,7 +308,7 @@ async function fetchWeatherWithFallback(opts) {
     return await fetchWeatherDefault(opts);
   } catch (netErr) {
     const { OFFLINE_PROFILES, PROFILE_YEAR } =
-      await import("./profiles.js?v=20261103u");
+      await import("./profiles.js?v=20261104a");
     let best = null,
       bestD = Infinity;
     for (const p of OFFLINE_PROFILES) {
@@ -774,7 +774,9 @@ async function runSizingUncached(msg, deps = {}) {
       bestPriceCallout =
         `Best 20-year price for this exact hardware: standard sizing with ` +
         `${replacementsHorizon} replacement(s) over 20 years (counted above).`;
-      bestPriceCalloutI18n = null;
+      bestPriceCalloutI18n = oversizeCalloutI18n("exact_hardware_swaps", {
+        replacements: replacementsHorizon,
+      });
       oversizeSavingsUsd = null;
       oversizedBattKwh = sizing.battKwh;
     }
