@@ -78,3 +78,27 @@ five-day drift can never again present itself as a product defect.
   count would be worse than leaving it out.
 - Time-lost figures are elapsed windows between recorded events, not measured
   work interruption.
+
+## Added during the burndown (living document)
+
+**G-2 · The byte gate is regression-blocking, and a deliberate localization
+slice always trips it (2026-11-03).** `#337` added nine dictionary keys and an
+error line; the gate reported `home_document 18.5 → 18.9 KB` and
+`js_to_first_result 197.1 → 197.8 KB`, both far under the plan's limits but over
+the _baseline_. The gate is right: it asks "is this the smallest version that
+keeps the proven behavior". The cure is the repo's own mechanism — a `baseline`
+row in `docs/plan/LEDGER.jsonl` carrying the measured values, `was`/`delta` and
+the reason — never a limit change. Cost: one CI round trip per PR (×2 today,
+#337 and #321). **Note for the next lane:** when two i18n slices land in
+sequence, the second must re-measure on top of the first, so land them in order
+and merge main into the second before measuring.
+
+**F-2 · The asset stamp must move on EVERY edit to a stamped file, and the check
+can only pass after the stamp commit exists (2026-11-03).** A comment-only trim
+in `ui.js` after stamp commit `12ea5e242` left the stamp at `20261103c`; the
+token check failed the `test` job in 21 s with the exact reason and cue. The
+same check reports "no commit in history ever introduced ?v=…" when run before
+the stamp commit is created, which reads like a content error and is not one.
+**Cure applied:** bump the stamp in the same commit as any asset edit, and run
+`bump-asset-tokens --check` _after_ committing, never before. Two CI round trips
+cost today (~25 min including queue).
