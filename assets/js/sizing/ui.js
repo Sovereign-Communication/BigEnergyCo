@@ -13,11 +13,11 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20261103n";
+import { APPLIANCES } from "./appliances.js?v=20261103p";
 import {
   INSTALL_NAV_BREAKPOINT_PX,
   installReveal,
-} from "./pwa-install.js?v=20261103n";
+} from "./pwa-install.js?v=20261103p";
 import {
   USE_CASES,
   USE_CASE_IDS,
@@ -28,27 +28,27 @@ import {
   normaliseOutageTarget,
   DEFAULT_RESERVE_PCT,
   DEFAULT_TOU,
-} from "./usecases.js?v=20261103n";
+} from "./usecases.js?v=20261103p";
 import {
   createRunChannel,
   staleRunAction,
   errorReleasesRunChannel,
   RUN_REPLY_DEADLINE_MS,
-} from "./run-coordinator.js?v=20261103n";
+} from "./run-coordinator.js?v=20261103p";
 import {
   assumptionDisclosureKeys,
   cutRowVisible,
   tierForGeneratorRuntime,
   generatorRuntimeForTier,
   generatorAllowedForRuntime,
-} from "./mode-chrome.js?v=20261103n";
-import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261103n";
-import { bestAffordableCurvePoint } from "../shared/budget-targets.js?v=20261103n";
+} from "./mode-chrome.js?v=20261103p";
+import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261103p";
+import { bestAffordableCurvePoint } from "../shared/budget-targets.js?v=20261103p";
 import {
   locateMe,
   purgeLegacyCityCache,
   setupCitySearch,
-} from "./location-picker.js?v=20261103n";
+} from "./location-picker.js?v=20261103p";
 
 import {
   estimateTariff,
@@ -56,14 +56,14 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20261103n";
+} from "./pricing.js?v=20261103p";
 // The country -> currency table. Static, not lazy: it is consulted the moment
 // a location resolves, so a dynamic import would only add a round trip to the
 // one path that must not wait. Its 11.5 KB is data, and the first-load budget
 // below records the deliberate trade.
-import { currencyForCountry } from "./country-currency.js?v=20261103n";
+import { currencyForCountry } from "./country-currency.js?v=20261103p";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261103n";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261103p";
 
 // THE FOUR WAYS TO PAY FOR ONE SYSTEM (master plan D-01 §6.4, R-PATH-01..10).
 //
@@ -95,7 +95,7 @@ let pathsLoading = null;
 function loadPaths() {
   if (pathsApi) return Promise.resolve(pathsApi);
   if (!pathsLoading)
-    pathsLoading = import("./paths.js?v=20261103n").then((mod) => {
+    pathsLoading = import("./paths.js?v=20261103p").then((mod) => {
       pathsApi = mod;
       PATHS_HORIZON_YEARS = mod.HORIZON_YEARS;
       return mod;
@@ -106,15 +106,15 @@ import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20261103n";
+} from "./lead-acid.js?v=20261103p";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20261103n";
+} from "./bom.js?v=20261103p";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20261103n";
+import { BOM_ITEMS } from "../shared/content.js?v=20261103p";
 
 import {
   applyI18n,
@@ -123,18 +123,18 @@ import {
   // uses, so `t` is a binding to the one implementation rather than a second
   // copy of the placeholder contract.
   translate as t,
-} from "../shared/i18n.js?v=20261103n";
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261103n";
-import { byId as $, el } from "../shared/dom.js?v=20261103n";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261103n";
+} from "../shared/i18n.js?v=20261103p";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261103p";
+import { byId as $, el } from "../shared/dom.js?v=20261103p";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261103p";
 import {
   isSimpleMode,
   initSimpleMode,
   setSimpleMode,
   onSimpleModeChange,
   modeLabel,
-} from "../shared/simple-mode.js?v=20261103n";
-import { buildSimpleView } from "../shared/simple-view.js?v=20261103n";
+} from "../shared/simple-mode.js?v=20261103p";
+import { buildSimpleView } from "../shared/simple-view.js?v=20261103p";
 import {
   advisorJevContext,
   interpretSanity,
@@ -142,29 +142,29 @@ import {
   renderSanityBadge,
   requestSanity,
   sanityState,
-} from "./validate.js?v=20261103n";
+} from "./validate.js?v=20261103p";
 import {
   CUT_TARGET_PCT,
   sliderStateDrifted,
   targetForPct,
-} from "../shared/cut-targets.js?v=20261103n";
+} from "../shared/cut-targets.js?v=20261103p";
 import {
   SHARE_PREFIX,
   b64urlEncode,
   parseShareHash,
-} from "./share-codec.js?v=20261103n";
+} from "./share-codec.js?v=20261103p";
 import {
   hasInfeasibleCopy,
   infeasibleCopyKeys,
-} from "./infeasible-copy.js?v=20261103n";
-import { csvDocument, partsListRows } from "./parts-csv.js?v=20261103n";
+} from "./infeasible-copy.js?v=20261103p";
+import { csvDocument, partsListRows } from "./parts-csv.js?v=20261103p";
 import {
   fuelBurnPerKwh,
   fuelDisplay,
   fuelRateUsd,
   fuelTypeName,
   isImperialLocation,
-} from "./fuel-units.js?v=20261103n";
+} from "./fuel-units.js?v=20261103p";
 
 import {
   createLeafletProvider,
@@ -172,18 +172,18 @@ import {
   rotatedRectangleAreaM2,
   rotatedRectangleCorners,
   manualRoofHint,
-} from "./map-provider.js?v=20261103n";
+} from "./map-provider.js?v=20261103p";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20261103n";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20261103n";
+} from "./wizard.js?v=20261103p";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20261103p";
 import {
   interpolateCurveTarget,
   surplusAnchor,
   budgetSpanMax,
-} from "./budget-span.js?v=20261103n";
+} from "./budget-span.js?v=20261103p";
 // Heavy modules used only after a sizing result stay outside the initial UI graph.
 let _engine = null;
 let _charts = null;
@@ -195,10 +195,10 @@ let _chartsInitialized = false;
 function preloadRunModules() {
   if (!_runModulesPromise) {
     _runModulesPromise = Promise.all([
-      import("./engine.js?v=20261103n"),
-      import("./charts.js?v=20261103n"),
-      import("./frontier-chart.js?v=20261103n"),
-      import("./rescale.js?v=20261103n"),
+      import("./engine.js?v=20261103p"),
+      import("./charts.js?v=20261103p"),
+      import("./frontier-chart.js?v=20261103p"),
+      import("./rescale.js?v=20261103p"),
     ])
       .then(([engine, charts, frontierChart, rescale]) => {
         _engine = engine;
@@ -266,9 +266,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20261103n";
+} from "./money.js?v=20261103p";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261103n";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261103p";
 
 let worker = null;
 
@@ -3782,11 +3782,9 @@ function renderFocusPanel(p, entry, isPreview) {
       : "👆 Selected system";
   const chips = $("focusChips");
   chips.innerHTML = "";
-  // The chip wraps rather than clips. `white-space:nowrap` on the whole chip
-  // pushed "save ~$25,526.00 + vs lead-acid · skips ~8 swaps" 34px past a
-  // 241px parent at 412px, and `.results-box{overflow:hidden}` cut the tail off
-  // the last line. Only the figure itself stays unbreakable, so the sentence
-  // can fall to a second line on a phone and a dollar amount never splits.
+  // Wraps instead of clipping: nowrap put this chip 34px past a 241px parent at
+  // 412px and .results-box{overflow:hidden} cut the tail. The figure keeps
+  // nowrap so a dollar amount never splits.
   const chip = (icon, big, small) => {
     const s = el("span", {
       style:
@@ -3982,7 +3980,7 @@ function restoreRunButton() {
 function ensureWorker() {
   if (!worker) {
     const runWorker = new Worker(
-      "./assets/js/sizing/sizing-worker.js?v=20261103n",
+      "./assets/js/sizing/sizing-worker.js?v=20261103p",
       {
         type: "module",
       },
@@ -5708,10 +5706,8 @@ function matrixHtml(p) {
       ? "Green outline = lowest true 20-year cost in that column. Click any cell to make it the system shown in every chart, the hardware list, and the export figures below. The \u201Cyour target\u201D column follows the slider."
       : 'Green outline = lowest true 20-year cost in that column (every bank swap counted). "Unmet" hours are covered by a generator or the grid.';
   return (
-    // tabindex: the wrap scrolls horizontally (450px table, 274px viewport at
-    // 412px), and a scrollable box with no focusable child is unreachable by
-    // keyboard — WCAG 2.1.1. The label names it for a screen reader instead of
-    // announcing a bare "group".
+    // tabindex + role + name: the wrap scrolls sideways and has no focusable
+    // child, so a keyboard could not reach it (WCAG 2.1.1).
     `<div class="matrix-wrap" tabindex="0" role="region" aria-label="${escapeAttr(t("matrixScroll"))}"><table class="matrix-table"><thead><tr><th>Battery \u2193 \u00B7 Goal \u2192</th>${head}</tr></thead><tbody>${body}</tbody></table></div>` +
     `<p style="font-size:0.78rem;color:var(--text-muted);margin-top:0.6rem;line-height:1.55;">${hint}</p>`
   );
@@ -8927,11 +8923,11 @@ async function initSizingUI() {
     // can click, and the browser smoke gate polls for the ready flag
     // rather than assuming it. Without the loader the CTA is a plain
     // link — the same fallback the loader's own catch takes.
-    import("../shared/translation-suggestion-loader.js?v=20261103n")
+    import("../shared/translation-suggestion-loader.js?v=20261103p")
       .then(({ installTranslationSuggestionLoader }) => {
         installTranslationSuggestionLoader(
           document.querySelector("[data-translation-suggestion]"),
-          () => import("../translation-suggestion.js?v=20261103n"),
+          () => import("../translation-suggestion.js?v=20261103p"),
         );
       })
       .catch(() => {});
