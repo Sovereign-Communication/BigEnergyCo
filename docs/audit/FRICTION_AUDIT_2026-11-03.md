@@ -146,3 +146,18 @@ full off-grid result, the off-grid money-bar sentence and a `display: none` cut
 row. **Cure:** drive the container the page actually paints (`#resultsRegion`),
 wait for the status to leave the weather stage, and read a 0-row matrix as "tab
 not open", not "no result". No code change: nothing was wrong with the surface.
+
+**R-1 · A runner restart and a restored share payload broke two surface drives (2026-11-04).**
+The Cloud runner restarted mid-session while the callout drive was running; the
+worktree, the local server and the 4/4 pinning test survived, so the first cost
+was one re-orientation turn, not lost work. The second cost was staler: after a
+reload the page restored the previous share hash (hardware label solar, but the
+payload was 7.78 kW plus a 40 kWh battery at 40.58 kWh/day), so a solar-only
+drive rendered the battery zero-swap callout; setting the hidden hardware select
+without a change event was overridden by the same restore; a hand-built share
+hash with uc=offgrid was ignored (the page stayed grid-tied at 41.1 kWh). The
+three callouts that were captured came from visible controls: the default run,
+the noSwapToggle run, and the off-grid 120 kWh run. **Cure:** clear the share
+hash before a drive, change visible controls in dependency order, wait for the
+status to leave the fetch stage, and treat any restored payload as stale until
+the result heading changes.
