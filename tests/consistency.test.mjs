@@ -28,6 +28,7 @@ import {
 import {
   rescalePayload,
   oversizeCallout,
+  oversizeCalloutI18n,
 } from "../assets/js/sizing/rescale.js";
 import { synthesizeFromProfile } from "../assets/js/sizing/nasa.js";
 import {
@@ -430,6 +431,10 @@ test("CONSISTENCY: rescale regenerates the scenario note from scaled parts", () 
       battKwh: 12,
       savingsUsd: 544,
     }),
+    bestPriceCalloutI18n: oversizeCalloutI18n("oversized_cheaper", {
+      battKwh: 12,
+      savingsUsd: 544,
+    }),
   };
   const r = rescalePayload({ annualGridSpendUsd: 1000, best: entry }, 2);
   assert.equal(r.best.battKwh, 10);
@@ -440,6 +445,14 @@ test("CONSISTENCY: rescale regenerates the scenario note from scaled parts", () 
     "note names the scaled bank",
   );
   assert.ok(r.best.bestPriceCallout.includes("$1,088"), "note scales the $");
+  assert.deepEqual(
+    r.best.bestPriceCalloutI18n,
+    oversizeCalloutI18n("oversized_cheaper", {
+      battKwh: 24,
+      savingsUsd: 1088,
+    }),
+    "locale arguments scale with the diagnostic sentence",
+  );
 
   // $-claiming swaps notes scale too; number-free notes stay byte-identical.
   const swaps = {
@@ -453,10 +466,21 @@ test("CONSISTENCY: rescale regenerates the scenario note from scaled parts", () 
       replacements: 2,
       savingsUsd: 544,
     }),
+    bestPriceCalloutI18n: oversizeCalloutI18n("swaps_cheaper", {
+      replacements: 2,
+      savingsUsd: 544,
+    }),
   };
   const r2 = rescalePayload({ annualGridSpendUsd: 1000, best: swaps }, 2);
   assert.ok(r2.best.bestPriceCallout.includes("$1,088"));
   assert.ok(r2.best.bestPriceCallout.includes("2 replacement(s)"));
+  assert.deepEqual(
+    r2.best.bestPriceCalloutI18n,
+    oversizeCalloutI18n("swaps_cheaper", {
+      replacements: 2,
+      savingsUsd: 1088,
+    }),
+  );
   const plain = {
     ...swaps,
     oversizeSavingsUsd: 0,

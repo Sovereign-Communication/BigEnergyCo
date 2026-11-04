@@ -13,11 +13,11 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20261103e";
+import { APPLIANCES } from "./appliances.js?v=20261103f";
 import {
   INSTALL_NAV_BREAKPOINT_PX,
   installReveal,
-} from "./pwa-install.js?v=20261103e";
+} from "./pwa-install.js?v=20261103f";
 import {
   USE_CASES,
   USE_CASE_IDS,
@@ -28,26 +28,26 @@ import {
   normaliseOutageTarget,
   DEFAULT_RESERVE_PCT,
   DEFAULT_TOU,
-} from "./usecases.js?v=20261103e";
+} from "./usecases.js?v=20261103f";
 import {
   createRunChannel,
   staleRunAction,
   errorReleasesRunChannel,
   RUN_REPLY_DEADLINE_MS,
-} from "./run-coordinator.js?v=20261103e";
+} from "./run-coordinator.js?v=20261103f";
 import {
   cutRowVisible,
   tierForGeneratorRuntime,
   generatorRuntimeForTier,
   generatorAllowedForRuntime,
-} from "./mode-chrome.js?v=20261103e";
-import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261103e";
-import { bestAffordableCurvePoint } from "../shared/budget-targets.js?v=20261103e";
+} from "./mode-chrome.js?v=20261103f";
+import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261103f";
+import { bestAffordableCurvePoint } from "../shared/budget-targets.js?v=20261103f";
 import {
   locateMe,
   purgeLegacyCityCache,
   setupCitySearch,
-} from "./location-picker.js?v=20261103e";
+} from "./location-picker.js?v=20261103f";
 
 import {
   estimateTariff,
@@ -55,14 +55,14 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20261103e";
+} from "./pricing.js?v=20261103f";
 // The country -> currency table. Static, not lazy: it is consulted the moment
 // a location resolves, so a dynamic import would only add a round trip to the
 // one path that must not wait. Its 11.5 KB is data, and the first-load budget
 // below records the deliberate trade.
-import { currencyForCountry } from "./country-currency.js?v=20261103e";
+import { currencyForCountry } from "./country-currency.js?v=20261103f";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261103e";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261103f";
 
 // THE FOUR WAYS TO PAY FOR ONE SYSTEM (master plan D-01 §6.4, R-PATH-01..10).
 //
@@ -94,7 +94,7 @@ let pathsLoading = null;
 function loadPaths() {
   if (pathsApi) return Promise.resolve(pathsApi);
   if (!pathsLoading)
-    pathsLoading = import("./paths.js?v=20261103e").then((mod) => {
+    pathsLoading = import("./paths.js?v=20261103f").then((mod) => {
       pathsApi = mod;
       PATHS_HORIZON_YEARS = mod.HORIZON_YEARS;
       return mod;
@@ -105,15 +105,15 @@ import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20261103e";
+} from "./lead-acid.js?v=20261103f";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20261103e";
+} from "./bom.js?v=20261103f";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20261103e";
+import { BOM_ITEMS } from "../shared/content.js?v=20261103f";
 
 import {
   applyI18n,
@@ -122,18 +122,18 @@ import {
   // uses, so `t` is a binding to the one implementation rather than a second
   // copy of the placeholder contract.
   translate as t,
-} from "../shared/i18n.js?v=20261103e";
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261103e";
-import { byId as $, el } from "../shared/dom.js?v=20261103e";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261103e";
+} from "../shared/i18n.js?v=20261103f";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261103f";
+import { byId as $, el } from "../shared/dom.js?v=20261103f";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261103f";
 import {
   isSimpleMode,
   initSimpleMode,
   setSimpleMode,
   onSimpleModeChange,
   modeLabel,
-} from "../shared/simple-mode.js?v=20261103e";
-import { buildSimpleView } from "../shared/simple-view.js?v=20261103e";
+} from "../shared/simple-mode.js?v=20261103f";
+import { buildSimpleView } from "../shared/simple-view.js?v=20261103f";
 import {
   advisorJevContext,
   interpretSanity,
@@ -141,29 +141,29 @@ import {
   renderSanityBadge,
   requestSanity,
   sanityState,
-} from "./validate.js?v=20261103e";
+} from "./validate.js?v=20261103f";
 import {
   CUT_TARGET_PCT,
   sliderStateDrifted,
   targetForPct,
-} from "../shared/cut-targets.js?v=20261103e";
+} from "../shared/cut-targets.js?v=20261103f";
 import {
   SHARE_PREFIX,
   b64urlEncode,
   parseShareHash,
-} from "./share-codec.js?v=20261103e";
+} from "./share-codec.js?v=20261103f";
 import {
   hasInfeasibleCopy,
   infeasibleCopyKeys,
-} from "./infeasible-copy.js?v=20261103e";
-import { csvDocument, partsListRows } from "./parts-csv.js?v=20261103e";
+} from "./infeasible-copy.js?v=20261103f";
+import { csvDocument, partsListRows } from "./parts-csv.js?v=20261103f";
 import {
   fuelBurnPerKwh,
   fuelDisplay,
   fuelRateUsd,
   fuelTypeName,
   isImperialLocation,
-} from "./fuel-units.js?v=20261103e";
+} from "./fuel-units.js?v=20261103f";
 
 import {
   createLeafletProvider,
@@ -171,18 +171,18 @@ import {
   rotatedRectangleAreaM2,
   rotatedRectangleCorners,
   manualRoofHint,
-} from "./map-provider.js?v=20261103e";
+} from "./map-provider.js?v=20261103f";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20261103e";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20261103e";
+} from "./wizard.js?v=20261103f";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20261103f";
 import {
   interpolateCurveTarget,
   surplusAnchor,
   budgetSpanMax,
-} from "./budget-span.js?v=20261103e";
+} from "./budget-span.js?v=20261103f";
 // Heavy modules used only after a sizing result stay outside the initial UI graph.
 let _engine = null;
 let _charts = null;
@@ -194,10 +194,10 @@ let _chartsInitialized = false;
 function preloadRunModules() {
   if (!_runModulesPromise) {
     _runModulesPromise = Promise.all([
-      import("./engine.js?v=20261103e"),
-      import("./charts.js?v=20261103e"),
-      import("./frontier-chart.js?v=20261103e"),
-      import("./rescale.js?v=20261103e"),
+      import("./engine.js?v=20261103f"),
+      import("./charts.js?v=20261103f"),
+      import("./frontier-chart.js?v=20261103f"),
+      import("./rescale.js?v=20261103f"),
     ])
       .then(([engine, charts, frontierChart, rescale]) => {
         _engine = engine;
@@ -265,9 +265,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20261103e";
+} from "./money.js?v=20261103f";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261103e";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261103f";
 
 let worker = null;
 
@@ -2932,7 +2932,11 @@ function run(quiet = false, explicit = false) {
   // A site/option change invalidates an adopted curve point (its hardware was
   // simulated for the old site and load); a bill-only change keeps it — the
   // rescale path already re-based it and the quiet refine re-simulates it.
-  if (lastRunInput && !_rescale.sameSiteOptions(lastRunInput, inp)) {
+  if (
+    lastRunInput &&
+    _rescale &&
+    !_rescale.sameSiteOptions(lastRunInput, inp)
+  ) {
     adoptedEntry = null;
     if (selectedKey === "adopted") selectedKey = "best";
     frontierSelected = null;
@@ -3966,7 +3970,7 @@ function restoreRunButton() {
 function ensureWorker() {
   if (!worker) {
     const runWorker = new Worker(
-      "./assets/js/sizing/sizing-worker.js?v=20261103e",
+      "./assets/js/sizing/sizing-worker.js?v=20261103f",
       {
         type: "module",
       },
@@ -4267,10 +4271,21 @@ function moneyRange(lo, hi) {
   return money(lo) + "–" + money(hi);
 }
 
-// Oversize notes are generated in USD by the engine; re-render the savings
-// figure through money() so non-USD readers see their own currency. USD
-// readers (or no-FX) get the original prose byte-identical.
-function bestPriceNote(text) {
+// The engine sends a semantic locale key plus numeric inputs for callouts
+// translated in the browser. Keep its English diagnostic sentence as a
+// fallback for callout variants not yet migrated.
+function bestPriceNote(entry) {
+  const message = entry?.bestPriceCalloutI18n;
+  if (message?.key && message.args) {
+    const vars = { ...message.args };
+    if (Number.isFinite(vars.battKwh)) vars.battKwh = fmt(vars.battKwh);
+    if (Number.isFinite(vars.replacements))
+      vars.replacements = fmt(vars.replacements);
+    if (Number.isFinite(vars.savingsUsd)) vars.savings = money(vars.savingsUsd);
+    delete vars.savingsUsd;
+    return t(message.key, vars);
+  }
+  const text = entry?.bestPriceCallout;
   const fx = fxActive();
   if (!fx || fx.code === "USD") return text;
   return _rescale.relocalizeOversizeCallout(text, money);
@@ -5976,7 +5991,7 @@ function entryDetailRows(p, e) {
     ]);
   }
   if (e.bestPriceCallout) {
-    rows.push(["Scenario note", bestPriceNote(e.bestPriceCallout)]);
+    rows.push(["Scenario note", bestPriceNote(e)]);
   }
   return rows;
 }
@@ -6126,7 +6141,7 @@ function renderBomPanel() {
         style:
           "margin-bottom:0.8rem;padding:0.75rem 1rem;border-radius:8px;background:rgba(0,230,153,0.08);border:1px solid rgba(0,230,153,0.3);font-size:0.85rem;line-height:1.45;color:var(--text-color);",
       },
-      `💡 ${bestPriceNote(f.bestPriceCallout)}`,
+      `💡 ${bestPriceNote(f)}`,
     );
     body.appendChild(callout);
   }
@@ -6603,11 +6618,7 @@ function renderTierCards(p) {
 
     if (t.bestPriceCallout) {
       card.appendChild(
-        el(
-          "div",
-          { class: "best-price-callout" },
-          `💡 ${bestPriceNote(t.bestPriceCallout)}`,
-        ),
+        el("div", { class: "best-price-callout" }, `💡 ${bestPriceNote(t)}`),
       );
     }
 
@@ -6784,11 +6795,7 @@ function renderTargetCards(p, extraTargets = []) {
 
     if (t.bestPriceCallout) {
       card.appendChild(
-        el(
-          "div",
-          { class: "best-price-callout" },
-          `💡 ${bestPriceNote(t.bestPriceCallout)}`,
-        ),
+        el("div", { class: "best-price-callout" }, `💡 ${bestPriceNote(t)}`),
       );
     }
 
@@ -8888,11 +8895,11 @@ async function initSizingUI() {
     // can click, and the browser smoke gate polls for the ready flag
     // rather than assuming it. Without the loader the CTA is a plain
     // link — the same fallback the loader's own catch takes.
-    import("../shared/translation-suggestion-loader.js?v=20261103e")
+    import("../shared/translation-suggestion-loader.js?v=20261103f")
       .then(({ installTranslationSuggestionLoader }) => {
         installTranslationSuggestionLoader(
           document.querySelector("[data-translation-suggestion]"),
-          () => import("../translation-suggestion.js?v=20261103e"),
+          () => import("../translation-suggestion.js?v=20261103f"),
         );
       })
       .catch(() => {});
