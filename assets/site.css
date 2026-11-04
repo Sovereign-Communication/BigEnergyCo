@@ -1214,6 +1214,22 @@ textarea:focus-visible {
 /* A field-level error that is actually readable: text, not just a red border.
    The input owns aria-invalid + aria-describedby so the message is announced;
    this block only makes it visible and legible at every width. */
+/* P1.6: the always-visible assumption lines. Muted but readable at every
+   width, and separated from the interactive row below it. */
+.assumption-disclosure {
+  margin: 1rem 0 0;
+
+  font-size: 0.85rem;
+
+  line-height: 1.55;
+
+  color: var(--text-muted);
+}
+
+.assumption-disclosure[hidden] {
+  display: none;
+}
+
 .field-error {
   margin: 0.4rem 0 0;
 
