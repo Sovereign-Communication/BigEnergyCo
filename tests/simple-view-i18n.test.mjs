@@ -178,6 +178,18 @@ test("the Simple mode label and chrome strings are dictionary lookups", () => {
   }
 });
 
+test("ui.js passes the translator into the Simple view render", () => {
+  // The view model requires `t`; this call site is the one the real page uses,
+  // and omitting it made every Simple result throw "t is not a function" after
+  // the simulation had already finished.
+  const ui = fs.readFileSync("assets/js/sizing/ui.js", "utf8");
+  assert.match(
+    ui,
+    /buildSimpleView\(\{[\s\S]{0,320}?\bt,\s*\}\)/,
+    "buildSimpleView must receive the translator at the render call site",
+  );
+});
+
 test("the Simple view model carries no bare prose literals", () => {
   const src = fs
     .readFileSync("assets/js/shared/simple-view.js", "utf8")
