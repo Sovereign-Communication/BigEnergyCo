@@ -57,6 +57,6 @@ export function initSimpleMode(storage = globalThis.localStorage) {
   return current;
 }
 
-export function modeLabel(simple) {
-  return simple ? "Simple mode" : "Technical mode";
+export function modeLabel(simple, t) {
+  return t(simple ? "simpleModeLabel" : "simpleModeTechnical");
 }

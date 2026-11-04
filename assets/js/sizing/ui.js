@@ -13,11 +13,11 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20261104c";
+import { APPLIANCES } from "./appliances.js?v=20261104d";
 import {
   INSTALL_NAV_BREAKPOINT_PX,
   installReveal,
-} from "./pwa-install.js?v=20261104c";
+} from "./pwa-install.js?v=20261104d";
 import {
   USE_CASES,
   USE_CASE_IDS,
@@ -28,27 +28,27 @@ import {
   normaliseOutageTarget,
   DEFAULT_RESERVE_PCT,
   DEFAULT_TOU,
-} from "./usecases.js?v=20261104c";
+} from "./usecases.js?v=20261104d";
 import {
   createRunChannel,
   staleRunAction,
   errorReleasesRunChannel,
   RUN_REPLY_DEADLINE_MS,
-} from "./run-coordinator.js?v=20261104c";
+} from "./run-coordinator.js?v=20261104d";
 import {
   assumptionDisclosureKeys,
   cutRowVisible,
   tierForGeneratorRuntime,
   generatorRuntimeForTier,
   generatorAllowedForRuntime,
-} from "./mode-chrome.js?v=20261104c";
-import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261104c";
-import { bestAffordableCurvePoint } from "../shared/budget-targets.js?v=20261104c";
+} from "./mode-chrome.js?v=20261104d";
+import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261104d";
+import { bestAffordableCurvePoint } from "../shared/budget-targets.js?v=20261104d";
 import {
   locateMe,
   purgeLegacyCityCache,
   setupCitySearch,
-} from "./location-picker.js?v=20261104c";
+} from "./location-picker.js?v=20261104d";
 
 import {
   estimateTariff,
@@ -56,14 +56,14 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20261104c";
+} from "./pricing.js?v=20261104d";
 // The country -> currency table. Static, not lazy: it is consulted the moment
 // a location resolves, so a dynamic import would only add a round trip to the
 // one path that must not wait. Its 11.5 KB is data, and the first-load budget
 // below records the deliberate trade.
-import { currencyForCountry } from "./country-currency.js?v=20261104c";
+import { currencyForCountry } from "./country-currency.js?v=20261104d";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261104c";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261104d";
 
 // THE FOUR WAYS TO PAY FOR ONE SYSTEM (master plan D-01 §6.4, R-PATH-01..10).
 //
@@ -95,7 +95,7 @@ let pathsLoading = null;
 function loadPaths() {
   if (pathsApi) return Promise.resolve(pathsApi);
   if (!pathsLoading)
-    pathsLoading = import("./paths.js?v=20261104c").then((mod) => {
+    pathsLoading = import("./paths.js?v=20261104d").then((mod) => {
       pathsApi = mod;
       PATHS_HORIZON_YEARS = mod.HORIZON_YEARS;
       return mod;
@@ -106,15 +106,15 @@ import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20261104c";
+} from "./lead-acid.js?v=20261104d";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20261104c";
+} from "./bom.js?v=20261104d";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20261104c";
+import { BOM_ITEMS } from "../shared/content.js?v=20261104d";
 
 import {
   applyI18n,
@@ -123,18 +123,18 @@ import {
   // uses, so `t` is a binding to the one implementation rather than a second
   // copy of the placeholder contract.
   translate as t,
-} from "../shared/i18n.js?v=20261104c";
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261104c";
-import { byId as $, el } from "../shared/dom.js?v=20261104c";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261104c";
+} from "../shared/i18n.js?v=20261104d";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261104d";
+import { byId as $, el } from "../shared/dom.js?v=20261104d";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261104d";
 import {
   isSimpleMode,
   initSimpleMode,
   setSimpleMode,
   onSimpleModeChange,
   modeLabel,
-} from "../shared/simple-mode.js?v=20261104c";
-import { buildSimpleView } from "../shared/simple-view.js?v=20261104c";
+} from "../shared/simple-mode.js?v=20261104d";
+import { buildSimpleView } from "../shared/simple-view.js?v=20261104d";
 import {
   advisorJevContext,
   interpretSanity,
@@ -142,29 +142,29 @@ import {
   renderSanityBadge,
   requestSanity,
   sanityState,
-} from "./validate.js?v=20261104c";
+} from "./validate.js?v=20261104d";
 import {
   CUT_TARGET_PCT,
   sliderStateDrifted,
   targetForPct,
-} from "../shared/cut-targets.js?v=20261104c";
+} from "../shared/cut-targets.js?v=20261104d";
 import {
   SHARE_PREFIX,
   b64urlEncode,
   parseShareHash,
-} from "./share-codec.js?v=20261104c";
+} from "./share-codec.js?v=20261104d";
 import {
   hasInfeasibleCopy,
   infeasibleCopyKeys,
-} from "./infeasible-copy.js?v=20261104c";
-import { csvDocument, partsListRows } from "./parts-csv.js?v=20261104c";
+} from "./infeasible-copy.js?v=20261104d";
+import { csvDocument, partsListRows } from "./parts-csv.js?v=20261104d";
 import {
   fuelBurnPerKwh,
   fuelDisplay,
   fuelRateUsd,
   fuelTypeName,
   isImperialLocation,
-} from "./fuel-units.js?v=20261104c";
+} from "./fuel-units.js?v=20261104d";
 
 import {
   createLeafletProvider,
@@ -172,18 +172,18 @@ import {
   rotatedRectangleAreaM2,
   rotatedRectangleCorners,
   manualRoofHint,
-} from "./map-provider.js?v=20261104c";
+} from "./map-provider.js?v=20261104d";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20261104c";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20261104c";
+} from "./wizard.js?v=20261104d";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20261104d";
 import {
   interpolateCurveTarget,
   surplusAnchor,
   budgetSpanMax,
-} from "./budget-span.js?v=20261104c";
+} from "./budget-span.js?v=20261104d";
 // Heavy modules used only after a sizing result stay outside the initial UI graph.
 let _engine = null;
 let _charts = null;
@@ -195,10 +195,10 @@ let _chartsInitialized = false;
 function preloadRunModules() {
   if (!_runModulesPromise) {
     _runModulesPromise = Promise.all([
-      import("./engine.js?v=20261104c"),
-      import("./charts.js?v=20261104c"),
-      import("./frontier-chart.js?v=20261104c"),
-      import("./rescale.js?v=20261104c"),
+      import("./engine.js?v=20261104d"),
+      import("./charts.js?v=20261104d"),
+      import("./frontier-chart.js?v=20261104d"),
+      import("./rescale.js?v=20261104d"),
     ])
       .then(([engine, charts, frontierChart, rescale]) => {
         _engine = engine;
@@ -266,9 +266,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20261104c";
+} from "./money.js?v=20261104d";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261104c";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261104d";
 
 let worker = null;
 
@@ -664,7 +664,10 @@ function applySimpleMode() {
   const toggle = $("simpleModeToggle");
   if (toggle) {
     toggle.checked = simpleMode;
-    toggle.setAttribute("aria-label", `${modeLabel(simpleMode)} enabled`);
+    toggle.setAttribute(
+      "aria-label",
+      t("simpleModeAria", { mode: modeLabel(simpleMode, t) }),
+    );
   }
   // Simple mode swaps the detail panels for one plain-language card: the
   // wrapper is only ever revealed with fresh content inside, so a stale card
@@ -2431,13 +2434,17 @@ function updateCurrencyUnitLabel() {
   const expSpan = document.querySelector('label[for="exportRate"] span');
 
   if (expSpan)
-    expSpan.textContent = `(${fx ? CURRENCIES[fx.code]?.symbol || fx.code : "$"}/kWh, optional \u2014 grid-tie only)`;
+    expSpan.textContent = t("simpleHintFeedIn", {
+      unit: fx ? CURRENCIES[fx.code]?.symbol || fx.code : "$",
+    });
 
   // The fixed charge is entered in the same display currency.
   const fixedCur = document.querySelector('label[for="fixedChargeVal"] span');
 
   if (fixedCur)
-    fixedCur.textContent = `(${fx ? CURRENCIES[fx.code]?.symbol || fx.code : "$"}/mo, optional)`;
+    fixedCur.textContent = t("simpleHintFixed", {
+      unit: fx ? CURRENCIES[fx.code]?.symbol || fx.code : "$",
+    });
 
   // The always-visible bill slider shows the resolved location's currency.
 
@@ -3980,7 +3987,7 @@ function restoreRunButton() {
 function ensureWorker() {
   if (!worker) {
     const runWorker = new Worker(
-      "./assets/js/sizing/sizing-worker.js?v=20261104c",
+      "./assets/js/sizing/sizing-worker.js?v=20261104d",
       {
         type: "module",
       },
@@ -6039,7 +6046,9 @@ function showSystemModal(p, entry, adopt) {
       : "";
   const title = $("systemModalTitle");
   if (title) {
-    title.textContent = `${p.mode === "gridtie" ? "Full bill-cut analysis" : "Full system analysis"}${headPct}: ${chemLabel}`;
+    title.textContent = `${t(
+      p.mode === "gridtie" ? "analysisFullBill" : "analysisFullSystem",
+    )}${headPct}: ${chemLabel}`;
   }
   if (body) {
     body.innerHTML = "";
@@ -8476,17 +8485,16 @@ function setupPwaControls() {
     if (!badge) return;
     if (!navigator.onLine) {
       badge.className = "offline-badge";
-      badge.innerHTML = `<span class="offline-dot"></span> Offline Ready`;
+      badge.innerHTML = `<span class="offline-dot"></span> ${t("offlineReady")}`;
       badge.style.display = "inline-flex";
-      badge.title =
-        "Working offline using cached app data & local weather simulation";
+      badge.title = t("offlineBadgeTitle");
     } else {
       if (
         badge.style.display !== "none" &&
         !badge.classList.contains("online-flash")
       ) {
         badge.className = "offline-badge online-flash";
-        badge.innerHTML = `<span class="offline-dot"></span> Back Online`;
+        badge.innerHTML = `<span class="offline-dot"></span> ${t("backOnline")}`;
         setTimeout(() => {
           badge.style.display = "none";
         }, 3000);
@@ -8947,11 +8955,11 @@ async function initSizingUI() {
     // can click, and the browser smoke gate polls for the ready flag
     // rather than assuming it. Without the loader the CTA is a plain
     // link — the same fallback the loader's own catch takes.
-    import("../shared/translation-suggestion-loader.js?v=20261104c")
+    import("../shared/translation-suggestion-loader.js?v=20261104d")
       .then(({ installTranslationSuggestionLoader }) => {
         installTranslationSuggestionLoader(
           document.querySelector("[data-translation-suggestion]"),
-          () => import("../translation-suggestion.js?v=20261104c"),
+          () => import("../translation-suggestion.js?v=20261104d"),
         );
       })
       .catch(() => {});
