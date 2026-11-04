@@ -1422,6 +1422,41 @@ function getTariff() {
   return Number.isFinite(v) && v > 0 ? v : null;
 }
 
+// One constant for the HTML `min`, the message's {min} and the check.
+const TARIFF_MIN = 0.01;
+
+/**
+ * A non-empty price that is text, zero or negative cannot be a price. Empty is
+ * valid: clearing the field means "use the local estimate".
+ */
+function tariffFieldInvalid() {
+  const input = $("customRateVal");
+  if (!input) return false;
+  const raw = String(input.value ?? "").trim();
+  if (raw === "") return false;
+  const v = parseFloat(raw);
+  return !Number.isFinite(v) || v < TARIFF_MIN;
+}
+
+/** One writer for the visible text and the announced aria state. */
+function showTariffError(show) {
+  const input = $("customRateVal");
+  const box = $("rateError");
+  if (show) {
+    if (input) input.setAttribute("aria-invalid", "true");
+    if (box) {
+      box.textContent = t("invalidTariff", { min: TARIFF_MIN.toFixed(2) });
+      box.hidden = false;
+    }
+  } else {
+    if (input) input.removeAttribute("aria-invalid");
+    if (box) {
+      box.hidden = true;
+      box.textContent = "";
+    }
+  }
+}
+
 // Fixed monthly connection fee, display currency like the tariff (a number
 // only the visitor knows — never auto-estimated, so no touched-flag needed).
 function getFixedCharge() {
@@ -2834,6 +2869,19 @@ function run(quiet = false, explicit = false) {
     clearTimeout(runTimer);
     runTimer = null;
   }
+
+  // A price that cannot be a price blocks the run and says why, next to the
+  // field and in the status line. This is checked BEFORE readInputs() so the
+  // run never proceeds with a tariff the field rejected.
+  if (tariffFieldInvalid()) {
+    runChannel.dropPending();
+    setResultsHidden(true);
+    showTariffError(true);
+    setStatus(t("invalidTariff", { min: TARIFF_MIN.toFixed(2) }));
+    if (!quiet) $("customRateVal")?.focus();
+    return;
+  }
+  showTariffError(false);
 
   const inp = readInputs();
 
@@ -8474,6 +8522,9 @@ async function initSizingUI() {
     if (customVal)
       customVal.addEventListener("input", () => {
         tariffTouched = true;
+        // Correcting the value clears the error immediately: an error that
+        // lingers after the fix reads as a second, unexplained failure.
+        if (!tariffFieldInvalid()) showTariffError(false);
         syncBillSlider();
         markPrecalcDirty();
       });
