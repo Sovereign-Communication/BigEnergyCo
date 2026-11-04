@@ -13,11 +13,11 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20261103f";
+import { APPLIANCES } from "./appliances.js?v=20261103k";
 import {
   INSTALL_NAV_BREAKPOINT_PX,
   installReveal,
-} from "./pwa-install.js?v=20261103f";
+} from "./pwa-install.js?v=20261103k";
 import {
   USE_CASES,
   USE_CASE_IDS,
@@ -28,26 +28,27 @@ import {
   normaliseOutageTarget,
   DEFAULT_RESERVE_PCT,
   DEFAULT_TOU,
-} from "./usecases.js?v=20261103f";
+} from "./usecases.js?v=20261103k";
 import {
   createRunChannel,
   staleRunAction,
   errorReleasesRunChannel,
   RUN_REPLY_DEADLINE_MS,
-} from "./run-coordinator.js?v=20261103f";
+} from "./run-coordinator.js?v=20261103k";
 import {
+  assumptionDisclosureKeys,
   cutRowVisible,
   tierForGeneratorRuntime,
   generatorRuntimeForTier,
   generatorAllowedForRuntime,
-} from "./mode-chrome.js?v=20261103f";
-import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261103f";
-import { bestAffordableCurvePoint } from "../shared/budget-targets.js?v=20261103f";
+} from "./mode-chrome.js?v=20261103k";
+import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261103k";
+import { bestAffordableCurvePoint } from "../shared/budget-targets.js?v=20261103k";
 import {
   locateMe,
   purgeLegacyCityCache,
   setupCitySearch,
-} from "./location-picker.js?v=20261103f";
+} from "./location-picker.js?v=20261103k";
 
 import {
   estimateTariff,
@@ -55,14 +56,14 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20261103f";
+} from "./pricing.js?v=20261103k";
 // The country -> currency table. Static, not lazy: it is consulted the moment
 // a location resolves, so a dynamic import would only add a round trip to the
 // one path that must not wait. Its 11.5 KB is data, and the first-load budget
 // below records the deliberate trade.
-import { currencyForCountry } from "./country-currency.js?v=20261103f";
+import { currencyForCountry } from "./country-currency.js?v=20261103k";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261103f";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261103k";
 
 // THE FOUR WAYS TO PAY FOR ONE SYSTEM (master plan D-01 §6.4, R-PATH-01..10).
 //
@@ -94,7 +95,7 @@ let pathsLoading = null;
 function loadPaths() {
   if (pathsApi) return Promise.resolve(pathsApi);
   if (!pathsLoading)
-    pathsLoading = import("./paths.js?v=20261103f").then((mod) => {
+    pathsLoading = import("./paths.js?v=20261103k").then((mod) => {
       pathsApi = mod;
       PATHS_HORIZON_YEARS = mod.HORIZON_YEARS;
       return mod;
@@ -105,15 +106,15 @@ import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20261103f";
+} from "./lead-acid.js?v=20261103k";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20261103f";
+} from "./bom.js?v=20261103k";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20261103f";
+import { BOM_ITEMS } from "../shared/content.js?v=20261103k";
 
 import {
   applyI18n,
@@ -122,18 +123,18 @@ import {
   // uses, so `t` is a binding to the one implementation rather than a second
   // copy of the placeholder contract.
   translate as t,
-} from "../shared/i18n.js?v=20261103f";
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261103f";
-import { byId as $, el } from "../shared/dom.js?v=20261103f";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261103f";
+} from "../shared/i18n.js?v=20261103k";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261103k";
+import { byId as $, el } from "../shared/dom.js?v=20261103k";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261103k";
 import {
   isSimpleMode,
   initSimpleMode,
   setSimpleMode,
   onSimpleModeChange,
   modeLabel,
-} from "../shared/simple-mode.js?v=20261103f";
-import { buildSimpleView } from "../shared/simple-view.js?v=20261103f";
+} from "../shared/simple-mode.js?v=20261103k";
+import { buildSimpleView } from "../shared/simple-view.js?v=20261103k";
 import {
   advisorJevContext,
   interpretSanity,
@@ -141,29 +142,29 @@ import {
   renderSanityBadge,
   requestSanity,
   sanityState,
-} from "./validate.js?v=20261103f";
+} from "./validate.js?v=20261103k";
 import {
   CUT_TARGET_PCT,
   sliderStateDrifted,
   targetForPct,
-} from "../shared/cut-targets.js?v=20261103f";
+} from "../shared/cut-targets.js?v=20261103k";
 import {
   SHARE_PREFIX,
   b64urlEncode,
   parseShareHash,
-} from "./share-codec.js?v=20261103f";
+} from "./share-codec.js?v=20261103k";
 import {
   hasInfeasibleCopy,
   infeasibleCopyKeys,
-} from "./infeasible-copy.js?v=20261103f";
-import { csvDocument, partsListRows } from "./parts-csv.js?v=20261103f";
+} from "./infeasible-copy.js?v=20261103k";
+import { csvDocument, partsListRows } from "./parts-csv.js?v=20261103k";
 import {
   fuelBurnPerKwh,
   fuelDisplay,
   fuelRateUsd,
   fuelTypeName,
   isImperialLocation,
-} from "./fuel-units.js?v=20261103f";
+} from "./fuel-units.js?v=20261103k";
 
 import {
   createLeafletProvider,
@@ -171,18 +172,18 @@ import {
   rotatedRectangleAreaM2,
   rotatedRectangleCorners,
   manualRoofHint,
-} from "./map-provider.js?v=20261103f";
+} from "./map-provider.js?v=20261103k";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20261103f";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20261103f";
+} from "./wizard.js?v=20261103k";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20261103k";
 import {
   interpolateCurveTarget,
   surplusAnchor,
   budgetSpanMax,
-} from "./budget-span.js?v=20261103f";
+} from "./budget-span.js?v=20261103k";
 // Heavy modules used only after a sizing result stay outside the initial UI graph.
 let _engine = null;
 let _charts = null;
@@ -194,10 +195,10 @@ let _chartsInitialized = false;
 function preloadRunModules() {
   if (!_runModulesPromise) {
     _runModulesPromise = Promise.all([
-      import("./engine.js?v=20261103f"),
-      import("./charts.js?v=20261103f"),
-      import("./frontier-chart.js?v=20261103f"),
-      import("./rescale.js?v=20261103f"),
+      import("./engine.js?v=20261103k"),
+      import("./charts.js?v=20261103k"),
+      import("./frontier-chart.js?v=20261103k"),
+      import("./rescale.js?v=20261103k"),
     ])
       .then(([engine, charts, frontierChart, rescale]) => {
         _engine = engine;
@@ -265,9 +266,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20261103f";
+} from "./money.js?v=20261103k";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261103f";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261103k";
 
 let worker = null;
 
@@ -3970,7 +3971,7 @@ function restoreRunButton() {
 function ensureWorker() {
   if (!worker) {
     const runWorker = new Worker(
-      "./assets/js/sizing/sizing-worker.js?v=20261103f",
+      "./assets/js/sizing/sizing-worker.js?v=20261103k",
       {
         type: "module",
       },
@@ -7169,6 +7170,21 @@ function renderEli5Summary(p) {
   wrap.append(grid, note);
 }
 
+/**
+ * P1.6: the assumptions that qualify every number on the card, on screen.
+ *
+ * The decision about WHICH assumptions apply lives in mode-chrome.js; this only
+ * resolves the keys and paints them, so a mode can never show a disclosure the
+ * model does not actually make (an off-grid result has no export credit).
+ */
+function renderAssumptionDisclosure(p) {
+  const box = $("assumptionDisclosure");
+  if (!box) return;
+  const keys = assumptionDisclosureKeys({ mode: p.mode });
+  box.textContent = keys.map((key) => t(key)).join(" ");
+  box.hidden = keys.length === 0;
+}
+
 // Surface the climate analysis's darkest 30-day window as a plain-language
 // caveat: solar users should sanity-check against it, and cold sites see
 // bigger battery-temperature effects. Hidden unless the toggle is on.
@@ -7239,6 +7255,7 @@ async function renderResults(p) {
   updateRoofAreaCapNote();
 
   renderWorstMonthCaveat(p);
+  renderAssumptionDisclosure(p);
 
   // Validate and preserve selection
   let selValid = false;
@@ -8895,11 +8912,11 @@ async function initSizingUI() {
     // can click, and the browser smoke gate polls for the ready flag
     // rather than assuming it. Without the loader the CTA is a plain
     // link — the same fallback the loader's own catch takes.
-    import("../shared/translation-suggestion-loader.js?v=20261103f")
+    import("../shared/translation-suggestion-loader.js?v=20261103k")
       .then(({ installTranslationSuggestionLoader }) => {
         installTranslationSuggestionLoader(
           document.querySelector("[data-translation-suggestion]"),
-          () => import("../translation-suggestion.js?v=20261103f"),
+          () => import("../translation-suggestion.js?v=20261103k"),
         );
       })
       .catch(() => {});
