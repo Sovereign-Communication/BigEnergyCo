@@ -133,3 +133,16 @@ in-lane; recorded as an owner-reserved blocker on #330, with local gate
 evidence attached to the blocked heads so the work can be verified immediately
 when runners return. The lane habit that made this cheap: every slice had its
 full local gate run before the push, so the block cost time, not evidence.
+
+**D-1 · Two "silent no-result" runs were a driver error, not a product defect (2026-11-04).**
+The prior pass clicked Run twice on the off-grid staging page, saw `#tierResults`
+at 0 rows, and recorded that the surface reached no result cards with no visible
+reason. Re-driving the same surface at the same stamp (`20261103u`) showed why.
+`#tierResults` is the matrix tab's table and stays empty for a successful off-grid
+run; the result paints into `#resultsRegion`, and the first run of a site pulls
+~2 MB of hourly weather before simulating — the status line names that stage and
+the button spins while it happens. One read after the weather stage returned the
+full off-grid result, the off-grid money-bar sentence and a `display: none` cut
+row. **Cure:** drive the container the page actually paints (`#resultsRegion`),
+wait for the status to leave the weather stage, and read a 0-row matrix as "tab
+not open", not "no result". No code change: nothing was wrong with the surface.
