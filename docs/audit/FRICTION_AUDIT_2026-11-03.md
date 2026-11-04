@@ -161,3 +161,17 @@ the noSwapToggle run, and the off-grid 120 kWh run. **Cure:** clear the share
 hash before a drive, change visible controls in dependency order, wait for the
 status to leave the fetch stage, and treat any restored payload as stale until
 the result heading changes.
+
+**R-2 · A share link's hardware choice was silently discarded by the run boundary (2026-11-04).**
+The solar-only drive looked like stale state for a turn: the hash applied `hw=solar`
+and `window.lastInputs.hardwareConfig` read `solar`, yet the run sized a 20 kWh
+battery and rendered the battery sentence. The cause was product code, not the
+drive: `runSizing()` derived `hardwareConfig` from the use case and overwrote the
+visitor's value, and bill-cut's legacy pair is `both`. A second turn went to the
+boot-only share restore: `restoreFromShare()` runs at load, so a hash change on the
+same document is ignored — a full reload with a query is required. **Cure:** the
+new `hardwareForRun()` honors solar/both on unlocked cases and keeps locked pairs
+(ToU/off-grid/backup); the pinning test covers the lock table. For drives, always
+load the hash with a full navigation, then read `lastInputs` before trusting a
+result. Cost: two diagnostic turns; the first receipt (solar-only) and the
+standard-sizing receipt came only after the fix.
