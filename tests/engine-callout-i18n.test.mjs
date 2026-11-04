@@ -49,11 +49,7 @@ test("every descriptor key exists in every offered locale", () => {
   for (const key of keys) {
     for (const lang of OFFERED) {
       const dict = LOCALES[lang] || {};
-      assert.equal(
-        typeof dict[key],
-        "string",
-        `${lang} is missing ${key}`,
-      );
+      assert.equal(typeof dict[key], "string", `${lang} is missing ${key}`);
       const rendered = interpolate(dict[key], {
         battKwh: "27",
         replacements: "2",
