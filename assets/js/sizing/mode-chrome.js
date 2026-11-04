@@ -62,3 +62,29 @@ export function generatorRuntimeForTier(tier) {
 export function generatorAllowedForRuntime(runtime) {
   return runtime !== "gen0";
 }
+
+/**
+ * The assumption disclosures that must be on screen with every result (P1.6).
+ *
+ * These are not footnotes: each one changes how a number above should be read,
+ * and each is a modelling choice the visitor did not make and cannot see.
+ *  - no incentive is applied to any cost (so the numbers are the unsubsidised
+ *    case, which is the honest default when the visitor's programme is
+ *    unknown and changes yearly);
+ *  - the tariff is held flat for the whole 20-year horizon (so a projection is
+ *    not a forecast of price rises);
+ *  - exported energy is credited at the hourly tariff rather than at a
+ *    time-of-use schedule or an annual netting.
+ *
+ * The third only exists where export exists: a mode with no grid connection
+ * cannot export, so claiming anything about export credit there would be a
+ * disclosure of something that never happens.
+ *
+ * Keys, not sentences: the caller resolves them through the dictionary, so the
+ * disclosure is in the visitor's language like the numbers it qualifies.
+ */
+export function assumptionDisclosureKeys({ mode }) {
+  const keys = ["assumeNoIncentives", "assumeFlatPrices"];
+  if (mode === "gridtie") keys.push("assumeHourlyExport");
+  return keys;
+}
