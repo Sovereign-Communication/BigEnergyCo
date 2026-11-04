@@ -583,10 +583,7 @@ button.btn {
   max-width: 100%;
 }
 
-/* The matrix scrolls sideways on a phone and has no focusable child, so it
-   carries tabindex="0" to stay reachable by keyboard (WCAG 2.1.1). A focusable
-   element with no visible focus is its own defect, so say where the keyboard
-   is. */
+/* Focusable scroll region (WCAG 2.1.1) needs a visible focus ring. */
 .matrix-wrap:focus-visible {
   outline: 3px solid var(--primary-accent);
   outline-offset: 2px;
