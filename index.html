@@ -259,10 +259,10 @@
     <!-- Early Hints prep: these two are on every page's critical path. When
          the zone's Early Hints setting is on, Cloudflare turns them into a
          103 response so the browser starts fetching before the HTML lands. -->
-    <link rel="preload" href="./assets/site.css?v=20261103k" as="style" />
-    <link rel="modulepreload" href="./assets/js/sizing/ui.js?v=20261103k" />
+    <link rel="preload" href="./assets/site.css?v=20261103q" as="style" />
+    <link rel="modulepreload" href="./assets/js/sizing/ui.js?v=20261103q" />
 
-    <link rel="stylesheet" href="./assets/site.css?v=20261103k" />
+    <link rel="stylesheet" href="./assets/site.css?v=20261103q" />
 
     <!-- Preconnect to weather, tariff, and geocoding APIs during parsing. -->
     <link rel="preconnect" href="https://power.larc.nasa.gov" crossorigin />
@@ -672,13 +672,14 @@
                         cursor: pointer;
                       "
                     />
-                    Manual
+                    <span data-i18n="manualModeLabel">Manual</span>
                     <span
                       style="
                         font-weight: 400;
                         color: var(--text-muted);
                         font-size: 0.82rem;
                       "
+                      data-i18n="manualModeHint"
                       >— adjust everything</span
                     >
                   </label>
@@ -697,9 +698,12 @@
                   <label
                     for="simpleModeToggle"
                     style="margin: 0; font-weight: 700; cursor: pointer"
+                    data-i18n="simpleModeLabel"
                     >Simple mode</label
                   >
-                  <span style="font-size: 0.78rem; color: var(--text-muted)"
+                  <span
+                    style="font-size: 0.78rem; color: var(--text-muted)"
+                    data-i18n="simpleModeHint"
                     >just the key numbers</span
                   >
                 </div>
@@ -850,6 +854,7 @@
                   id="btnOpenRoofMap"
                   type="button"
                   class="btn btn-outline roof-map-open"
+                  data-i18n="mapDrawAction"
                 >
                   Draw this area on an optional map
                 </button>
@@ -3509,15 +3514,15 @@
 
     <!-- Browser helpers (classic script: advisor + modal globals) -->
 
-    <script type="module" src="./assets/js/sizing/ui.js?v=20261103k"></script>
+    <script type="module" src="./assets/js/sizing/ui.js?v=20261103q"></script>
 
     <!-- Turnstile client (B1/R-CF-02). Harmless with no site key configured;
          the advisor posts without a token in that case, exactly as before. -->
     <script
       type="module"
-      src="./assets/js/turnstile-client.js?v=20261103k"
+      src="./assets/js/turnstile-client.js?v=20261103q"
     ></script>
-    <script defer src="./assets/js/chat.js?v=20261103k"></script>
+    <script defer src="./assets/js/chat.js?v=20261103q"></script>
   </body>
 </html>
 
