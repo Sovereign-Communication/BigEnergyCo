@@ -53,9 +53,17 @@
       "review_by": "2027-02-01"
     },
     "turnkey_benchmark": {
-      "unknown": true,
-      "note": "P2.2: still unknown, and the reason is specific rather than a lack of searching. The published turnkey sources report their headline figure as a chart, not as text: Berkeley Lab's 2026 data update states the installer-level spread in prose (median prices across the top-100 residential installers in 2025 ranged from $2.4 to $6.3/W, about 25% of installers below $3/W and about 10% above $5/W) but renders the national median only as a plotted figure, and DOE's own benchmark table gives a modelled bottom-up cost (Q1-2025, PV-only 8 kWdc residential: $2.78/W MSP, $2.95/W MMP) rather than what installers charge. A {lo,mid,hi} band needs a cited mid as well as cited ends, so the remaining read is the national median from the LBNL public data file or the published median table, not a midpoint invented to fill the slot. The shipped multiplier this replaces is F-01.",
-      "review_by": "2027-02-01"
+      "lo": 3.0,
+      "mid": 4.0,
+      "hi": 5.2,
+      "unit": "USD/Wdc",
+      "currency": "USD",
+      "year": 2024,
+      "grade": "B",
+      "source": "lbnl_tracking_the_sun",
+      "retrieved": "2026-11-05",
+      "review_by": "2027-05-05",
+      "note": "Berkeley Lab, U.S. Distributed Solar and Storage: 2025 Data Update (Tracking the Sun), published 2025-10-27 and read 2026-11-05. The band is the published distribution of installed prices for host-owned, stand-alone residential PV installed in 2024: 20th percentile $3.0/Wdc, median $4.0/Wdc, 80th percentile $5.2/Wdc in 2024 dollars, before incentives. This is a range because the plan (V-01) requires one: a single 'typical installer price' hides the spread that makes the installer premium honest. Three limits travel with it and must be shown wherever it renders. First, the vintage is 2024 installs, so the year must be displayed, not implied; the 2026 update published in August 2026 reports that host-owned residential prices fell a further $0.5/W in inflation-adjusted terms and that median prices across the top-100 installers in 2025 spanned $2.4 to $6.3/W, but it prints no percentile table in text, so the newer distribution is the next read and this band is the 2024 anchor until then. Second, third-party-owned and self-installed systems are excluded, so this measures what an installer charged a host-owned customer. Third, the figures include both cash and loan-financed systems, and loan dealer fees pull the median up - for 2024, cash-purchase median was $3.5/W against $4.7/W loan-financed - so a visitor paying cash should be pointed at the lower end. Grade B rather than A: Berkeley Lab is a DOE national laboratory compiling state agency records, not a statistics office publishing a census."
     },
     "hardware_landed_factor": {
       "unknown": true,

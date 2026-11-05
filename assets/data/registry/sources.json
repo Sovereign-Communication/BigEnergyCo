@@ -21,6 +21,16 @@
       "basis": "Verified at EIA's own terms page on 2026-11-05, which says in its first line that 'U.S. government publications are in the public domain and are not subject to copyright protection' and that you may 'use and/or distribute any of our data, files, databases, reports, graphs, charts'. It asks for an acknowledgment naming the publication date, which the value's note carries.",
       "verified_url": "https://www.eia.gov/about/copyrights_reuse.php"
     },
+    "lbnl_tracking_the_sun": {
+      "publisher": "Lawrence Berkeley National Laboratory - Energy Markets and Planning",
+      "title": "U.S. Distributed Solar and Storage: 2025 Data Update (Tracking the Sun)",
+      "url": "https://emp.lbl.gov/tracking-the-sun",
+      "license": "LBNL/UC report; the project-level data are published for public use",
+      "as_of": "2025-10-27",
+      "redistribution": "permitted",
+      "basis": "The value embedded is a single summary statistic - the 20th percentile, median and 80th percentile installed price in dollars per watt - which is a fact, not the report's expression, so reproducing it with its edition cited is not reproducing the work. Berkeley Lab also publishes the underlying project-level data as a public data file described as non-confidential and non-proprietary, which is the source a visitor can check these percentiles against. The deck's copyright notice reserves rights in the manuscript for the Regents and grants the US Government rights in it; no chart, table layout or passage is copied into the site. If a later reader disagrees about the statistic, the fallback is link_only, which costs the visitor an embedded number but not the citation.",
+      "verified_url": "https://emp.lbl.gov/sites/default/files/2025-10/distributed_solar_storage-2025_data_update.pdf"
+    },
     "bls_oews": {
       "publisher": "US Bureau of Labor Statistics",
       "title": "Occupational Employment and Wage Statistics (OEWS) - Electricians, 47-2111",
