@@ -164,3 +164,71 @@ project, and do not frame ECB pages.
 - P2.x may embed ECB reference rates unmodified with citation.
 - P2.x must not embed or derive from GlobalPetrolPrices. Any plan line that
   assumed otherwise is now wrong and should be corrected where it appears.
+
+## The runtime FX source and the ECB's coverage (V-07)
+
+Read in this pass at the provider's own docs page, because the source's terms
+had never been read and one of them creates an obligation the site now meets.
+
+### ExchangeRate-API, Open Access endpoint (`open.er-api.com`)
+
+Read at <https://www.exchangerate-api.com/docs/free>:
+
+> This open access API is subject to our Terms and requires attribution. You're
+> welcome to cache the data we respond with and to use it for either personal or
+> commercial currency conversion purposes. You are, however, not allowed to
+> re-distribute it.
+
+and, in the endpoint comparison:
+
+> **Open API** - No API Key - Attribution Required - Updates Once Per Day - Rate
+> Limited
+
+with the required form:
+
+> ```
+> <a href="https://www.exchangerate-api.com">Rates By Exchange Rate API</a>
+> ```
+
+The page also notes a 429 response that clears after 20 minutes, and a
+`time_eol` field the endpoint will populate if it is ever deprecated.
+
+Three consequences, all of them now implemented or recorded:
+
+1. **Attribution is required, and the page carries it.** A link with the
+   provider's exact required text sits directly under the rate line on the
+   calculator page, so it appears wherever those rates are used. The link is not
+   translated, because it is a brand string the terms specify.
+2. **Redistribution is not permitted, and nothing ships the rates.** The map and
+   calculator fetch live; the provider's payload is never written into shipped
+   data. Whether the built-in fallback table is itself a copy of that payload was
+   **not** audited in this pass, so it is carried as an open assumption (A-19) with
+   a verify-by date rather than asserted clean.
+3. **Once-a-day refresh bounds freshness.** A live rate can be up to 24 hours
+   old; the page's staleness badge (P1.4) is what stops that from becoming a
+   silent claim of currency.
+
+### The ECB reference rates, and why they are not a substitute
+
+Read at
+<https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html>:
+
+> They are based on the daily concertation procedure between central banks
+> across Europe, which normally takes place around 14:10 CET. The reference
+> rates are published for information purposes only.
+
+> Owing to current trading activity in the EUR/RUB market, the European Central
+> Bank (ECB) is not in a position to set a reference rate that is
+> representative of prevailing market conditions. The ECB has therefore decided
+> to suspend its publication of a euro reference rate for the Russian rouble
+> until further notice.
+
+Coverage is a curated list of roughly thirty currencies quoted against the euro
+(JPY, CZK, DKK, SEK, CHF, TRY, BRL, CAD, NZD, SGD, THB and their peers), against
+the **153** currencies this site converts. So the ECB is a citable reference for
+licensing purposes - it may be embedded with "Source: ECB" - but it cannot stand
+in for the runtime source: it is EUR-based, covers about a fifth of the
+currencies, is published for information rather than transactions, and has no
+rouble since 2022-03-01. That comparison is recorded in the `fx_live`
+disclosure so a future change to the FX source starts from it rather than
+rediscovering it.
