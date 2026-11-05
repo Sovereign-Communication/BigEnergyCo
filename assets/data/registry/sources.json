@@ -9,7 +9,9 @@
       "license": "Public domain (US Government work)",
       "as_of": "2026-10-05",
       "redistribution": "permitted",
-      "basis": "A US Government work in the public domain: redistribution needs no permission and no attribution obligation beyond the citation we give anyway."
+      "basis": "A US Government work in the public domain: redistribution needs no permission and no attribution obligation beyond the citation we give anyway.",
+      "v09_status": "APPROVED",
+      "v09_evaluated": false
     },
     "eia_retail": {
       "publisher": "US Energy Information Administration",
@@ -19,7 +21,9 @@
       "as_of": "2026-11-05",
       "redistribution": "permitted",
       "basis": "Verified at EIA's own terms page on 2026-11-05, which says in its first line that 'U.S. government publications are in the public domain and are not subject to copyright protection' and that you may 'use and/or distribute any of our data, files, databases, reports, graphs, charts'. It asks for an acknowledgment naming the publication date, which the value's note carries.",
-      "verified_url": "https://www.eia.gov/about/copyrights_reuse.php"
+      "verified_url": "https://www.eia.gov/about/copyrights_reuse.php",
+      "v09_status": "APPROVED",
+      "v09_evaluated": false
     },
     "lbnl_tracking_the_sun": {
       "publisher": "Lawrence Berkeley National Laboratory - Energy Markets and Planning",
@@ -29,7 +33,9 @@
       "as_of": "2025-10-27",
       "redistribution": "permitted",
       "basis": "The value embedded is a single summary statistic - the 20th percentile, median and 80th percentile installed price in dollars per watt - which is a fact, not the report's expression, so reproducing it with its edition cited is not reproducing the work. Berkeley Lab also publishes the underlying project-level data as a public data file described as non-confidential and non-proprietary, which is the source a visitor can check these percentiles against. The deck's copyright notice reserves rights in the manuscript for the Regents and grants the US Government rights in it; no chart, table layout or passage is copied into the site. If a later reader disagrees about the statistic, the fallback is link_only, which costs the visitor an embedded number but not the citation.",
-      "verified_url": "https://emp.lbl.gov/sites/default/files/2025-10/distributed_solar_storage-2025_data_update.pdf"
+      "verified_url": "https://emp.lbl.gov/sites/default/files/2025-10/distributed_solar_storage-2025_data_update.pdf",
+      "v09_status": "PENDING EVALUATION",
+      "v09_evaluated": false
     },
     "bls_oews": {
       "publisher": "US Bureau of Labor Statistics",
@@ -39,7 +45,9 @@
       "as_of": "2026-08-27",
       "redistribution": "permitted",
       "basis": "Verified at BLS's own copyright page on 2026-11-05: BLS is a Federal agency and 'everything that we publish, both in hard copy and electronically, is in the public domain, except for previously copyrighted photographs and illustrations. You are free to use our public domain material without specific permission, although we do ask that you cite the Bureau of Labor Statistics as the source.' The value's note cites BLS, as asked. The registered emblem is a trademark and is not used.",
-      "verified_url": "https://www.bls.gov/opub/copyright-information.htm"
+      "verified_url": "https://www.bls.gov/opub/copyright-information.htm",
+      "v09_status": "APPROVED",
+      "v09_evaluated": false
     },
     "iso_4217": {
       "publisher": "International Organization for Standardization",
@@ -48,7 +56,9 @@
       "license": "ISO standard, free to access",
       "as_of": "2026-10-05",
       "redistribution": "permitted",
-      "basis": "A currency code string is a fact carrying no copyrightable expression; the standard's prose is not redistributed, only the three-letter code."
+      "basis": "A currency code string is a fact carrying no copyrightable expression; the standard's prose is not redistributed, only the three-letter code.",
+      "v09_status": "PENDING EVALUATION",
+      "v09_evaluated": false
     },
     "iso_3166": {
       "publisher": "International Organization for Standardization",
@@ -57,7 +67,9 @@
       "license": "ISO standard, free to access",
       "as_of": "2026-10-05",
       "redistribution": "permitted",
-      "basis": "A country code string is a fact carrying no copyrightable expression; the site already ships these codes as its place-file names."
+      "basis": "A country code string is a fact carrying no copyrightable expression; the site already ships these codes as its place-file names.",
+      "v09_status": "PENDING EVALUATION",
+      "v09_evaluated": false
     },
     "nrel_degradation": {
       "publisher": "NREL - PV Lifetime Project",
@@ -66,7 +78,9 @@
       "license": "US Government / public domain",
       "as_of": "2026-10-05",
       "redistribution": "permitted",
-      "basis": "A US Government work in the public domain."
+      "basis": "A US Government work in the public domain.",
+      "v09_status": "APPROVED",
+      "v09_evaluated": false
     },
     "open_er_api_fx": {
       "publisher": "open.er-api.com",
@@ -75,7 +89,9 @@
       "license": "Free tier, terms at the linked site",
       "as_of": "2026-10-05",
       "redistribution": "link_only",
-      "basis": "Free-tier terms live at the vendor's site and are not recorded in this repo, so a redistribution right is not established here. The runtime refresh contract is P2.5's to pin with the terms in hand; until then an FX figure is linked, never embedded."
+      "basis": "Free-tier terms live at the vendor's site and are not recorded in this repo, so a redistribution right is not established here. The runtime refresh contract is P2.5's to pin with the terms in hand; until then an FX figure is linked, never embedded.",
+      "v09_status": "PENDING EVALUATION",
+      "v09_evaluated": false
     },
     "fraunhofer_pv": {
       "publisher": "Fraunhofer ISE Photovoltaics Report",
@@ -84,7 +100,9 @@
       "license": "Freely downloadable",
       "as_of": "2026-10-05",
       "redistribution": "link_only",
-      "basis": "\"Freely downloadable\" is a reading permission, not a redistribution licence. Values taken from the report are linked for the visitor to check rather than embedded."
+      "basis": "\"Freely downloadable\" is a reading permission, not a redistribution licence. Values taken from the report are linked for the visitor to check rather than embedded.",
+      "v09_status": "PENDING EVALUATION",
+      "v09_evaluated": false
     }
   }
 }

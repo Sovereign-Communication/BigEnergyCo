@@ -133,6 +133,14 @@
       "source": "iso_4217",
       "grade": "C",
       "disclosure": "ISO 4217 fixes the CODE and its name, not the rate. The rates themselves are our snapshot. The page says these are indicative whenever they are used, so a visitor is never shown a stale rate as a live one."
+
+      "audit": {
+        "a19_status": "OPEN",
+        "a19_verify_by": "2026-11-19",
+        "a19_requirement": "trace each fallback value to an independently published reference (or replace it with one) and record that against the source",
+        "a19_current": "fallback values source is iso_4217 (currency codes only, not rates); lineage not yet fully audited",
+        "a19_note": "FX fallback table in pricing.js is NOT a stored copy of live provider payload; publishing does not breach provider T&Cs, but fallback values lineage must be audited"
+      }
     },
     {
       "id": "country_currency_map",
