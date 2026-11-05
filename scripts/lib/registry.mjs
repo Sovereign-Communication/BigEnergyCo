@@ -179,6 +179,16 @@ export function validateSource(id, source) {
   if (typeof source.url === "string" && !/^https:\/\//.test(source.url)) {
     errors.push(`${at}.url: must be an https URL a visitor can open`);
   }
+  // V-09 asks where a licence was READ, not merely cited. A source may record
+  // that page, and when it does it must be openable for the same reason.
+  if (source.verified_url !== undefined) {
+    if (
+      typeof source.verified_url !== "string" ||
+      !/^https:\/\//.test(source.verified_url)
+    ) {
+      errors.push(`${at}.verified_url: must be an https URL`);
+    }
+  }
   if (source.as_of !== undefined && !isIsoDate(source.as_of)) {
     errors.push(`${at}.as_of: must be a YYYY-MM-DD date`);
   }

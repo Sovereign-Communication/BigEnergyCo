@@ -10,10 +10,17 @@
       "review_by": "2027-10-05"
     },
     "tariff": {
-      "unknown": true,
-      "note": "P2.2: the US state tariffs the engine ships are grade-B leads from EIA, not values re-verified at the primary source. R-DATA-08 makes re-verification the condition of embedding, so this stays unknown until that pass happens rather than being carried across as if it had been checked.",
+      "lo": 0.1816,
+      "mid": 0.1816,
+      "hi": 0.1816,
+      "unit": "USD/kWh",
+      "currency": "USD",
+      "year": 2026,
+      "grade": "A",
       "source": "eia_retail",
-      "review_by": "2027-02-01"
+      "retrieved": "2026-11-05",
+      "review_by": "2027-05-05",
+      "note": "Source: U.S. Energy Information Administration (Oct 2026). U.S. total residential average price, 18.16 cents/kWh, Electric Power Monthly Table 5.6.A for August 2026, read at the EIA table on 2026-11-05. A point statistic, so the band is deliberately degenerate - lo, mid and hi are the same number rather than a spread invented around it. The 6-month review matches a monthly publication cadence. State rows from the same table are P2.3's nesting work."
     },
     "fixed_charge": {
       "unknown": true,

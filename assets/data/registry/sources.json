@@ -16,9 +16,10 @@
       "title": "Electric Power Monthly - retail electricity prices",
       "url": "https://www.eia.gov/electricity/monthly/",
       "license": "US Government public domain",
-      "as_of": "2026-10-05",
+      "as_of": "2026-11-05",
       "redistribution": "permitted",
-      "basis": "A US Government work in the public domain."
+      "basis": "Verified at EIA's own terms page on 2026-11-05, which says in its first line that 'U.S. government publications are in the public domain and are not subject to copyright protection' and that you may 'use and/or distribute any of our data, files, databases, reports, graphs, charts'. It asks for an acknowledgment naming the publication date, which the value's note carries.",
+      "verified_url": "https://www.eia.gov/about/copyrights_reuse.php"
     },
     "iso_4217": {
       "publisher": "International Organization for Standardization",

@@ -102,6 +102,25 @@ test("a licence that forbids redistribution can never be declared embeddable", (
   }
 });
 
+test("a source may record WHERE its licence was read, and that page must be openable", () => {
+  // V-09 is about reading the licence at the licence page, not citing the
+  // publisher's homepage. The field is optional so an unverified source stays
+  // honest rather than acquiring a plausible-looking URL.
+  assert.deepEqual(
+    validateSource(
+      "eia",
+      goodSource({ verified_url: "https://example.gov/copyrights_reuse" }),
+    ),
+    [],
+  );
+  assert.ok(
+    validateSource(
+      "eia",
+      goodSource({ verified_url: "http://example.gov/x" }),
+    ).some((e) => e.includes("verified_url: must be an https URL")),
+  );
+});
+
 test("a link-only source cannot back an embedded value", () => {
   const sources = {
     ise: goodSource({
