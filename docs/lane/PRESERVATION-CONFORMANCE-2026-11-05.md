@@ -49,7 +49,7 @@ the six rows below.
 
 | ID  | Gap                                                                                                                                       | Why it is a gap (the durability test it fails)                                                                                                                                                                              | Verified 2026-11-05 (read)                                                                                                                                                                                             | Curing path / owner                                                                                                                           |
 | --- | ----------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| G1  | `-bak` pair: `C:/tmp/car2-bak/cities.js` (blob `a964fc51`, 20,722 B), `C:/tmp/car4-bak/frontier.js` (blob `1a6da8de`, 24,977 B)           | Content is LOST. Not pushed, not integrated, not regenerable - proven unrecoverable by size-exact + git blob SHA-1 gate and a VSS shadow-copy probe with zero copies found                                                  | Both paths absent, directories absent (read: `stat` per path, 2026-11-05)                                                                                                                                              | NOT curable by preservation. Carried as a known loss; owner's call whether any reconstruction is worth a session                              |
+| G1  | `-bak` pair: `C:/tmp/car2-bak/cities.js` (blob `a964fc51`, 20,722 B), `C:/tmp/car4-bak/frontier.js` (blob `1a6da8de`, 24,977 B)           | Unrecovered: no matching copy found through the documented checks; carried as a known preservation gap. Not pushed, not integrated, and not shown to be regenerable. The cited checks (size-exact + git blob SHA-1 gate, VSS shadow-copy probe) establish only that no matching copy was found through them, which is not the same as proof that none exists | Both paths absent, directories absent (read: `stat` per path, 2026-11-05)                                                                                                                                              | NOT curable by preservation. Carried as a known loss; owner's call whether any reconstruction is worth a session                              |
 | G2  | 8,899 unreadable entries in the 2026-11-01 profile walk (7,268 permission-denied across other accounts' junctions, 1,631 path-not-found)  | The sweep's own boundary. Absence of a BigEnergyCo artifact inside those entries is UNPROVEN, so the ALL-CLEAR is a name-bounded claim, not a byte-level one                                                                | Carried from `docs/lane/temp-verify-20261101/scan-errors.log`; not re-walked this session (read: prior session's log, 2026-11-01 - stated as carried, not as current)                                                  | Lane can re-run the error scan for this repo's names by 2026-11-19 (register row A-06); a full byte-level walk needs owner-approved elevation |
 | G3  | Repo-scoped Claude session transcripts: `%USERPROFILE%/.claude/projects/C--Users-SCM-Documents-GitHub-BigEnergyCo` (3.8 MB, 10 files)     | Third-party tool state, classified as not-repo-work-product, therefore never pushed: it exists on this machine only                                                                                                         | Present, 10 files, 3.8 MB - unchanged from the 2026-11-03 record (read: recursive `find -type f` + `du -sh`, 2026-11-05)                                                                                               | Classification is the disposition; if the owner wants it durable, it must be pushed as an out-of-repo artifact                                |
 | G4  | Showcase-scoped transcripts: `.../C--Users-SCM-Documents-GitHub-BigEnergyCo-BigEnergyCo-showcase` (76 KB, 4 files)                        | Same class as G3: single-machine copy, never pushed                                                                                                                                                                         | Present, 4 files, 76 KB (read: recursive `find -type f` + `du -sh`, 2026-11-05)                                                                                                                                        | Same as G3                                                                                                                                    |
@@ -69,13 +69,34 @@ the six rows below.
 
 - The lane's own preservation log is evidence, and self-reported acceptance is
   retired as a mechanism. A producer cannot issue its own ALL-CLEAR.
-- Six gap rows (G1-G6) remain open above. G1 is a permanent loss, G2 bounds the
+- Six gap rows (G1-G6) remain open above. G1 is an unrecovered loss whose
+  absence is established only through the documented checks, G2 bounds the
   sweep, G3-G5 are single-machine third-party state, G6 is an unproven
   regenerability claim.
 - What cures the path: an independent (non-author) verifier reads this sheet and
   the sweep statement, accepts or rejects each row's read and disposition, and
   records the verdict here. Until that lands, every statement about Claude
   removal for this repo is a bounded claim, not an ALL-CLEAR.
+
+### Non-author verdict received: CHANGES (2026-11-05T11:27:19Z)
+
+- Verdict: **CHANGES**, confidence 0.88, by the GPT slow lane's independent
+  Sol-class review of this sheet at lane head `638295c8`, blob `c8bb3229`.
+  Review record: `bigenergyco/reviews/PRESERVATION_CONFORMANCE_2026-11-05.md`
+  in `Treystu/slow-lane-ledger` (read: the review's own carry comment on PR
+  #330, 2026-11-05T11:27:19Z).
+- Corroborated by that review: this sheet's framing (evidence is not acceptance,
+  ALL-CLEAR NOT ISSUED, six gaps open, H-1/H-2 owner-reserved) and 47 refs under
+  `mission/branch-tips-20261101`, with exact remote SHAs matching this sheet for
+  P-02/03/04/09-14.
+- Cured in this pass: row G1's wording. It said the pair was "proven
+  unrecoverable"; the checks establish only that no matching copy was found
+  through them, and the row now says exactly that, with the distinction spelled
+  out.
+- **The ALL-CLEAR still stands UNISSUED.** A CHANGES verdict is not an
+  acceptance, and this lane cannot convert one into the other by curing the
+  wording on its own: after the cure the sheet needs a further non-author read
+  confirming the change, not the producer's word that it was made.
 
 ## E. What this sheet does not claim
 
