@@ -813,6 +813,10 @@
       integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
       crossorigin="anonymous"
     ></script>
+    <!-- Chunk geometry (R-PERF-04, P1.5). Must load before heatmap.js: the
+         loader asks it which squares the viewport needs. Self-hosted, like
+         Leaflet, so no page depends on a third-party CDN (R-OFF-02). -->
+    <script defer src="../assets/js/heatmap-chunks.js?v=20261105a"></script>
     <script defer src="../assets/js/heatmap-palette.js?v=20261105a"></script>
     <script defer src="../assets/js/heatmap.js?v=20261105a"></script>
   </body>

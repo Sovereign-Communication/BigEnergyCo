@@ -50,10 +50,19 @@
   var imageLayer = null;
   var dotLayer = null;
   var dotRenderer = null;
-  var gridData = null; // fetched on demand (first click / zoom threshold)
-  var dataLoading = null; // in-flight fetch promise
+  // The grid is fetched per viewport, not in one piece (R-PERF-04, P1.5):
+  // 39,707 points in a 4.9 MB file was the whole payload for a click on one
+  // city. gridMeta is the chunk manifest; loadedPoints holds only the chunks
+  // the visitor's view needed, and every marker keeps its own point so the
+  // colour refresh no longer depends on array order.
+  var gridMeta = null;
+  var gridPaths = []; // chunkCache key -> manifest entry
+  var chunkPromises = {};
+  var loadedPoints = [];
+  var dataLoading = null; // in-flight manifest/fallback load
   var manifest = null;
   var rankings = null;
+  var usageTiers = null;
 
   var usageIdx = 1; // 0=5kWh, 1=10kWh, 2=20kWh, 3=30kWh
   var metric = "cost"; // "cost" | "p" | "b"
@@ -339,32 +348,141 @@
       wh2.textContent = "🔴 Slowest " + metricLabel + " (" + usage + " kWh/d)";
   }
 
-  // ── On-demand data ───────────────────────────────────────────────────────
-  function ensureData() {
-    if (gridData) return Promise.resolve(gridData);
-    if (dataLoading) return dataLoading;
-    dataLoading = fetch("../assets/data/heatmap-grid.min.json?v=20261105a")
+  // ── On-demand data, per viewport ─────────────────────────────────────────
+  function bump(url) {
+    return url + "?v=" + ASSET_V;
+  }
+
+  // The single-file grid stays shipped as the fallback. A manifest or chunk
+  // that fails to fetch must not leave the map interactive-but-empty: a
+  // visitor on a stale service worker, or on a network that loses one request,
+  // gets the old behaviour rather than a silent dead map.
+  function loadMonolith() {
+    return fetch(bump("../assets/data/heatmap-grid.min.json"))
       .then(function (res) {
         if (!res.ok) throw new Error("Failed to load heatmap data");
         return res.json();
       })
       .then(function (data) {
-        gridData = data;
-        enableCanvasDots();
+        resetDots();
+        usageTiers = data.usageTiersKwhDay || data.tiers;
+        addDots(data.points || []);
         return data;
+      });
+  }
+
+  function loadManifest() {
+    return fetch(bump("../assets/data/heatmap-grid/index.min.json"))
+      .then(function (res) {
+        if (!res.ok) throw new Error("Failed to load heatmap manifest");
+        return res.json();
+      })
+      .then(function (data) {
+        if (!data || !data.chunks) throw new Error("no chunks in manifest");
+        gridMeta = data;
+        gridPaths = data.chunks;
+        usageTiers = data.tiers;
+        return data;
+      });
+  }
+
+  function loadChunk(entry) {
+    if (!entry) return Promise.resolve();
+    if (chunkPromises[entry.k]) return chunkPromises[entry.k];
+    var p = fetch(bump("../assets/data/heatmap-grid/" + entry.f))
+      .then(function (res) {
+        if (!res.ok) throw new Error("Failed to load chunk " + entry.k);
+        return res.json();
+      })
+      .then(function (data) {
+        addDots(data.points || []);
       })
       .catch(function (err) {
+        delete chunkPromises[entry.k];
+        throw err;
+      });
+    chunkPromises[entry.k] = p;
+    return p;
+  }
+
+  function viewBounds() {
+    try {
+      var b = map.getBounds();
+      // Half a chunk of padding: a point just outside the viewport is still the
+      // nearest point to a click near the edge, and a marker drawn one square
+      // beyond the edge is cheap compared with a popup naming a distant city.
+      return HeatmapChunks.padBounds(
+        {
+          south: b.getSouth(),
+          west: b.getWest(),
+          north: b.getNorth(),
+          east: b.getEast(),
+        },
+        HeatmapChunks.CHUNK_DEG / 2,
+      );
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function ensureViewportChunks() {
+    var bounds = viewBounds();
+    if (!bounds) return Promise.resolve();
+    var wanted = HeatmapChunks.chunksForBounds(bounds, gridPaths);
+    var loads = [];
+    for (var i = 0; i < wanted.length; i++) loads.push(loadChunk(wanted[i]));
+    return Promise.all(loads);
+  }
+
+  function ensureData() {
+    // Guard the global (R-OFF-02): the chunk module ships next to this file, but
+    // a build that lost it, or a cache that served an older HTML, must still
+    // produce a working map rather than a ReferenceError in the click handler.
+    if (
+      typeof HeatmapChunks === "undefined" ||
+      !HeatmapChunks.chunksForBounds
+    ) {
+      if (!chunkLoadAttempted) {
+        chunkLoadAttempted = true;
+        dataLoading = loadMonolith().catch(function (err) {
+          chunkLoadAttempted = false;
+          dataLoading = null;
+          throw err;
+        });
+      }
+      return dataLoading || Promise.resolve();
+    }
+    if (chunkLoadAttempted) return ensureViewportChunks();
+    if (dataLoading) return dataLoading;
+    chunkLoadAttempted = true;
+    dataLoading = loadManifest()
+      .then(function () {
+        return ensureViewportChunks();
+      })
+      .catch(function (err) {
+        // Manifest or first chunk failed: fall back to the whole file once.
+        // eslint-disable-next-line no-console
+        console.warn(
+          "heatmap chunk load failed, using the single-file grid",
+          err,
+        );
+        return loadMonolith();
+      })
+      .catch(function (err) {
+        chunkLoadAttempted = false;
         dataLoading = null;
         throw err;
       });
     return dataLoading;
   }
 
+  var chunkLoadAttempted = false;
+
   function nearestPoint(lat, lng) {
-    if (!gridData) return null;
+    if (!loadedPoints.length) return null;
     var best = null;
     var bestD = Infinity;
-    var pts = gridData.points;
+    var pts = loadedPoints;
     for (var i = 0; i < pts.length; i++) {
       var pt = pts[i];
       var dLat = P.pointLat(pt) - lat;
@@ -385,7 +503,7 @@
     var isReal = basis === "real";
     var pYrs = getPointYears(pt, "p");
     var bYrs = getPointYears(pt, "b");
-    var tiers = gridData.usageTiersKwhDay || gridData.tiers;
+    var tiers = usageTiers || [5, 10, 20, 30];
     var usage = tiers[usageIdx];
     var t = pt.t;
     var tr = pt.r !== undefined ? pt.r : pt.tr;
@@ -488,38 +606,50 @@
     L.popup({ maxWidth: 300 }).setLatLng(latlng).setContent(popup).openOn(map);
   }
 
-  // ── Canvas dots (hybrid mode, after data loads) ──────────────────────────
-  function enableCanvasDots() {
-    if (!map || !gridData || dotLayer) return;
+  // ── Canvas dots, added as their chunk arrives ────────────────────────────
+  // Each marker keeps its own point (`layer._pt`), so changing metric, basis or
+  // usage recolours every marker without assuming it sits at a fixed index in
+  // one global array - which chunked loading makes impossible anyway.
+  function addDots(points) {
+    if (!map || !points || !points.length) return;
     if (!dotRenderer) dotRenderer = L.canvas({ padding: 0.5 });
-    var markers = [];
-    var points = gridData.points;
+    if (!dotLayer) {
+      dotLayer = L.layerGroup().addTo(map);
+      // Past zoom 5 the PNG pixels stretch; fade canvas dots in for sharpness.
+      map.on("zoomend", function () {
+        if (!dotLayer) return;
+        var sharp = map.getZoom() >= 5;
+        dotLayer.eachLayer(function (layer) {
+          layer.setStyle({ fillOpacity: sharp ? 0.85 : 0.0 });
+        });
+      });
+    }
+    var sharpNow = map.getZoom() >= 5;
     for (var i = 0; i < points.length; i++) {
       (function (pt) {
         var m = L.circleMarker([P.pointLat(pt), P.pointLon(pt)], {
           radius: 3.5,
           weight: 0,
           fillColor: dotColor(pt),
-          fillOpacity: 0.0, // invisible until zoomed; PNG shows the dots
+          fillOpacity: sharpNow ? 0.85 : 0.0, // hidden until zoomed; the PNG shows dots
           interactive: true,
           renderer: dotRenderer,
         });
+        m._pt = pt;
         m.on("click", function (e) {
           showPopup(pt, e.latlng);
         });
-        markers.push(m);
+        dotLayer.addLayer(m);
+        loadedPoints.push(pt);
       })(points[i]);
     }
-    dotLayer = L.layerGroup(markers).addTo(map);
+  }
 
-    // Past zoom 5 the PNG pixels stretch; fade canvas dots in for sharpness.
-    map.on("zoomend", function () {
-      if (!dotLayer) return;
-      var sharp = map.getZoom() >= 5;
-      dotLayer.eachLayer(function (layer) {
-        layer.setStyle({ fillOpacity: sharp ? 0.85 : 0.0 });
-      });
-    });
+  // The fallback path loads the whole file, so anything the chunk path already
+  // drew has to go first or every point that overlapped would appear twice.
+  function resetDots() {
+    if (dotLayer) dotLayer.clearLayers();
+    loadedPoints = [];
   }
 
   // ── Controls ─────────────────────────────────────────────────────────────
@@ -574,11 +704,9 @@
   }
 
   function refreshCanvasColors() {
-    if (!dotLayer || !gridData) return;
-    var points = gridData.points;
-    var i = 0;
+    if (!dotLayer) return;
     dotLayer.eachLayer(function (layer) {
-      layer.setStyle({ fillColor: dotColor(points[i++]) });
+      if (layer._pt) layer.setStyle({ fillColor: dotColor(layer._pt) });
     });
   }
 
@@ -672,6 +800,12 @@
         });
         map.on("zoomend", function () {
           if (map.getZoom() >= 5) ensureData().catch(function () {});
+        });
+        // Panning to a square whose chunk is not loaded yet must fill it in, or
+        // the data would silently stop at whatever the first view needed.
+        map.on("moveend", function () {
+          if (chunkLoadAttempted && gridMeta)
+            ensureViewportChunks().catch(function () {});
         });
 
         setupControls();
