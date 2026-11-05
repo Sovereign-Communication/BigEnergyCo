@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "note": "Source catalogue for the data registry (R-DATA-01, R-DATA-04). Every source records its licence, and `redistribution` records whether that licence permits embedding the value in a shipped bundle, with the basis for that reading. A licence that says NC or ND cannot be declared permitted - scripts/lib/registry.mjs rejects it. The seven entries carried over from assets/data/provenance.json are the sources the site already cites; no source was invented here.",
+  "sources": {
+    "nasa_power": {
+      "publisher": "NASA POWER Project, Langley Research Center",
+      "title": "POWER Hourly API - solar irradiance and ambient temperature",
+      "url": "https://power.larc.nasa.gov/",
+      "license": "Public domain (US Government work)",
+      "as_of": "2026-10-05",
+      "redistribution": "permitted",
+      "basis": "A US Government work in the public domain: redistribution needs no permission and no attribution obligation beyond the citation we give anyway."
+    },
+    "eia_retail": {
+      "publisher": "US Energy Information Administration",
+      "title": "Electric Power Monthly - retail electricity prices",
+      "url": "https://www.eia.gov/electricity/monthly/",
+      "license": "US Government public domain",
+      "as_of": "2026-10-05",
+      "redistribution": "permitted",
+      "basis": "A US Government work in the public domain."
+    },
+    "iso_4217": {
+      "publisher": "International Organization for Standardization",
+      "title": "ISO 4217 currency codes",
+      "url": "https://www.iso.org/iso-4217-currency-codes.html",
+      "license": "ISO standard, free to access",
+      "as_of": "2026-10-05",
+      "redistribution": "permitted",
+      "basis": "A currency code string is a fact carrying no copyrightable expression; the standard's prose is not redistributed, only the three-letter code."
+    },
+    "iso_3166": {
+      "publisher": "International Organization for Standardization",
+      "title": "ISO 3166 country codes",
+      "url": "https://www.iso.org/iso-3166-country-codes.html",
+      "license": "ISO standard, free to access",
+      "as_of": "2026-10-05",
+      "redistribution": "permitted",
+      "basis": "A country code string is a fact carrying no copyrightable expression; the site already ships these codes as its place-file names."
+    },
+    "nrel_degradation": {
+      "publisher": "NREL - PV Lifetime Project",
+      "title": "Photovoltaic Degradation Rate Study",
+      "url": "https://www.nrel.gov/pv/lifetime-project.html",
+      "license": "US Government / public domain",
+      "as_of": "2026-10-05",
+      "redistribution": "permitted",
+      "basis": "A US Government work in the public domain."
+    },
+    "open_er_api_fx": {
+      "publisher": "open.er-api.com",
+      "title": "Exchange rate API",
+      "url": "https://www.exchangerate-api.com/",
+      "license": "Free tier, terms at the linked site",
+      "as_of": "2026-10-05",
+      "redistribution": "link_only",
+      "basis": "Free-tier terms live at the vendor's site and are not recorded in this repo, so a redistribution right is not established here. The runtime refresh contract is P2.5's to pin with the terms in hand; until then an FX figure is linked, never embedded."
+    },
+    "fraunhofer_pv": {
+      "publisher": "Fraunhofer ISE Photovoltaics Report",
+      "title": "Photovoltaics Report",
+      "url": "https://www.ise.fraunhofer.de/en/publications/studies/photovoltaics-report.html",
+      "license": "Freely downloadable",
+      "as_of": "2026-10-05",
+      "redistribution": "link_only",
+      "basis": "\"Freely downloadable\" is a reading permission, not a redistribution licence. Values taken from the report are linked for the visitor to check rather than embedded."
+    }
+  }
+}

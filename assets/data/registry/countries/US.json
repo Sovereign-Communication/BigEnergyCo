@@ -1,0 +1,118 @@
+{
+  "iso": "US",
+  "name": "United States",
+  "values": {
+    "currency": {
+      "code": "USD",
+      "grade": "A",
+      "source": "iso_3166",
+      "retrieved": "2026-10-05",
+      "review_by": "2027-10-05"
+    },
+    "tariff": {
+      "unknown": true,
+      "note": "P2.2: the US state tariffs the engine ships are grade-B leads from EIA, not values re-verified at the primary source. R-DATA-08 makes re-verification the condition of embedding, so this stays unknown until that pass happens rather than being carried across as if it had been checked.",
+      "source": "eia_retail",
+      "review_by": "2027-02-01"
+    },
+    "fixed_charge": {
+      "unknown": true,
+      "note": "P2.3: not yet populated. Unknown is a permitted value and triggers the check-your-bill prompt instead of a guess.",
+      "review_by": "2027-02-01"
+    },
+    "export_regime": {
+      "unknown": true,
+      "note": "P2.4: export rules are policy and carry a 6-month review window. Net metering, net billing and buy-all-sell-all differ by state, and this file is national scope, so the honest national answer is unknown until P2.4 lands the sub-national rows.",
+      "review_by": "2027-02-01"
+    },
+    "legality_gridtie": {
+      "unknown": true,
+      "note": "P2.4: grid-tie legality is a policy field with a 6-month window and varies by state and utility.",
+      "review_by": "2027-02-01"
+    },
+    "legality_offgrid": {
+      "unknown": true,
+      "note": "P2.4: off-grid legality hinges on local code and permit rules that a national row cannot honestly summarise.",
+      "review_by": "2027-02-01"
+    },
+    "legality_battery_only": {
+      "unknown": true,
+      "note": "P2.4: battery-only legality is a policy field with a 6-month window.",
+      "review_by": "2027-02-01"
+    },
+    "legality_portable": {
+      "unknown": true,
+      "note": "P2.4: portable-system rules are a policy field with a 6-month window.",
+      "review_by": "2027-02-01"
+    },
+    "turnkey_benchmark": {
+      "unknown": true,
+      "note": "P2.2: the shipped turnkey figure is the site's own hardware estimate times a multiplier (F-01), which is a derivation and not a market benchmark. It cannot be graded until a published benchmark is cited, so it is unknown here.",
+      "review_by": "2027-02-01"
+    },
+    "hardware_landed_factor": {
+      "unknown": true,
+      "note": "P2.3: not yet populated from a citable landed-cost source.",
+      "review_by": "2027-02-01"
+    },
+    "electrician_rate": {
+      "unknown": true,
+      "note": "P2.3: the shipped labour model is our own regional estimate (grade D territory); P2.3 either cites a rate survey or records it as a derivation with its formula.",
+      "review_by": "2027-02-01"
+    },
+    "permit_fees": {
+      "unknown": true,
+      "note": "P2.4: permit fees are jurisdictional and belong with the policy pass.",
+      "review_by": "2027-02-01"
+    },
+    "lease_available": {
+      "unknown": true,
+      "note": "P2.3: lease and PPA availability are not populated yet.",
+      "review_by": "2027-02-01"
+    },
+    "lease_term_years": {
+      "unknown": true,
+      "note": "P2.3: no citable term data yet.",
+      "review_by": "2027-02-01"
+    },
+    "lease_buyout_pct": {
+      "unknown": true,
+      "note": "P2.3: no citable buyout data yet.",
+      "review_by": "2027-02-01"
+    },
+    "inflation_rate": {
+      "unknown": true,
+      "note": "P2.3: the engine assumes flat prices; the registry row for the assumption itself is what P2.3 fills.",
+      "review_by": "2027-02-01"
+    },
+    "real_discount_rate": {
+      "unknown": true,
+      "note": "P2.3: not yet populated.",
+      "review_by": "2027-02-01"
+    },
+    "pv_degradation_d1": {
+      "lo": 0.015,
+      "mid": 0.02,
+      "hi": 0.025,
+      "unit": "fraction per year (first year)",
+      "grade": "B",
+      "source": "nrel_degradation",
+      "year": 2026,
+      "retrieved": "2026-10-05",
+      "review_by": "2027-10-05",
+      "note": "The engine ships 0.02 (paths.js DEGRADATION.firstYear); the band is the range NREL reports for current modules."
+    },
+    "pv_degradation_ann": {
+      "lo": 0.003,
+      "mid": 0.005,
+      "hi": 0.007,
+      "unit": "fraction per year (thereafter)",
+      "grade": "B",
+      "source": "nrel_degradation",
+      "year": 2026,
+      "retrieved": "2026-10-05",
+      "review_by": "2027-10-05",
+      "note": "The engine ships 0.005 (paths.js DEGRADATION.annual)."
+    }
+  }
+}
