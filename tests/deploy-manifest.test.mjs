@@ -39,10 +39,15 @@ function cliList() {
 
 test("MANIFEST SIZE: the deploy contract stays within its known envelope", () => {
   const n = deployList().length;
-  // 391 at time of writing (352 + 18 heatmap PNGs + 8 new heatmap/data files + 13 others).
-  // A drop means the enumeration broke; a big jump means something unreviewed
-  // entered the allowlist dirs.
-  assert.ok(n >= 380 && n <= 420, `deploy list = ${n}, expected ~391`);
+  // 500 at time of writing: 413 before the heatmap grid was cut into viewport
+  // chunks (P1.5, R-PERF-04), plus 85 - the 83 chunk files, their manifest and
+  // assets/js/heatmap-chunks.js - and the module's page reference.
+  //
+  // The band is deliberately narrow: a drop means the enumeration broke, and a
+  // jump means something unreviewed entered the allowlist dirs. Widening it is
+  // a review decision, so the reason is recorded here rather than the number
+  // simply floated upward.
+  assert.ok(n >= 480 && n <= 520, `deploy list = ${n}, expected ~500`);
 });
 test("MANIFEST CONTENT: every file it names is git-tracked", () => {
   const tracked = trackedFiles();
