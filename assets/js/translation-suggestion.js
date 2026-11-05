@@ -1,4 +1,4 @@
-import { translationSuggestionUrl } from "./shared/translation-suggestion-url.js?v=20261105a";
+import { translationSuggestionUrl } from "./shared/translation-suggestion-url.js?v=20261105b";
 
 const link = document.querySelector("[data-translation-suggestion]");
 
