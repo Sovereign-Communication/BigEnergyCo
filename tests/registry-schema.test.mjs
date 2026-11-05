@@ -404,3 +404,149 @@ test("every shipped country bundle fits the 6 KB ceiling", () => {
     );
   }
 });
+
+test("a nested region is a citation in its own right, never an inheritance", () => {
+  const full = Object.fromEntries(
+    REQUIRED_FIELDS.map((f) => [
+      f,
+      { unknown: true, note: "pending", review_by: "2027-02-01" },
+    ]),
+  );
+  const region = { name: "Ohio", values: { tariff: goodValue() } };
+  const doc = { iso: "US", name: "United States", values: full };
+  assert.deepEqual(
+    validateCountry("US", { ...doc, regions: { "US-OH": region } }, ctx()),
+    [],
+  );
+
+  // No inheritance: the country's tariff cannot stand in for Ohio's, because a
+  // visitor in Ohio would then be shown a national average wearing a state name.
+  const unsourced = {
+    name: "Ohio",
+    values: { tariff: { ...goodValue(), source: undefined } },
+  };
+  assert.ok(
+    validateCountry(
+      "US",
+      { ...doc, regions: { "US-OH": unsourced } },
+      ctx(),
+    ).some((e) => e.includes("US-OH") && e.includes("source")),
+  );
+
+  const inherited = {
+    name: "Ohio",
+    values: { tariff: { ...goodValue(), inherit: "US" } },
+  };
+  assert.ok(
+    validateCountry(
+      "US",
+      { ...doc, regions: { "US-OH": inherited } },
+      ctx(),
+    ).some((e) => e.includes("never inherit")),
+  );
+});
+
+test("a region key must be an ISO 3166-2 code belonging to this country", () => {
+  const full = Object.fromEntries(
+    REQUIRED_FIELDS.map((f) => [
+      f,
+      { unknown: true, note: "pending", review_by: "2027-02-01" },
+    ]),
+  );
+  const doc = { iso: "US", name: "United States", values: full };
+  const region = { name: "Ontario", values: { tariff: goodValue() } };
+
+  // A Canadian province inside the US file is a filing mistake that would
+  // surface to a visitor as a wrong price, so it fails at the schema.
+  assert.ok(
+    validateCountry("US", { ...doc, regions: { "CA-ON": region } }, ctx()).some(
+      (e) => e.includes("does not belong to country US"),
+    ),
+  );
+  assert.ok(
+    validateCountry("US", { ...doc, regions: { Ohio: region } }, ctx()).some(
+      (e) => e.includes("ISO 3166-2"),
+    ),
+  );
+  assert.ok(
+    validateCountry(
+      "US",
+      {
+        ...doc,
+        regions: { "US-OH": { ...region, name: "", values: {} } },
+      },
+      ctx(),
+    ).some((e) => e.includes("no values is not worth nesting")),
+  );
+  assert.ok(
+    validateCountry(
+      "US",
+      { ...doc, regions: { "US-OH": { ...region, emblem: "x" } } },
+      ctx(),
+    ).some((e) => e.includes("unknown key emblem")),
+  );
+});
+
+test("the shipped US file nests a cited tariff for every state and DC", () => {
+  const doc = JSON.parse(
+    readFileSync("assets/data/registry/countries/US.json", "utf8"),
+  );
+  const codes = Object.keys(doc.regions ?? {});
+  // 50 states plus the District of Columbia: EIA publishes all 51 and the file
+  // may not quietly drop one, because a dropped state falls back to the national
+  // average without telling the visitor.
+  assert.equal(codes.length, 51);
+  assert.ok(codes.every((c) => /^US-[A-Z]{2}$/.test(c)));
+  for (const [code, region] of Object.entries(doc.regions)) {
+    const tariff = region.values.tariff;
+    assert.ok(region.name, `${code} has no name`);
+    assert.equal(tariff.grade, "A", `${code} tariff is not grade A`);
+    assert.equal(tariff.source, "eia_retail", `${code} cites ${tariff.source}`);
+    assert.equal(tariff.lo, tariff.mid, `${code} invents a band`);
+    assert.equal(tariff.hi, tariff.mid, `${code} invents a band`);
+    assert.ok(
+      tariff.mid > 0.05 && tariff.mid < 1,
+      `${code} tariff ${tariff.mid} is not a plausible USD/kWh price`,
+    );
+    assert.equal(tariff.currency, "USD");
+    assert.equal(tariff.unit, "USD/kWh");
+  }
+  // The bundle ships regions under the short key the runtime reads.
+  const bundle = countryBundle("US", doc);
+  assert.equal(Object.keys(bundle.r).length, 51);
+  assert.equal(bundle.r["US-CA"].n, "California");
+  assert.equal(bundle.r["US-CA"].v.tariff.mid, 0.2975);
+});
+
+test("a stale region value is reported as staleness, like any other", () => {
+  const full = Object.fromEntries(
+    REQUIRED_FIELDS.map((f) => [
+      f,
+      { unknown: true, note: "pending", review_by: "2027-02-01" },
+    ]),
+  );
+  const doc = {
+    iso: "US",
+    name: "United States",
+    values: full,
+    regions: {
+      "US-OH": {
+        name: "Ohio",
+        values: {
+          tariff: goodValue({
+            review_by: "2027-10-05",
+            retrieved: "2026-10-05",
+          }),
+        },
+      },
+    },
+  };
+  const { pastDue } = validateRegistry(
+    { sources: { eia: goodSource() }, countries: { US: doc } },
+    { today: "2027-11-01" },
+  );
+  assert.ok(
+    pastDue.some((row) => row.includes("US-OH") && row.includes("tariff")),
+    `region staleness not reported: ${pastDue.join(" | ")}`,
+  );
+});

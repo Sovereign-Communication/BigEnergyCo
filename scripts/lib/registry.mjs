@@ -225,7 +225,10 @@ export function validateSource(id, source) {
  */
 export function validateValue(field, value, ctx = {}) {
   const errors = [];
-  const at = `values.${field}`;
+  // `prefix` exists so a nested region's error names the region. Without it a
+  // 51-region file reports "values.tariff" and the reader has to guess which
+  // state is broken.
+  const at = `${ctx.prefix ?? "values"}.${field}`;
   const { sources = {}, today } = ctx;
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return [`${at}: must be an object`];
@@ -369,6 +372,81 @@ function validateCitation(at, value, { sources = {}, field, today }) {
   return errors;
 }
 
+/**
+ * Validate a country's nested sub-national regions (R-DATA-01: "with
+ * sub-national regions nested where data exists").
+ *
+ * The point of nesting is that a visitor in Ohio sees Ohio's number, not the
+ * national average wearing Ohio's name. That only stays true if a region value
+ * is a citation in its own right: it must carry its own source, grade and dates
+ * rather than reach up to the country's. So there is no inheritance path here - a
+ * region value without a source is an error, not a lookup - and a region cannot
+ * quietly become a derivation of the national figure (P2.3's rule: no value is
+ * derived from another value unless the derivation says so).
+ */
+function validateRegions(code, regions, ctx = {}) {
+  const errors = [];
+  const at = `countries/${code}.json`;
+  if (!regions || typeof regions !== "object" || Array.isArray(regions)) {
+    return [`${at}.regions: must be an object of region code -> region`];
+  }
+  for (const [key, region] of Object.entries(regions)) {
+    const rat = `${at}.regions.${key}`;
+    // ISO 3166-2, and the prefix must be this country: a US file holding a
+    // Canadian province is a filing mistake that would surface as a wrong price.
+    if (!/^[A-Z]{2}-[A-Z0-9]{1,3}$/.test(key)) {
+      errors.push(`${rat}: key must be an ISO 3166-2 code like ${code}-XX`);
+      continue;
+    }
+    if (!key.startsWith(`${code}-`)) {
+      errors.push(`${rat}: region code does not belong to country ${code}`);
+      continue;
+    }
+    if (!region || typeof region !== "object" || Array.isArray(region)) {
+      errors.push(`${rat}: must be an object`);
+      continue;
+    }
+    if (typeof region.name !== "string" || !region.name.trim()) {
+      errors.push(`${rat}.name: must be a non-empty string`);
+    }
+    for (const extra of Object.keys(region)) {
+      if (!["name", "values", "note"].includes(extra)) {
+        errors.push(`${rat}: unknown key ${extra}`);
+      }
+    }
+    const values = region.values;
+    if (!values || typeof values !== "object" || Array.isArray(values)) {
+      errors.push(`${rat}.values: must be an object`);
+      continue;
+    }
+    if (!Object.keys(values).length) {
+      errors.push(
+        `${rat}.values: a region with no values is not worth nesting`,
+      );
+    }
+    for (const [field, value] of Object.entries(values)) {
+      if (!REQUIRED_FIELDS.includes(field)) {
+        errors.push(`${rat}: unknown field ${field}`);
+        continue;
+      }
+      if (value && typeof value === "object" && value.inherit !== undefined) {
+        errors.push(
+          `${rat}.${field}: regions never inherit a value - cite it or mark it unknown`,
+        );
+        continue;
+      }
+      errors.push(
+        ...validateValue(field, value, {
+          ...ctx,
+          field,
+          prefix: `${at}.regions.${key}`,
+        }),
+      );
+    }
+  }
+  return errors;
+}
+
 /** Validate one country document. Returns {errors}. */
 export function validateCountry(code, doc, ctx = {}) {
   const errors = [];
@@ -403,6 +481,9 @@ export function validateCountry(code, doc, ctx = {}) {
     }
     errors.push(...validateValue(field, values[field], { ...ctx, field }));
   }
+  if (doc.regions !== undefined) {
+    errors.push(...validateRegions(code, doc.regions, ctx));
+  }
   return errors;
 }
 
@@ -431,15 +512,36 @@ export function validateRegistry(registry, opts = {}) {
         );
       }
     }
+    for (const [region, regionDoc] of Object.entries(doc?.regions ?? {})) {
+      for (const [field, value] of Object.entries(regionDoc?.values ?? {})) {
+        if (isIsoDate(value?.review_by) && value.review_by < today) {
+          pastDue.push(
+            `countries/${code}.json ${region} ${field}: review_by ${value.review_by} is before ${today}`,
+          );
+        }
+      }
+    }
   }
   return { errors, pastDue };
 }
 
 /** The compact bundle emitted for one country (R-DATA-01). */
 export function countryBundle(code, doc) {
-  return {
+  const bundle = {
     iso: code,
     name: doc.name,
     v: doc.values,
   };
+  // Regions ship under a short key: the bundle is a browser payload with a 6 KB
+  // ceiling, and a repeated long key is exactly the sort of weight the ceiling
+  // exists to catch.
+  if (doc.regions && Object.keys(doc.regions).length) {
+    bundle.r = Object.fromEntries(
+      Object.entries(doc.regions).map(([key, region]) => [
+        key,
+        { n: region.name, v: region.values },
+      ]),
+    );
+  }
+  return bundle;
 }

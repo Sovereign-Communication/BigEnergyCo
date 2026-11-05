@@ -175,9 +175,17 @@ try {
 const missing = placeCodes.filter((c) => !countryCodes.includes(c));
 const covered = placeCodes.length - missing.length;
 
+// Region rows are reported because they are the part of the registry a visitor
+// most often sees without knowing it: a nested state price replaces the national
+// one, so a count that quietly drops is a coverage regression, not cosmetics.
+let regionRows = 0;
+for (const code of countryCodes) {
+  regionRows += Object.keys(registry.countries[code].regions ?? {}).length;
+}
+
 console.log(
   `registry: OK - ${Object.keys(registry.sources).length} source(s), ${countryCodes.length} country file(s), ` +
-    `${covered}/${placeCodes.length} place-data countries covered as of ${today}`,
+    `${regionRows} sub-national region(s), ${covered}/${placeCodes.length} place-data countries covered as of ${today}`,
 );
 if (missing.length) {
   console.log(
