@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "note": "Source catalogue for the data registry (R-DATA-01, R-DATA-04). Every source records its licence, and `redistribution` records whether that licence permits embedding the value in a shipped bundle, with the basis for that reading. A licence that says NC or ND cannot be declared permitted - scripts/lib/registry.mjs rejects it. The seven entries carried over from assets/data/provenance.json are the sources the site already cites; no source was invented here.",
+  "note": "Source catalogue for the data registry (R-DATA-01, R-DATA-04). Every source records its licence, and `redistribution` records whether that licence permits embedding the value in a shipped bundle, with the basis for that reading. A licence that says NC or ND cannot be declared permitted - scripts/lib/registry.mjs rejects it. The seven entries carried over from assets/data/provenance.json are the sources the site already cites. bls_oews was added in P2.2 when the electrician wage was cited, and no source was invented to fill a row: a source enters this file when a value actually cites it.",
   "sources": {
     "nasa_power": {
       "publisher": "NASA POWER Project, Langley Research Center",
@@ -20,6 +20,16 @@
       "redistribution": "permitted",
       "basis": "Verified at EIA's own terms page on 2026-11-05, which says in its first line that 'U.S. government publications are in the public domain and are not subject to copyright protection' and that you may 'use and/or distribute any of our data, files, databases, reports, graphs, charts'. It asks for an acknowledgment naming the publication date, which the value's note carries.",
       "verified_url": "https://www.eia.gov/about/copyrights_reuse.php"
+    },
+    "bls_oews": {
+      "publisher": "US Bureau of Labor Statistics",
+      "title": "Occupational Employment and Wage Statistics (OEWS) - Electricians, 47-2111",
+      "url": "https://www.bls.gov/ooh/construction-and-extraction/electricians.htm",
+      "license": "Public domain (US Government work)",
+      "as_of": "2026-08-27",
+      "redistribution": "permitted",
+      "basis": "Verified at BLS's own copyright page on 2026-11-05: BLS is a Federal agency and 'everything that we publish, both in hard copy and electronically, is in the public domain, except for previously copyrighted photographs and illustrations. You are free to use our public domain material without specific permission, although we do ask that you cite the Bureau of Labor Statistics as the source.' The value's note cites BLS, as asked. The registered emblem is a trademark and is not used.",
+      "verified_url": "https://www.bls.gov/opub/copyright-information.htm"
     },
     "iso_4217": {
       "publisher": "International Organization for Standardization",

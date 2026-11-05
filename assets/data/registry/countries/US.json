@@ -54,7 +54,7 @@
     },
     "turnkey_benchmark": {
       "unknown": true,
-      "note": "P2.2: the shipped turnkey figure is the site's own hardware estimate times a multiplier (F-01), which is a derivation and not a market benchmark. It cannot be graded until a published benchmark is cited, so it is unknown here.",
+      "note": "P2.2: still unknown, and the reason is specific rather than a lack of searching. The published turnkey sources report their headline figure as a chart, not as text: Berkeley Lab's 2026 data update states the installer-level spread in prose (median prices across the top-100 residential installers in 2025 ranged from $2.4 to $6.3/W, about 25% of installers below $3/W and about 10% above $5/W) but renders the national median only as a plotted figure, and DOE's own benchmark table gives a modelled bottom-up cost (Q1-2025, PV-only 8 kWdc residential: $2.78/W MSP, $2.95/W MMP) rather than what installers charge. A {lo,mid,hi} band needs a cited mid as well as cited ends, so the remaining read is the national median from the LBNL public data file or the published median table, not a midpoint invented to fill the slot. The shipped multiplier this replaces is F-01.",
       "review_by": "2027-02-01"
     },
     "hardware_landed_factor": {
@@ -63,9 +63,17 @@
       "review_by": "2027-02-01"
     },
     "electrician_rate": {
-      "unknown": true,
-      "note": "P2.3: the shipped labour model is our own regional estimate (grade D territory); P2.3 either cites a rate survey or records it as a derivation with its formula.",
-      "review_by": "2027-02-01"
+      "lo": 30.38,
+      "mid": 30.38,
+      "hi": 30.38,
+      "unit": "USD/hour",
+      "currency": "USD",
+      "year": 2025,
+      "grade": "A",
+      "source": "bls_oews",
+      "retrieved": "2026-11-05",
+      "review_by": "2027-11-05",
+      "note": "Bureau of Labor Statistics, Occupational Outlook Handbook: Electricians, page last modified 2026-08-27, read 2026-11-05. The median annual wage for electricians was $63,190 in May 2025, or $30.38/hour (821,000 jobs). A point statistic, so the band is degenerate rather than a spread invented around it. What this number IS matters: an employer's median wage for the occupation, observed by OEWS. It is not a contractor's billed rate - a billed rate adds payroll burden, overhead and margin on top - so the site's labour model must apply its own multiplier and label it as a derivation (grade D) wherever it appears. Reading this value as a billed rate would understate installer labour by roughly half, which is exactly the sort of quiet error R-DATA-08 exists to prevent. 12-month window because OEWS is an annual series, so the next release arrives well inside it."
     },
     "permit_fees": {
       "unknown": true,
