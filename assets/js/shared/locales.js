@@ -643,7 +643,13 @@ export const LOCALES = {
     worstMonthNote:
       "Darkest month: {month} — about {avg} kWh/m²/day of average sun. Size for this month, not the yearly average, or the system will fall short on gray weeks.",
     bomSelectedSystem: "Selected system",
-    fxAsOfNote: "Live rates as of {asOf}.",
+    fxSourceStatic:
+      "Rate source: open.er-api.com. No live rate loaded, so these are built-in estimates.",
+    fxSourceLive: "Rate source: open.er-api.com, as of {asOf}.",
+    fxSourceStale:
+      "Rate source: open.er-api.com, last updated {asOf} ({days} days ago). Check the rate before relying on it.",
+    fxSourceFailed:
+      "Rate source: open.er-api.com. The live refresh failed, so these are built-in estimates.",
     advisorIntakeBillLabel: "Monthly Electric Bill ($ USD):",
     advisorIntakeKwhLabel: "Daily Energy Consumption (kWh / day):",
     advisorIntakeBillPh: "e.g. 400",
@@ -1325,7 +1331,14 @@ export const LOCALES = {
     worstMonthNote:
       "Mes más oscuro: {month} — unos {avg} kWh/m²/día de sol medio. Dimensiona para este mes, no para la media anual, o el sistema se quedará corto en semanas grises.",
     bomSelectedSystem: "Sistema seleccionado",
-    fxAsOfNote: "Tipos en vivo a fecha de {asOf}.",
+    fxSourceStatic:
+      "Fuente del tipo de cambio: open.er-api.com. No se cargó ningún tipo en vivo, así que son estimaciones integradas.",
+    fxSourceLive:
+      "Fuente del tipo de cambio: open.er-api.com, a fecha de {asOf}.",
+    fxSourceStale:
+      "Fuente del tipo de cambio: open.er-api.com, última actualización {asOf} (hace {days} días). Comprueba el tipo antes de fiarte de él.",
+    fxSourceFailed:
+      "Fuente del tipo de cambio: open.er-api.com. La actualización en vivo falló, así que son estimaciones integradas.",
     advisorIntakeBillLabel: "Factura eléctrica mensual ($ USD):",
     advisorIntakeKwhLabel: "Consumo energético diario (kWh / día):",
     advisorIntakeBillPh: "p. ej. 400",
@@ -1998,7 +2011,13 @@ export const LOCALES = {
     worstMonthNote:
       "Mês mais escuro: {month} — cerca de {avg} kWh/m²/dia de sol médio. Dimensione para este mês, não para a média anual, ou o sistema ficará aquém em semanas cinzentas.",
     bomSelectedSystem: "Sistema selecionado",
-    fxAsOfNote: "Câmbio ao vivo em {asOf}.",
+    fxSourceStatic:
+      "Fonte da taxa de câmbio: open.er-api.com. Nenhuma taxa ao vivo foi carregada, então estes são valores estimados incorporados.",
+    fxSourceLive: "Fonte da taxa de câmbio: open.er-api.com, em {asOf}.",
+    fxSourceStale:
+      "Fonte da taxa de câmbio: open.er-api.com, última atualização {asOf} (há {days} dias). Confirme a taxa antes de confiar nela.",
+    fxSourceFailed:
+      "Fonte da taxa de câmbio: open.er-api.com. A atualização ao vivo falhou, então estes são valores estimados incorporados.",
     advisorIntakeBillLabel: "Conta mensal de energia ($ USD):",
     advisorIntakeKwhLabel: "Consumo diário de energia (kWh / dia):",
     advisorIntakeBillPh: "ex. 400",
@@ -2684,7 +2703,13 @@ export const LOCALES = {
     worstMonthNote:
       "Mois le plus sombre : {month} — environ {avg} kWh/m²/jour de soleil moyen. Dimensionnez pour ce mois, pas pour la moyenne annuelle, sinon le système manquera lors des semaines grises.",
     bomSelectedSystem: "Système sélectionné",
-    fxAsOfNote: "Taux en cours au {asOf}.",
+    fxSourceStatic:
+      "Source du taux de change : open.er-api.com. Aucun taux en direct n'a été chargé, ce sont donc des estimations intégrées.",
+    fxSourceLive: "Source du taux de change : open.er-api.com, au {asOf}.",
+    fxSourceStale:
+      "Source du taux de change : open.er-api.com, dernière mise à jour le {asOf} (il y a {days} jours). Vérifiez le taux avant de vous y fier.",
+    fxSourceFailed:
+      "Source du taux de change : open.er-api.com. L'actualisation en direct a échoué, ce sont donc des estimations intégrées.",
     advisorIntakeBillLabel: "Facture d'électricité mensuelle ($ USD) :",
     advisorIntakeKwhLabel: "Consommation d'énergie quotidienne (kWh / jour) :",
     advisorIntakeBillPh: "p. ex. 400",
@@ -3362,7 +3387,13 @@ export const LOCALES = {
     worstMonthNote:
       "Dunkelster Monat: {month} — etwa {avg} kWh/m²/Tag durchschnittliche Sonne. Plane für diesen Monat, nicht für den Jahresdurchschnitt, sonst reicht das System in grauen Wochen nicht.",
     bomSelectedSystem: "Ausgewähltes System",
-    fxAsOfNote: "Live-Kurse Stand {asOf}.",
+    fxSourceStatic:
+      "Kursquelle: open.er-api.com. Es wurde kein Live-Kurs geladen, daher sind dies eingebaute Schätzwerte.",
+    fxSourceLive: "Kursquelle: open.er-api.com, Stand {asOf}.",
+    fxSourceStale:
+      "Kursquelle: open.er-api.com, zuletzt aktualisiert am {asOf} (vor {days} Tagen). Prüfen Sie den Kurs, bevor Sie sich darauf verlassen.",
+    fxSourceFailed:
+      "Kursquelle: open.er-api.com. Die Live-Aktualisierung ist fehlgeschlagen, daher sind dies eingebaute Schätzwerte.",
     advisorIntakeBillLabel: "Monatliche Stromrechnung ($ USD):",
     advisorIntakeKwhLabel: "Täglicher Energieverbrauch (kWh / Tag):",
     advisorIntakeBillPh: "z. B. 400",
@@ -4145,7 +4176,13 @@ export const LOCALES = {
     worstMonthNote:
       "Donkerste maand: {month} — ongeveer {avg} kWh/m²/dag gemiddelde zon. Dimensioneer voor deze maand, niet voor het jaargemiddelde, anders schiet het systeem tekort in grijze weken.",
     bomSelectedSystem: "Geselecteerd systeem",
-    fxAsOfNote: "Live koersen per {asOf}.",
+    fxSourceStatic:
+      "Bron van de wisselkoers: open.er-api.com. Er is geen live koers geladen, dus dit zijn ingebouwde schattingen.",
+    fxSourceLive: "Bron van de wisselkoers: open.er-api.com, per {asOf}.",
+    fxSourceStale:
+      "Bron van de wisselkoers: open.er-api.com, laatst bijgewerkt op {asOf} ({days} dagen geleden). Controleer de koers voordat u erop vertrouwt.",
+    fxSourceFailed:
+      "Bron van de wisselkoers: open.er-api.com. Het verversen van de live koers is mislukt, dus dit zijn ingebouwde schattingen.",
     advisorIntakeBillLabel: "Maandelijkse energierekening ($ USD):",
     advisorIntakeKwhLabel: "Dagelijks energieverbruik (kWh / dag):",
     advisorIntakeBillPh: "bijv. 400",
@@ -4784,7 +4821,13 @@ export const LOCALES = {
     worstMonthNote:
       "الأشهر الأكثر عتمة: {month} — نحو {avg} كيلوواط ساعة/م²/يوم من الشمس المتوسطة. صمّم لهذا الشهر، لا للمتوسط السنوي، وإلا لن يكفِ النظام في الأسابيع الغائمة.",
     bomSelectedSystem: "النظام المحدد",
-    fxAsOfNote: "أسعار مباشرة حتى {asOf}.",
+    fxSourceStatic:
+      "مصدر سعر الصرف: open.er-api.com. لم يتم تحميل سعر مباشر، لذا هذه تقديرات مدمجة.",
+    fxSourceLive: "مصدر سعر الصرف: open.er-api.com، بتاريخ {asOf}.",
+    fxSourceStale:
+      "مصدر سعر الصرف: open.er-api.com، آخر تحديث {asOf} (قبل {days} يومًا). تحقّق من السعر قبل الاعتماد عليه.",
+    fxSourceFailed:
+      "مصدر سعر الصرف: open.er-api.com. فشل التحديث المباشر، لذا هذه تقديرات مدمجة.",
     advisorIntakeBillLabel: "فاتورة الكهرباء الشهرية ($ دولار أمريكي):",
     advisorIntakeKwhLabel: "استهلاك الطاقة اليومي (كيلوواط ساعة / اليوم):",
     advisorIntakeBillPh: "مثال: 400",

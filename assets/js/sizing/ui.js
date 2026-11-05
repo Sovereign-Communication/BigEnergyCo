@@ -53,6 +53,7 @@ import {
 import {
   estimateTariff,
   CURRENCIES,
+  fxFreshness,
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
@@ -4311,16 +4312,52 @@ function bestPriceNote(entry) {
   return _rescale.relocalizeOversizeCallout(text, money);
 }
 
+// The FX provenance line (P1.4, F-10). Rendered on every load, including the
+// offline one, because "no source and no date" was the defect: a visitor whose
+// money was converted at the built-in fallback table had nothing on screen
+// saying so, and a live rate aged silently until the next page load.
+//
+// The data-i18n attribute is kept in step with the state rather than left
+// alone. For the static and failed wordings it stays set, so a later
+// applyI18n() re-translates the right sentence. For live and stale it is
+// removed, because those carry a date the static key cannot express - and an
+// applyI18n() that reverted them to "no live rate loaded" would be stating
+// something false about a rate that did load.
+function renderFxStatus() {
+  const el = $("fxAsOf");
+  if (!el) return;
+  const f = fxFreshness({ asOf: fxMeta.asOf });
+  if (f.state === "stale") {
+    el.removeAttribute("data-i18n");
+    el.textContent = t("fxSourceStale", {
+      asOf: f.asOf,
+      days: String(f.days),
+    });
+  } else if (f.state === "live") {
+    el.removeAttribute("data-i18n");
+    el.textContent = t("fxSourceLive", { asOf: f.asOf });
+  } else {
+    const key = fxMeta.failed ? "fxSourceFailed" : "fxSourceStatic";
+    el.setAttribute("data-i18n", key);
+    el.textContent = t(key);
+  }
+}
+
 function fxNote() {
   const fx = fxActive();
 
   if (!fx) return null;
 
-  const asOf = fxMeta.asOf
-    ? ` Live rates as of ${fxMeta.asOf}.`
-    : " Indicative built-in rates (live fetch unavailable).";
+  const f = fxFreshness({ asOf: fxMeta.asOf });
 
-  return `Amounts shown in ${fx.code} at ${fx.rate} per US$1. Energy cost rates and recommendations are converted to ${fx.code}; source price scopes remain USD-denominated.`;
+  const stamp =
+    f.state === "stale"
+      ? t("fxSourceStale", { asOf: f.asOf, days: String(f.days) })
+      : f.state === "live"
+        ? t("fxSourceLive", { asOf: f.asOf })
+        : t(fxMeta.failed ? "fxSourceFailed" : "fxSourceStatic");
+
+  return `${stamp} Amounts shown in ${fx.code} at ${fx.rate} per US$1. Energy cost rates and recommendations are converted to ${fx.code}; source price scopes remain USD-denominated.`;
 }
 
 // REMOVED 2026-10-05: renderAutoCards (232 lines) was UNREACHABLE shipped
@@ -8979,6 +9016,12 @@ async function initSizingUI() {
 
     // Background FX refresh: keeps auto-selected currencies accurate.
 
+    // Paint the provenance line first, from whatever the rates actually are
+    // right now (the built-in table, unless a previous refresh in this page
+    // already succeeded), so the visitor is never shown converted money with
+    // no source and no date while the fetch is in flight.
+    renderFxStatus();
+
     refreshFxRates();
   } catch (err) {
     // A single init failure must never silently kill the whole UI.
@@ -9008,11 +9051,21 @@ async function refreshFxRates() {
       ...(timeoutSignal ? { signal: timeoutSignal } : {}),
     });
 
-    if (!res.ok) return;
+    if (!res.ok) {
+      fxMeta.live = false;
+      fxMeta.failed = true;
+      renderFxStatus();
+      return;
+    }
 
     const json = await res.json();
 
-    if (!json || json.result !== "success" || !json.rates) return;
+    if (!json || json.result !== "success" || !json.rates) {
+      fxMeta.live = false;
+      fxMeta.failed = true;
+      renderFxStatus();
+      return;
+    }
 
     for (const code of Object.keys(CURRENCIES)) {
       const r = json.rates[code];
@@ -9021,10 +9074,10 @@ async function refreshFxRates() {
     }
 
     fxMeta.asOf = json.time_last_update_utc || new Date().toUTCString();
+    fxMeta.live = true;
+    fxMeta.failed = false;
 
-    const elN = $("fxAsOf");
-
-    if (elN) elN.textContent = t("fxAsOfNote", { asOf: fxMeta.asOf });
+    renderFxStatus();
 
     // fxActive() reads the fxRate INPUT, not the CURRENCIES table — without
     // syncing it, the live fetch changes nothing on screen. Display-currency
@@ -9053,7 +9106,11 @@ async function refreshFxRates() {
 
     if (lastPayload) renderResults(lastPayload);
   } catch {
-    /* offline - static defaults remain */
+    // Offline, blocked, or timed out: the built-in table stays in use, and the
+    // line now says so instead of leaving the visitor to guess.
+    fxMeta.live = false;
+    fxMeta.failed = true;
+    renderFxStatus();
   }
 }
 

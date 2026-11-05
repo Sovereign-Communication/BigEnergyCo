@@ -1938,14 +1938,27 @@
                       maxlength="4"
                     />
 
+                    <!-- FX provenance (P1.4, F-10). Never empty: the static
+                         wording is the shipped default, so a visitor who never
+                         gets a live rate - offline, blocked, or JS still
+                         loading - still learns where the rate came from. The
+                         sizing UI swaps in the dated wording once a live fetch
+                         lands, and swaps the failure wording if it does not.
+                         role="status" so the change is announced rather than
+                         only drawn. -->
                     <p
                       id="fxAsOf"
+                      role="status"
+                      data-i18n="fxSourceStatic"
                       style="
                         font-size: 0.72rem;
                         color: var(--text-muted);
                         margin-top: 0.35rem;
                       "
-                    ></p>
+                    >
+                      Rate source: open.er-api.com. No live rate loaded, so
+                      these are built-in estimates.
+                    </p>
                   </div>
                 </div>
               </div>
