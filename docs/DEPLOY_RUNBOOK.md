@@ -171,6 +171,15 @@ only make a run fail sooner, never last longer.
 
 ## Release
 
+**Precondition on a campaign's first promotion.** Before the first promotion of a
+release campaign, the record must already carry two things: a recorded **Jev
+vision-audit PASS**, and the **rollback target named** (`npm run rollback -- <sha>`
+is only a rollback if the sha was chosen in advance). The promote tool cannot
+check either one - it verifies what staging serves, not who decided to ship -
+so they are read from the record by the operator. The live state of both, with
+the reads behind them, is tracked in
+`docs/lane/PROMOTION-READINESS-2026-11-06.md`.
+
 1. Commit only the intended source and runbook changes.
 2. If the catalog price stamps (`POWMR_CATALOG.checkedDate`, `PRICES_CHECKED`)
    are near a year old, re-verify against the PowMr catalog and bump them —
