@@ -131,8 +131,7 @@
         "assets/js/sizing/pricing.js:CURRENCIES"
       ],
       "source": "iso_4217",
-      "grade": "C",
-      "disclosure": "ISO 4217 fixes the CODE and its name, not the rate. The rates themselves are our snapshot. The page says these are indicative whenever they are used, so a visitor is never shown a stale rate as a live one."
+      "grade": "C",        "disclosure": "ISO 4217 fixes the CODE and its name, not the rate. The rates themselves are our snapshot. The page says these are indicative whenever they are used, so a visitor is never shown a stale rate as a live one.",
 
       "audit": {
         "a19_status": "OPEN",
