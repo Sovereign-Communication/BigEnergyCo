@@ -1,0 +1,55 @@
+version: 2.1
+
+# The verification rail.
+#
+# WHY THIS EXISTS. `main` has been UNVERIFIABLE since the GitHub Actions account
+# hit its billing lock: every job fails with `steps=0` and the same annotation, so
+# no gate has produced a verdict on main in this cycle (classification filed on
+# PR #330, 2026-11-05: 9 of 9 failures are billing residue, zero genuine). This
+# config is the lane's port of the verification battery to a rail that can
+# actually run. It is deliberately the SAME battery AGENTS.md section 2 names,
+# in the same order, so a green pipeline here means what the protocol already
+# says a green check means — not a second, softer definition of "verified".
+#
+# PHASE 1 (this file): ONE job, no secrets, no network beyond checkout, no
+# `npm ci`. The battery runs on the tree: every script it calls is dependency-free
+# node, which is the same reason `npm test` is an offline suite. Phase 2
+# (web-smoke / quality-lab / lighthouse / coverage on `cimg/node:22-browsers`, the
+#  main-only drift tripwire, and jev-complete with TYPESAFE_API_KEY) is explicitly
+# NOT folded in here — it lands after this job first goes green, per the tasking
+# on PR #330.
+#
+# Out of scope for this port, by the same tasking: deploy.yml,
+# cf-pages-deploy.yml, promote/verify-staging. Those are Cloudflare Pages and
+# live-URL territory, not verification.
+
+executors:
+  node22:
+    docker:
+      - image: cimg/node:22
+
+jobs:
+  verify:
+    executor: node22
+    steps:
+      - checkout
+      - run:
+          name: Character encoding check
+          command: node scripts/check-chars.mjs
+      - run:
+          name: SEO, sitemap, JSON-LD, tokens (14-gate chain)
+          command: npm run seo
+      - run:
+          name: "Code style (the runner's view: tracked files, git's line endings)"
+          command: npm run format:check
+      - run:
+          name: Deployment staging check
+          command: node scripts/deploy-pages-local.mjs --check
+      - run:
+          name: Offline test suite
+          command: npm test
+
+workflows:
+  verify:
+    jobs:
+      - verify
