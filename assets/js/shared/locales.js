@@ -3,7 +3,7 @@
 // `ar` flips the document to RTL automatically.
 // Keys not present in a locale fall back to English silently.
 
-import { HOME_COPY } from "./home-copy.js?v=20261105c";
+import { HOME_COPY } from "./home-copy.js?v=20261107a";
 
 export const LOCALES = {
   en: {
@@ -163,7 +163,7 @@ export const LOCALES = {
     simpleAskAdvisor: "Ask the AI advisor (plain words)",
     sanityOk: "Independently sanity-checked ✓ — physics plausible",
     sanityFlag:
-      "⚠ An independent AI check flags this result as physically implausible —",
+      "⚠ An independent AI check doubts these numbers are physically possible. It can be wrong, and it never changes your result.",
     sanityAskAdvisor: "ask the advisor why",
     sanityUncertain:
       "Sanity check inconclusive — the independent AI check could not reach a confident verdict on these inputs",
@@ -469,9 +469,14 @@ export const LOCALES = {
     metricReserveTradeoff: "what holding a reserve costs, in savings and hours",
     metricGridIndependence: "of the year running with no grid at all",
     metricPortableRuntime: "of days the station runs your devices all day",
-    statusWorks: "Works",
-    statusPartial: "Partly",
-    statusNotHere: "Does not work here",
+    // The verdict lead, in plain words. The six verdict sentences used to open
+    // with a bare label ("Partly: 99% of the year runs"), which read as a
+    // category stamp on top of a sentence and, for the not-here case, argued
+    // with its own sentence ("Does not work here: this removes 45% of your
+    // bill"). One short sentence, then the measurement.
+    verdictLeadWorks: "This one works here.",
+    verdictLeadPartial: "This one gets most of the way there.",
+    verdictLeadNotHere: "This one falls short here.",
     useCaseOutcomeTitle: "Your result: {useCase}",
     useCaseVerdictFooter:
       "{useCase} — measured from this location's own hourly weather, not an estimate.",
@@ -495,19 +500,19 @@ export const LOCALES = {
     generatorRuntime1: "1% \u2014 a few days a year",
     generatorRuntime2: "2%+ \u2014 fine when needed",
     verdictBillCut:
-      "{status}: this system removes {pct}% of your bill over 20 years.",
+      "This system removes {pct}% of your bill over 20 years.",
     verdictTou:
-      "{status}: the battery covers {pct}% of your peak-window energy, worth about {saving} over 20 years against a {cost} battery. Your peak-to-off-peak spread here is {spread} per kWh.",
+      "The battery covers {pct}% of your peak-window energy, worth about {saving} over 20 years against a {cost} battery. Your peak-to-off-peak spread here is {spread} per kWh.",
     verdictBackup:
-      "{status}: your essentials run for the full {targetHours} hours in {pct}% of the power cuts we simulated (typical night: {hours} hours).",
+      "Your essentials run for the full {targetHours} hours in {pct}% of the power cuts we simulated (typical night: {hours} hours).",
     verdictReserve:
-      "{status}: holding that reserve costs {pct}% of your bill savings and buys {coverHours} hours of cover.",
+      "Holding that reserve costs {pct}% of your bill savings and buys {coverHours} hours of cover.",
     verdictReserveNoBattery:
       "There is nothing to hold a reserve in: the cheapest system for this goal carries no battery at all.",
     verdictOffGrid:
-      "{status}: {pct}% of the year runs with no grid — {unmetHours} hours short in the worst year, {autonomy} days of autonomy.",
+      "{pct}% of the year runs with no grid — {unmetHours} hours short in the worst year, {autonomy} days of autonomy.",
     verdictPortable:
-      "{status}: your station runs a full day on {days} of {trips} days here, and one charge lasts {runtime} hours.",
+      "Your station runs a full day on {days} of {trips} days here, and one charge lasts {runtime} hours.",
     cityLabel: "Where is this system going?",
     loadLabel: "How much power do you use?",
     loadAppliances: "Let me pick my appliances",
@@ -645,7 +650,7 @@ export const LOCALES = {
     bomSelectedSystem: "Selected system",
     fxSourceStatic:
       "Rate source: open.er-api.com. No live rate loaded, so these are built-in estimates.",
-    fxSourceLive: "Rate source: open.er-api.com, as of {asOf}.",
+    fxSourceLive: "Rate source: open.er-api.com, as of {asOf} — that date is the exchange rate’s; the weather figures are five years of hourly history.",
     fxSourceStale:
       "Rate source: open.er-api.com, last updated {asOf} ({days} days ago). Check the rate before relying on it.",
     fxSourceFailed:
@@ -783,9 +788,9 @@ export const LOCALES = {
     metricGridIndependence: "del año funcionando sin red",
     metricPortableRuntime:
       "de los días que la estación alimenta tus dispositivos todo el día",
-    statusWorks: "Funciona",
-    statusPartial: "En parte",
-    statusNotHere: "Aquí no funciona",
+    verdictLeadWorks: "Este funciona aquí.",
+    verdictLeadPartial: "Este llega casi hasta el final.",
+    verdictLeadNotHere: "Este se queda corto aquí.",
     useCaseOutcomeTitle: "Tu resultado: {useCase}",
     useCaseVerdictFooter:
       "{useCase}: medido con el clima horario de esta ubicación, no es una estimación.",
@@ -810,19 +815,19 @@ export const LOCALES = {
     generatorRuntime1: "1% \u2014 unos d\u00edas al a\u00f1o",
     generatorRuntime2: "2%+ \u2014 sin problema cuando haga falta",
     verdictBillCut:
-      "{status}: este sistema elimina el {pct}% de tu factura en 20 años.",
+      "Este sistema elimina el {pct}% de tu factura en 20 años.",
     verdictTou:
-      "{status}: la batería cubre el {pct}% de tu energía en horas punta, unos {saving} en 20 años frente a una batería de {cost}. Aquí la diferencia entre punta y valle es de {spread} por kWh.",
+      "La batería cubre el {pct}% de tu energía en horas punta, unos {saving} en 20 años frente a una batería de {cost}. Aquí la diferencia entre punta y valle es de {spread} por kWh.",
     verdictBackup:
-      "{status}: lo esencial aguanta las {targetHours} horas completas en el {pct}% de los apagones que simulamos (noche típica: {hours} horas).",
+      "Lo esencial aguanta las {targetHours} horas completas en el {pct}% de los apagones que simulamos (noche típica: {hours} horas).",
     verdictReserve:
-      "{status}: guardar esa reserva cuesta el {pct}% de tu ahorro y compra {coverHours} horas de cobertura.",
+      "Guardar esa reserva cuesta el {pct}% de tu ahorro y compra {coverHours} horas de cobertura.",
     verdictReserveNoBattery:
       "No hay nada donde guardar una reserva: el sistema más barato para este objetivo no lleva batería.",
     verdictOffGrid:
-      "{status}: el {pct}% del año funciona sin red, con {unmetHours} horas de déficit en el peor año y {autonomy} días de autonomía.",
+      "El {pct}% del año funciona sin red, con {unmetHours} horas de déficit en el peor año y {autonomy} días de autonomía.",
     verdictPortable:
-      "{status}: tu estación alimenta tus dispositivos todo el día en {days} de {trips} días aquí, y una carga dura {runtime} horas.",
+      "Tu estación alimenta tus dispositivos todo el día en {days} de {trips} días aquí, y una carga dura {runtime} horas.",
     cityLabel: "¿Dónde se instalará el sistema?",
     loadLabel: "¿Cuánta energía consumes?",
     loadAppliances: "Elijo mis electrodomésticos",
@@ -911,7 +916,7 @@ export const LOCALES = {
     simpleAskAdvisor: "Pregunta al asistente de IA (en palabras simples)",
     sanityOk: "Verificado de forma independiente ✓ — físicamente plausible",
     sanityFlag:
-      "⚠ Una verificación de IA independiente marca este resultado como físicamente implausible —",
+      "⚠ Una verificación de IA independiente duda que estas cifras sean físicamente posibles. Puede equivocarse y nunca cambia tu resultado.",
     sanityAskAdvisor: "pregunta al asistente por qué",
     sanityUncertain:
       "Verificación no concluyente — la comprobación independiente de IA no alcanzó un veredicto seguro sobre estas entradas",
@@ -1334,7 +1339,7 @@ export const LOCALES = {
     fxSourceStatic:
       "Fuente del tipo de cambio: open.er-api.com. No se cargó ningún tipo en vivo, así que son estimaciones integradas.",
     fxSourceLive:
-      "Fuente del tipo de cambio: open.er-api.com, a fecha de {asOf}.",
+      "Fuente del tipo de cambio: open.er-api.com, a fecha de {asOf} — esa fecha es la del tipo de cambio; la meteorología son cinco años de historial horario.",
     fxSourceStale:
       "Fuente del tipo de cambio: open.er-api.com, última actualización {asOf} (hace {days} días). Comprueba el tipo antes de fiarte de él.",
     fxSourceFailed:
@@ -1438,9 +1443,9 @@ export const LOCALES = {
     metricGridIndependence: "do ano funcionando sem rede nenhuma",
     metricPortableRuntime:
       "dos dias em que a estação alimenta seus aparelhos o dia todo",
-    statusWorks: "Funciona",
-    statusPartial: "Em parte",
-    statusNotHere: "Aqui não funciona",
+    verdictLeadWorks: "Este funciona aqui.",
+    verdictLeadPartial: "Este chega quase até ao fim.",
+    verdictLeadNotHere: "Este fica aquém aqui.",
     useCaseOutcomeTitle: "Seu resultado: {useCase}",
     useCaseVerdictFooter:
       "{useCase}: medido com o clima horário deste local — não é uma estimativa.",
@@ -1465,19 +1470,19 @@ export const LOCALES = {
     generatorRuntime1: "1% — alguns dias por ano",
     generatorRuntime2: "2%+ — sem problema quando necessário",
     verdictBillCut:
-      "{status}: este sistema elimina {pct}% da sua conta em 20 anos.",
+      "Este sistema elimina {pct}% da sua conta em 20 anos.",
     verdictTou:
-      "{status}: a bateria cobre {pct}% da sua energia nas horas de pico, valendo cerca de {saving} em 20 anos contra uma bateria de {cost}. A diferença entre pico e fora do pico aqui é de {spread} por kWh.",
+      "A bateria cobre {pct}% da sua energia nas horas de pico, valendo cerca de {saving} em 20 anos contra uma bateria de {cost}. A diferença entre pico e fora do pico aqui é de {spread} por kWh.",
     verdictBackup:
-      "{status}: o essencial funciona as {targetHours} horas completas em {pct}% dos apagões que simulamos (noite típica: {hours} horas).",
+      "O essencial funciona as {targetHours} horas completas em {pct}% dos apagões que simulamos (noite típica: {hours} horas).",
     verdictReserve:
-      "{status}: guardar essa reserva custa {pct}% da sua economia e compra {coverHours} horas de cobertura.",
+      "Guardar essa reserva custa {pct}% da sua economia e compra {coverHours} horas de cobertura.",
     verdictReserveNoBattery:
       "Não há onde guardar uma reserva: o sistema mais barato para esse objetivo não tem bateria nenhuma.",
     verdictOffGrid:
-      "{status}: {pct}% do ano funciona sem rede — faltam {unmetHours} horas no pior ano, com {autonomy} dias de autonomia.",
+      "{pct}% do ano funciona sem rede — faltam {unmetHours} horas no pior ano, com {autonomy} dias de autonomia.",
     verdictPortable:
-      "{status}: sua estação alimenta seus aparelhos o dia todo em {days} de {trips} dias aqui, e uma carga dura {runtime} horas.",
+      "Sua estação alimenta seus aparelhos o dia todo em {days} de {trips} dias aqui, e uma carga dura {runtime} horas.",
     cityLabel: "Onde o sistema será instalado?",
     loadLabel: "Quanta energia você consome?",
     loadAppliances: "Escolho meus eletrodomésticos",
@@ -1605,7 +1610,7 @@ export const LOCALES = {
     simpleAskAdvisor: "Pergunte ao assistente de IA (em palavras simples)",
     sanityOk: "Verificado de forma independente ✓ — fisicamente plausível",
     sanityFlag:
-      "⚠ Uma verificação de IA independente marca este resultado como fisicamente implausível —",
+      "⚠ Uma verificação de IA independente duvida que estes números sejam fisicamente possíveis. Pode estar enganada e nunca altera o seu resultado.",
     sanityAskAdvisor: "pergunte ao assistente por quê",
     sanityUncertain:
       "Verificação inconclusiva — a verificação independente de IA não alcançou um veredito confiável sobre estas entradas",
@@ -2013,7 +2018,7 @@ export const LOCALES = {
     bomSelectedSystem: "Sistema selecionado",
     fxSourceStatic:
       "Fonte da taxa de câmbio: open.er-api.com. Nenhuma taxa ao vivo foi carregada, então estes são valores estimados incorporados.",
-    fxSourceLive: "Fonte da taxa de câmbio: open.er-api.com, em {asOf}.",
+    fxSourceLive: "Fonte da taxa de câmbio: open.er-api.com, em {asOf} — esta data é a da taxa de câmbio; a meteorologia são cinco anos de histórico horário.",
     fxSourceStale:
       "Fonte da taxa de câmbio: open.er-api.com, última atualização {asOf} (há {days} dias). Confirme a taxa antes de confiar nela.",
     fxSourceFailed:
@@ -2116,9 +2121,9 @@ export const LOCALES = {
     metricGridIndependence: "de l'année fonctionnant sans aucun réseau",
     metricPortableRuntime:
       "des jours où la station alimente vos appareils toute la journée",
-    statusWorks: "Fonctionne",
-    statusPartial: "En partie",
-    statusNotHere: "Ne fonctionne pas ici",
+    verdictLeadWorks: "Celui-ci fonctionne ici.",
+    verdictLeadPartial: "Celui-ci y arrive presque.",
+    verdictLeadNotHere: "Celui-ci reste insuffisant ici.",
     useCaseOutcomeTitle: "Votre résultat : {useCase}",
     useCaseVerdictFooter:
       "{useCase} : mesuré avec la météo horaire de ce lieu — pas une estimation.",
@@ -2145,19 +2150,19 @@ export const LOCALES = {
     generatorRuntime1: "1% — quelques jours par an",
     generatorRuntime2: "2%+ — sans problème si besoin",
     verdictBillCut:
-      "{status} : ce système supprime {pct}% de votre facture sur 20 ans.",
+      "Ce système supprime {pct}% de votre facture sur 20 ans.",
     verdictTou:
-      "{status} : la batterie couvre {pct}% de votre énergie en heures pleines, soit environ {saving} sur 20 ans face à une batterie de {cost}. L'écart entre pointe et creux ici est de {spread} par kWh.",
+      "La batterie couvre {pct}% de votre énergie en heures pleines, soit environ {saving} sur 20 ans face à une batterie de {cost}. L'écart entre pointe et creux ici est de {spread} par kWh.",
     verdictBackup:
-      "{status} : l'essentiel tient les {targetHours} heures complètes dans {pct}% des coupures que nous avons simulées (nuit typique : {hours} heures).",
+      "L'essentiel tient les {targetHours} heures complètes dans {pct}% des coupures que nous avons simulées (nuit typique : {hours} heures).",
     verdictReserve:
-      "{status} : garder cette réserve coûte {pct}% de vos économies et achète {coverHours} heures de couverture.",
+      "Garder cette réserve coûte {pct}% de vos économies et achète {coverHours} heures de couverture.",
     verdictReserveNoBattery:
       "Il n'y a rien où garder une réserve : le système le moins cher pour cet objectif ne comporte aucune batterie.",
     verdictOffGrid:
-      "{status} : {pct}% de l'année fonctionne sans réseau — {unmetHours} heures manquantes la pire année, {autonomy} jours d'autonomie.",
+      "{pct}% de l'année fonctionne sans réseau — {unmetHours} heures manquantes la pire année, {autonomy} jours d'autonomie.",
     verdictPortable:
-      "{status} : votre station alimente vos appareils toute la journée sur {days} jours sur {trips} ici, et une charge dure {runtime} heures.",
+      "Votre station alimente vos appareils toute la journée sur {days} jours sur {trips} ici, et une charge dure {runtime} heures.",
     cityLabel: "Où sera installé le système ?",
     loadLabel: "Quelle est votre consommation ?",
     loadAppliances: "Je choisis mes appareils",
@@ -2290,7 +2295,7 @@ export const LOCALES = {
     simpleAskAdvisor: "Demandez au conseiller IA (en mots simples)",
     sanityOk: "Vérifié de façon indépendante ✓ — physiquement plausible",
     sanityFlag:
-      "⚠ Une vérification IA indépendante signale ce résultat comme physiquement implausible —",
+      "⚠ Une vérification IA indépendante doute que ces chiffres soient physiquement réalisables. Elle peut se tromper et ne change jamais votre résultat.",
     sanityAskAdvisor: "demandez au conseiller pourquoi",
     sanityUncertain:
       "Vérification non concluante — le contrôle indépendant par IA n'a pas atteint de verdict fiable sur ces entrées",
@@ -2705,7 +2710,7 @@ export const LOCALES = {
     bomSelectedSystem: "Système sélectionné",
     fxSourceStatic:
       "Source du taux de change : open.er-api.com. Aucun taux en direct n'a été chargé, ce sont donc des estimations intégrées.",
-    fxSourceLive: "Source du taux de change : open.er-api.com, au {asOf}.",
+    fxSourceLive: "Source du taux de change : open.er-api.com, au {asOf} — cette date est celle du taux de change ; la météo couvre cinq ans d’historique horaire.",
     fxSourceStale:
       "Source du taux de change : open.er-api.com, dernière mise à jour le {asOf} (il y a {days} jours). Vérifiez le taux avant de vous y fier.",
     fxSourceFailed:
@@ -2859,9 +2864,9 @@ export const LOCALES = {
     metricGridIndependence: "des Jahres ganz ohne Netz",
     metricPortableRuntime:
       "der Tage, an denen die Station deine Geräte den ganzen Tag versorgt",
-    statusWorks: "Funktioniert",
-    statusPartial: "Teilweise",
-    statusNotHere: "Funktioniert hier nicht",
+    verdictLeadWorks: "Diese Variante funktioniert hier.",
+    verdictLeadPartial: "Diese Variante kommt fast hin.",
+    verdictLeadNotHere: "Diese Variante reicht hier nicht.",
     useCaseOutcomeTitle: "Dein Ergebnis: {useCase}",
     useCaseVerdictFooter:
       "{useCase}: gemessen mit dem stündlichen Wetter dieses Ortes — keine Schätzung.",
@@ -2885,19 +2890,19 @@ export const LOCALES = {
     generatorRuntime1: "1% — wenige Tage im Jahr",
     generatorRuntime2: "2%+ — bei Bedarf kein Problem",
     verdictBillCut:
-      "{status}: Dieses System spart {pct}% deiner Rechnung über 20 Jahre.",
+      "Dieses System spart {pct}% deiner Rechnung über 20 Jahre.",
     verdictTou:
-      "{status}: Die Batterie deckt {pct}% deiner Energie in den Spitzenstunden, rund {saving} über 20 Jahre gegen eine {cost}-Batterie. Der Abstand zwischen Spitze und Tal beträgt hier {spread} pro kWh.",
+      "Die Batterie deckt {pct}% deiner Energie in den Spitzenstunden, rund {saving} über 20 Jahre gegen eine {cost}-Batterie. Der Abstand zwischen Spitze und Tal beträgt hier {spread} pro kWh.",
     verdictBackup:
-      "{status}: Dein Nötigstes läuft die vollen {targetHours} Stunden in {pct}% der simulierten Stromausfälle (typische Nacht: {hours} Stunden).",
+      "Dein Nötigstes läuft die vollen {targetHours} Stunden in {pct}% der simulierten Stromausfälle (typische Nacht: {hours} Stunden).",
     verdictReserve:
-      "{status}: Dieser Reserve kostet dich {pct}% deiner Ersparnis und bringt {coverHours} Stunden Deckung.",
+      "Dieser Reserve kostet dich {pct}% deiner Ersparnis und bringt {coverHours} Stunden Deckung.",
     verdictReserveNoBattery:
       "Es gibt nichts, worin eine Reserve stecken könnte: das billigste System für dieses Ziel hat gar keine Batterie.",
     verdictOffGrid:
-      "{status}: {pct}% des Jahres laufen ganz ohne Netz — {unmetHours} Stunden fehlen im schlechtesten Jahr, {autonomy} Tage Autonomie.",
+      "{pct}% des Jahres laufen ganz ohne Netz — {unmetHours} Stunden fehlen im schlechtesten Jahr, {autonomy} Tage Autonomie.",
     verdictPortable:
-      "{status}: Deine Station versorgt deine Geräte hier an {days} von {trips} Tagen den ganzen Tag, und eine Ladung reicht {runtime} Stunden.",
+      "Deine Station versorgt deine Geräte hier an {days} von {trips} Tagen den ganzen Tag, und eine Ladung reicht {runtime} Stunden.",
     chemLabel: "Batteriechemie:",
     // Added with the English key. German was the one locale that never
     // received this note at all: it lived only in the translated
@@ -2978,7 +2983,7 @@ export const LOCALES = {
     simpleAskAdvisor: "Fragen Sie den KI-Berater (in einfachen Worten)",
     sanityOk: "Unabhängig geprüft ✓ — physikalisch plausibel",
     sanityFlag:
-      "⚠ Eine unabhängige KI-Prüfung markiert dieses Ergebnis als physikalisch unplausibel —",
+      "⚠ Eine unabhängige KI-Prüfung bezweifelt, dass diese Zahlen technisch möglich sind. Sie kann sich irren und ändert dein Ergebnis nie.",
     sanityAskAdvisor: "fragen Sie den Berater warum",
     sanityUncertain:
       "Prüfung unentschieden — die unabhängige KI-Prüfung erreichte für diese Eingaben kein eindeutiges Urteil",
@@ -3389,7 +3394,7 @@ export const LOCALES = {
     bomSelectedSystem: "Ausgewähltes System",
     fxSourceStatic:
       "Kursquelle: open.er-api.com. Es wurde kein Live-Kurs geladen, daher sind dies eingebaute Schätzwerte.",
-    fxSourceLive: "Kursquelle: open.er-api.com, Stand {asOf}.",
+    fxSourceLive: "Kursquelle: open.er-api.com, Stand {asOf} — dieses Datum ist das des Wechselkurses; die Wetterdaten umfassen fünf Jahre stündlicher Werte.",
     fxSourceStale:
       "Kursquelle: open.er-api.com, zuletzt aktualisiert am {asOf} (vor {days} Tagen). Prüfen Sie den Kurs, bevor Sie sich darauf verlassen.",
     fxSourceFailed:
@@ -3580,7 +3585,7 @@ export const LOCALES = {
     simpleAskAdvisor: "Vraag de AI-adviseur (in gewone woorden)",
     sanityOk: "Onafhankelijk gecontroleerd ✓ — fysisch plausibel",
     sanityFlag:
-      "⚠ Een onafhankelijke AI-controle markeert dit resultaat als fysisch onwaarschijnlijk —",
+      "⚠ Een onafhankelijke AI-controle betwijfelt of deze cijfers technisch haalbaar zijn. Die kan ernaast zitten en verandert je resultaat nooit.",
     sanityAskAdvisor: "vraag de adviseur waarom",
     sanityUncertain:
       "Controle zonder duidelijke uitslag — de onafhankelijke AI-controle kon bij deze invoer geen zeker oordeel vellen",
@@ -3822,9 +3827,9 @@ export const LOCALES = {
     metricGridIndependence: "van het jaar volledig zonder net gedraaid",
     metricPortableRuntime:
       "van de dagen dat het station uw apparaten de hele dag laat draaien",
-    statusWorks: "Werkt",
-    statusPartial: "Gedeeltelijk",
-    statusNotHere: "Werkt hier niet",
+    verdictLeadWorks: "Deze werkt hier.",
+    verdictLeadPartial: "Deze komt bijna helemaal.",
+    verdictLeadNotHere: "Deze schiet hier tekort.",
     useCaseOutcomeTitle: "Uw resultaat: {useCase}",
     useCaseVerdictFooter:
       "{useCase} — gemeten aan het eigen uurlijkse weer van deze locatie, geen schatting.",
@@ -3844,19 +3849,19 @@ export const LOCALES = {
     portableBankLabel: "Bruikbare grootte van het powerstation (kWh)",
     portableShoreLabel: "Ik kan opladen via het net of een voertuig",
     verdictBillCut:
-      "{status}: dit systeem neemt {pct}% van uw rekening weg over 20 jaar.",
+      "Dit systeem neemt {pct}% van uw rekening weg over 20 jaar.",
     verdictTou:
-      "{status}: de accu dekt {pct}% van uw piekuren-energie, ongeveer {saving} waard over 20 jaar tegen een accu van {cost}. Uw piek-dalverschil is hier {spread} per kWh.",
+      "De accu dekt {pct}% van uw piekuren-energie, ongeveer {saving} waard over 20 jaar tegen een accu van {cost}. Uw piek-dalverschil is hier {spread} per kWh.",
     verdictBackup:
-      "{status}: uw essentiële apparaten draaien de volle {targetHours} uur in {pct}% van de gesimuleerde stroomuitvallen (typische nacht: {hours} uur).",
+      "Uw essentiële apparaten draaien de volle {targetHours} uur in {pct}% van de gesimuleerde stroomuitvallen (typische nacht: {hours} uur).",
     verdictReserve:
-      "{status}: het aanhouden van die reserve kost {pct}% van uw rekeningsbesparing en levert {coverHours} uur dekking op.",
+      "Het aanhouden van die reserve kost {pct}% van uw rekeningsbesparing en levert {coverHours} uur dekking op.",
     verdictReserveNoBattery:
       "Er is niets om een reserve in aan te houden: het goedkoopste systeem voor dit doel heeft helemaal geen accu.",
     verdictOffGrid:
-      "{status}: {pct}% van het jaar draait zonder net — {unmetHours} uur tekort in het slechtste jaar, {autonomy} dagen autonomie.",
+      "{pct}% van het jaar draait zonder net — {unmetHours} uur tekort in het slechtste jaar, {autonomy} dagen autonomie.",
     verdictPortable:
-      "{status}: uw station draait een volle dag op {days} van {trips} dagen hier, en één lading gaat {runtime} uur mee.",
+      "Uw station draait een volle dag op {days} van {trips} dagen hier, en één lading gaat {runtime} uur mee.",
     cityLabel: "Waar komt dit systeem?",
     loadLabel: "Hoeveel stroom verbruikt u?",
     loadAppliances: "Ik kies mijn apparaten",
@@ -4178,7 +4183,7 @@ export const LOCALES = {
     bomSelectedSystem: "Geselecteerd systeem",
     fxSourceStatic:
       "Bron van de wisselkoers: open.er-api.com. Er is geen live koers geladen, dus dit zijn ingebouwde schattingen.",
-    fxSourceLive: "Bron van de wisselkoers: open.er-api.com, per {asOf}.",
+    fxSourceLive: "Bron van de wisselkoers: open.er-api.com, per {asOf} — deze datum is die van de wisselkoers; de weercijfers beslaan vijf jaar uurgegevens.",
     fxSourceStale:
       "Bron van de wisselkoers: open.er-api.com, laatst bijgewerkt op {asOf} ({days} dagen geleden). Controleer de koers voordat u erop vertrouwt.",
     fxSourceFailed:
@@ -4278,9 +4283,9 @@ export const LOCALES = {
     metricReserveTradeoff: "تكلفة الاحتفاظ بالهامش، بالوفورات والساعات",
     metricGridIndependence: "من السنة تعمل بلا شبكة إطلاقًا",
     metricPortableRuntime: "من الأيام التي تغذّي فيها المحطة أجهزتك طوال اليوم",
-    statusWorks: "ينجح",
-    statusPartial: "جزئيًا",
-    statusNotHere: "لا ينجح هنا",
+    verdictLeadWorks: "هذا يعمل هنا.",
+    verdictLeadPartial: "هذا ينجح إلى حد كبير.",
+    verdictLeadNotHere: "هذا لا يكفي هنا.",
     useCaseOutcomeTitle: "نتيجتك: {useCase}",
     useCaseVerdictFooter:
       "{useCase}: قِيست باستخدام الطقس الساعي لهذا الموقع، وليست تقديرًا.",
@@ -4304,19 +4309,19 @@ export const LOCALES = {
     generatorRuntime1: "1% \u2014 بضعة أيام في السنة",
     generatorRuntime2: "2%+ \u2014 لا مشكلة عند الحاجة",
     verdictBillCut:
-      "{status}: يزيل هذا النظام {pct}% من فاتورتك على مدى 20 عامًا.",
+      "يزيل هذا النظام {pct}% من فاتورتك على مدى 20 عامًا.",
     verdictTou:
-      "{status}: تغطي البطارية {pct}% من طاقتك في ساعات الذروة، بقيمة نحو {saving} على مدى 20 عامًا مقابل بطارية تكلف {cost}. الفارق بين الذروة وخارج الذروة هنا {spread} لكل ك.و.س.",
+      "تغطي البطارية {pct}% من طاقتك في ساعات الذروة، بقيمة نحو {saving} على مدى 20 عامًا مقابل بطارية تكلف {cost}. الفارق بين الذروة وخارج الذروة هنا {spread} لكل ك.و.س.",
     verdictBackup:
-      "{status}: تعمل أساسياتك كاملة الساعات {targetHours} في {pct}% من انقطاعات الكهرباء التي حاكيناها (ليلة نموذجية: {hours} ساعات).",
+      "تعمل أساسياتك كاملة الساعات {targetHours} في {pct}% من انقطاعات الكهرباء التي حاكيناها (ليلة نموذجية: {hours} ساعات).",
     verdictReserve:
-      "{status}: الاحتفاظ بهذا الهامش يكلفك {pct}% من وفورك ويشتري {coverHours} ساعة من التغطية.",
+      "الاحتفاظ بهذا الهامش يكلفك {pct}% من وفورك ويشتري {coverHours} ساعة من التغطية.",
     verdictReserveNoBattery:
       "لا يوجد مكان للاحتفاظ بهامش: أرخص نظام لهذا الهدف لا يحمل بطارية إطلاقًا.",
     verdictOffGrid:
-      "{status}: {pct}% من السنة تعمل بلا شبكة — تنقص {unmetHours} ساعة في أسوأ عام، مع {autonomy} يومًا من الاستقلالية.",
+      "{pct}% من السنة تعمل بلا شبكة — تنقص {unmetHours} ساعة في أسوأ عام، مع {autonomy} يومًا من الاستقلالية.",
     verdictPortable:
-      "{status}: تغذّي محطتك أجهزتك طوال اليوم في {days} يومًا من {trips} يومًا هنا، وشحنة واحدة تدوم {runtime} ساعة.",
+      "تغذّي محطتك أجهزتك طوال اليوم في {days} يومًا من {trips} يومًا هنا، وشحنة واحدة تدوم {runtime} ساعة.",
     cityLabel: "أين سيُركَّب النظام؟",
     loadLabel: "كم تستهلك من الطاقة؟",
     loadAppliances: "أختار أجهزتي الكهربائية",
@@ -4439,7 +4444,7 @@ export const LOCALES = {
     simpleAskAdvisor: "اسأل مستشار الذكاء الاصطناعي (بكلمات بسيطة)",
     sanityOk: "تم التحقق بشكل مستقل ✓ — معقول فيزيائيًا",
     sanityFlag:
-      "⚠ تشير مراجعة ذكاء اصطناعي مستقلة إلى أن هذه النتيجة غير معقولة فيزيائيًا —",
+      "⚠ يشك فحص مستقل بالذكاء الاصطناعي في أن تكون هذه الأرقام ممكنة فيزيائيًا. قد يكون مخطئًا ولا يغيّر نتيجتك أبدًا.",
     sanityAskAdvisor: "اسأل المستشار لماذا",
     sanityUncertain:
       "التحقق غير حاسم — لم يتمكن الفحص المستقل بالذكاء الاصطناعي من الوصول إلى حكم واثق بشأن هذه المدخلات",
@@ -4823,7 +4828,7 @@ export const LOCALES = {
     bomSelectedSystem: "النظام المحدد",
     fxSourceStatic:
       "مصدر سعر الصرف: open.er-api.com. لم يتم تحميل سعر مباشر، لذا هذه تقديرات مدمجة.",
-    fxSourceLive: "مصدر سعر الصرف: open.er-api.com، بتاريخ {asOf}.",
+    fxSourceLive: "مصدر سعر الصرف: open.er-api.com، بتاريخ {asOf} — هذا التاريخ هو تاريخ سعر الصرف؛ بيانات الطقس تغطي خمس سنوات من السجلات الساعية.",
     fxSourceStale:
       "مصدر سعر الصرف: open.er-api.com، آخر تحديث {asOf} (قبل {days} يومًا). تحقّق من السعر قبل الاعتماد عليه.",
     fxSourceFailed:

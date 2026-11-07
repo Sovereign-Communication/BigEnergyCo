@@ -279,6 +279,22 @@ function localizedDegradedReply(data) {
   return parts.join("\n");
 }
 
+// The advisor is sent internal briefs in square brackets ("[ADVISOR INSTRUCTION:
+// ...]") that tell the model HOW to answer - simple mode's plain-words rule,
+// the climate/space context, the missing-inverter note. They are prompt
+// scaffolding and are never meant to be read by a visitor, but a model can echo
+// one back, and this function renders whatever text it is handed. So the strip
+// happens here, at the one place every reply passes through, rather than trusting
+// the model not to repeat itself.
+function stripInternalBrief(replyText) {
+  if (!replyText) return replyText;
+
+  return String(replyText)
+    .replace(/\[\s*ADVISOR INSTRUCTION:[\s\S]*?\]/gi, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 function renderBotReply(replyText, degraded, data) {
   var chatWindow = document.getElementById("chatWindow");
 
@@ -298,7 +314,7 @@ function renderBotReply(replyText, degraded, data) {
 
   body.style.whiteSpace = "pre-wrap";
 
-  body.textContent = replyText;
+  body.textContent = stripInternalBrief(replyText);
 
   botDiv.appendChild(body);
   if (degraded) {
