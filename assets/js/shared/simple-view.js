@@ -5,7 +5,7 @@
 // stays single-owner, and its translator so no label or sentence in this file
 // can ship in English on another locale. Anything missing or non-finite is
 // dropped, never rendered as "NaN".
-import { seriesBreakdown } from "../sizing/money.js?v=20261107f";
+import { seriesBreakdown } from "../sizing/money.js?v=20261107g";
 
 export function buildSimpleView({ p, entry, saved, fmt, t }) {
   if (!p || !entry || !entry.solvable) return { feasible: false };

@@ -97,7 +97,12 @@ test("every locale has the line and its doors", () => {
   }
 });
 
-test("the line is quiet: muted, small, and hidden until revealed", () => {
-  assert.match(CSS, /\.value-moment-ask\s*\{[\s\S]*?text-muted/);
-  assert.match(CSS, /\.value-moment-ask\[hidden\]\s*\{\s*display:\s*none;/);
+test("the line is quiet, and hidden until revealed", () => {
+  assert.match(CSS, /\.vma\s*\{[\s\S]*?text-muted/);
+  // `hidden` works natively here only because .vma sets no display of its own;
+  // a display rule would silently out-rank the attribute and show the ask
+  // before any result exists.
+  const block = CSS.slice(CSS.indexOf(".vma {"));
+  const rule = block.slice(0, block.indexOf("}"));
+  assert.doesNotMatch(rule, /display\s*:/);
 });
