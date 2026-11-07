@@ -3,7 +3,7 @@
 // `ar` flips the document to RTL automatically.
 // Keys not present in a locale fall back to English silently.
 
-import { HOME_COPY } from "./home-copy.js?v=20261107h";
+import { HOME_COPY } from "./home-copy.js?v=20261107i";
 
 export const LOCALES = {
   en: {
@@ -52,7 +52,7 @@ export const LOCALES = {
     ctaStart: "Start a Free Estimate",
     pickCity: "Pick a city (or use 📍 My location) so we know your sunshine.",
     shareLoaded:
-      "Shared setup loaded. Review the inputs, then click Size My System to calculate.",
+      "This is the result someone shared with you, sized from their location and usage. Change any input to price your own system.",
     invalidShare:
       "This share link could not be read — it may have been cut short when it was copied. Ignore it and set up your own estimate below.",
     customCoordsLocation: "Using custom coordinates ({lat}, {lon}).",
@@ -733,7 +733,7 @@ export const LOCALES = {
     pickCity:
       "Elige una ciudad (o usa 📍 Mi ubicación) para que sepamos tu insolación.",
     shareLoaded:
-      "Configuración compartida cargada. Revisa los datos y pulsa Dimensionar mi sistema para calcular.",
+      "Este es el resultado que alguien compartió contigo, calculado con su ubicación y su consumo. Cambia cualquier dato para calcular tu propio sistema.",
     invalidShare:
       "No se pudo leer este enlace compartido: puede que se haya cortado al copiarlo. Ignóralo y prepara tu propia estimación más abajo.",
     customCoordsLocation: "Usando coordenadas personalizadas ({lat}, {lon}).",
@@ -1516,7 +1516,7 @@ export const LOCALES = {
     pickCity:
       "Escolha uma cidade (ou use 📍 Minha localização) para sabermos sua insolação.",
     shareLoaded:
-      "Configuração compartilhada carregada. Confira os dados e clique em Dimensionar meu sistema para calcular.",
+      "Este é o resultado que alguém compartilhou com você, calculado com a localização e o consumo dessa pessoa. Altere qualquer dado para calcular o seu próprio sistema.",
     invalidShare:
       "Não foi possível ler este link compartilhado — ele pode ter sido cortado na cópia. Ignore-o e monte sua própria estimativa abaixo.",
     customCoordsLocation: "Usando coordenadas personalizadas ({lat}, {lon}).",
@@ -2204,7 +2204,7 @@ export const LOCALES = {
     pickCity:
       "Choisissez une ville (ou utilisez 📍 Ma position) pour connaître votre ensoleillement.",
     shareLoaded:
-      "Configuration partagée chargée. Vérifiez les entrées, puis cliquez sur Dimensionner pour calculer.",
+      "Voici le résultat que quelqu’un a partagé avec vous, calculé à partir de sa position et de sa consommation. Modifiez une entrée pour évaluer votre propre système.",
     invalidShare:
       "Ce lien partagé n’a pas pu être lu — il a peut-être été tronqué en le copiant. Ignorez-le et faites votre propre estimation ci-dessous.",
     customCoordsLocation:
@@ -2810,7 +2810,7 @@ export const LOCALES = {
     pickCity:
       "Wähle eine Stadt oder nutze 📍 deinen Standort für die Sonnendaten.",
     shareLoaded:
-      "Geteilte Einstellungen geladen. Prüfe die Eingaben und klicke dann auf System dimensionieren.",
+      "Das ist das Ergebnis, das jemand mit dir geteilt hat — berechnet aus dessen Standort und Verbrauch. Ändere eine Eingabe, um dein eigenes System zu schätzen.",
     invalidShare:
       "Dieser geteilte Link ließ sich nicht lesen — beim Kopieren wurde er vielleicht abgeschnitten. Ignoriere ihn und stell unten deine eigene Schätzung auf.",
     customCoordsLocation: "Eigene Koordinaten verwendet ({lat}, {lon}).",
@@ -3498,7 +3498,7 @@ export const LOCALES = {
     pickCity:
       "Kies een stad (of gebruik 📍 Mijn locatie) zodat we uw zonneschijn kennen.",
     shareLoaded:
-      "Gedeelde configuratie geladen. Controleer de invoer en klik op Systeem dimensioneren om te berekenen.",
+      "Dit is het resultaat dat iemand met u heeft gedeeld, berekend met diens locatie en verbruik. Wijzig een invoer om uw eigen systeem te berekenen.",
     invalidShare:
       "Deze deellink kon niet worden gelezen — mogelijk is hij ingekort bij het kopiëren. Negeer hem en stel hieronder uw eigen berekening samen.",
     customCoordsLocation: "Aangepaste coördinaten in gebruik ({lat}, {lon}).",
@@ -4378,7 +4378,7 @@ export const LOCALES = {
     tariffNote: "سعر تقديري لـ {label} — غيّره أعلاه إذا كنت تعرف تعريفتك.",
     pickCity: "اختر مدينة (أو استخدم 📍 موقعي) لمعرفة إشعاعك الشمسي.",
     shareLoaded:
-      "تم تحميل الإعدادات المشتركة. راجع المدخلات ثم اضغط احسب نظامي لبدء الحساب.",
+      "هذه نتيجة شاركها معك شخص آخر، محسوبة من موقعه واستهلاكه. غيّر أي إدخال لتقدير نظامك الخاص.",
     invalidShare:
       "تعذّرت قراءة رابط المشاركة — ربما قُطع عند نسخه. تجاهله واضبط تقديرك الخاص أدناه.",
     customCoordsLocation: "يجري استخدام الإحداثيات المخصصة ({lat}, {lon}).",

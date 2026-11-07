@@ -13,11 +13,11 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20261107h";
+import { APPLIANCES } from "./appliances.js?v=20261107i";
 import {
   INSTALL_NAV_BREAKPOINT_PX,
   installReveal,
-} from "./pwa-install.js?v=20261107h";
+} from "./pwa-install.js?v=20261107i";
 import {
   USE_CASES,
   USE_CASE_IDS,
@@ -28,27 +28,27 @@ import {
   normaliseOutageTarget,
   DEFAULT_RESERVE_PCT,
   DEFAULT_TOU,
-} from "./usecases.js?v=20261107h";
+} from "./usecases.js?v=20261107i";
 import {
   createRunChannel,
   staleRunAction,
   errorReleasesRunChannel,
   RUN_REPLY_DEADLINE_MS,
-} from "./run-coordinator.js?v=20261107h";
+} from "./run-coordinator.js?v=20261107i";
 import {
   assumptionDisclosureKeys,
   cutRowVisible,
   tierForGeneratorRuntime,
   generatorRuntimeForTier,
   generatorAllowedForRuntime,
-} from "./mode-chrome.js?v=20261107h";
-import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261107h";
-import { bestAffordableCurvePoint } from "../shared/budget-targets.js?v=20261107h";
+} from "./mode-chrome.js?v=20261107i";
+import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261107i";
+import { bestAffordableCurvePoint } from "../shared/budget-targets.js?v=20261107i";
 import {
   locateMe,
   purgeLegacyCityCache,
   setupCitySearch,
-} from "./location-picker.js?v=20261107h";
+} from "./location-picker.js?v=20261107i";
 
 import {
   estimateTariff,
@@ -57,14 +57,14 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20261107h";
+} from "./pricing.js?v=20261107i";
 // The country -> currency table. Static, not lazy: it is consulted the moment
 // a location resolves, so a dynamic import would only add a round trip to the
 // one path that must not wait. Its 11.5 KB is data, and the first-load budget
 // below records the deliberate trade.
-import { currencyForCountry } from "./country-currency.js?v=20261107h";
+import { currencyForCountry } from "./country-currency.js?v=20261107i";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261107h";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261107i";
 
 // THE FOUR WAYS TO PAY FOR ONE SYSTEM (master plan D-01 §6.4, R-PATH-01..10).
 //
@@ -96,7 +96,7 @@ let pathsLoading = null;
 function loadPaths() {
   if (pathsApi) return Promise.resolve(pathsApi);
   if (!pathsLoading)
-    pathsLoading = import("./paths.js?v=20261107h").then((mod) => {
+    pathsLoading = import("./paths.js?v=20261107i").then((mod) => {
       pathsApi = mod;
       PATHS_HORIZON_YEARS = mod.HORIZON_YEARS;
       return mod;
@@ -107,15 +107,15 @@ import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20261107h";
+} from "./lead-acid.js?v=20261107i";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20261107h";
+} from "./bom.js?v=20261107i";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20261107h";
+import { BOM_ITEMS } from "../shared/content.js?v=20261107i";
 
 import {
   applyI18n,
@@ -124,18 +124,18 @@ import {
   // uses, so `t` is a binding to the one implementation rather than a second
   // copy of the placeholder contract.
   translate as t,
-} from "../shared/i18n.js?v=20261107h";
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261107h";
-import { byId as $, el } from "../shared/dom.js?v=20261107h";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261107h";
+} from "../shared/i18n.js?v=20261107i";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261107i";
+import { byId as $, el } from "../shared/dom.js?v=20261107i";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261107i";
 import {
   isSimpleMode,
   initSimpleMode,
   setSimpleMode,
   onSimpleModeChange,
   modeLabel,
-} from "../shared/simple-mode.js?v=20261107h";
-import { buildSimpleView } from "../shared/simple-view.js?v=20261107h";
+} from "../shared/simple-mode.js?v=20261107i";
+import { buildSimpleView } from "../shared/simple-view.js?v=20261107i";
 import {
   advisorJevContext,
   interpretSanity,
@@ -143,29 +143,29 @@ import {
   renderSanityBadge,
   requestSanity,
   sanityState,
-} from "./validate.js?v=20261107h";
+} from "./validate.js?v=20261107i";
 import {
   CUT_TARGET_PCT,
   sliderStateDrifted,
   targetForPct,
-} from "../shared/cut-targets.js?v=20261107h";
+} from "../shared/cut-targets.js?v=20261107i";
 import {
   SHARE_PREFIX,
   b64urlEncode,
   parseShareHash,
-} from "./share-codec.js?v=20261107h";
+} from "./share-codec.js?v=20261107i";
 import {
   hasInfeasibleCopy,
   infeasibleCopyKeys,
-} from "./infeasible-copy.js?v=20261107h";
-import { csvDocument, partsListRows } from "./parts-csv.js?v=20261107h";
+} from "./infeasible-copy.js?v=20261107i";
+import { csvDocument, partsListRows } from "./parts-csv.js?v=20261107i";
 import {
   fuelBurnPerKwh,
   fuelDisplay,
   fuelRateUsd,
   fuelTypeName,
   isImperialLocation,
-} from "./fuel-units.js?v=20261107h";
+} from "./fuel-units.js?v=20261107i";
 
 import {
   createLeafletProvider,
@@ -173,18 +173,18 @@ import {
   rotatedRectangleAreaM2,
   rotatedRectangleCorners,
   manualRoofHint,
-} from "./map-provider.js?v=20261107h";
+} from "./map-provider.js?v=20261107i";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20261107h";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20261107h";
+} from "./wizard.js?v=20261107i";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20261107i";
 import {
   interpolateCurveTarget,
   surplusAnchor,
   budgetSpanMax,
-} from "./budget-span.js?v=20261107h";
+} from "./budget-span.js?v=20261107i";
 // Heavy modules used only after a sizing result stay outside the initial UI graph.
 let _engine = null;
 let _charts = null;
@@ -196,10 +196,10 @@ let _chartsInitialized = false;
 function preloadRunModules() {
   if (!_runModulesPromise) {
     _runModulesPromise = Promise.all([
-      import("./engine.js?v=20261107h"),
-      import("./charts.js?v=20261107h"),
-      import("./frontier-chart.js?v=20261107h"),
-      import("./rescale.js?v=20261107h"),
+      import("./engine.js?v=20261107i"),
+      import("./charts.js?v=20261107i"),
+      import("./frontier-chart.js?v=20261107i"),
+      import("./rescale.js?v=20261107i"),
     ])
       .then(([engine, charts, frontierChart, rescale]) => {
         _engine = engine;
@@ -267,9 +267,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20261107h";
+} from "./money.js?v=20261107i";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261107h";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261107i";
 
 let worker = null;
 
@@ -4001,7 +4001,7 @@ function restoreRunButton() {
 function ensureWorker() {
   if (!worker) {
     const runWorker = new Worker(
-      "./assets/js/sizing/sizing-worker.js?v=20261107h",
+      "./assets/js/sizing/sizing-worker.js?v=20261107i",
       {
         type: "module",
       },
@@ -9057,20 +9057,26 @@ async function initSizingUI() {
     // can click, and the browser smoke gate polls for the ready flag
     // rather than assuming it. Without the loader the CTA is a plain
     // link — the same fallback the loader's own catch takes.
-    import("../shared/translation-suggestion-loader.js?v=20261107h")
+    import("../shared/translation-suggestion-loader.js?v=20261107i")
       .then(({ installTranslationSuggestionLoader }) => {
         installTranslationSuggestionLoader(
           document.querySelector("[data-translation-suggestion]"),
-          () => import("../translation-suggestion.js?v=20261107h"),
+          () => import("../translation-suggestion.js?v=20261107i"),
         );
       })
       .catch(() => {});
 
     updateFuelUnits();
 
-    // A shared link restores its inputs; sizing still requires an explicit
-    // click so opening a link never starts weather or engine work silently.
-    restoreFromShare();
+    // V2's recipient gap: a share link exists to show someone's RESULT, so a
+    // valid link lands on the result instead of on a prefilled form.
+    // restoreFromShare() returns true only after the codec accepted the hash
+    // and every input was written; a malformed or hostile link returns false
+    // here and never reaches run(), so only a link that already passed the
+    // bounds gate can start weather or engine work. `explicit` bypasses the
+    // authorization/dirty gates so this single load-time run is never
+    // silently swallowed, and it runs once because init runs once.
+    if (restoreFromShare()) run(false, true);
 
     // Background FX refresh: keeps auto-selected currencies accurate.
 
