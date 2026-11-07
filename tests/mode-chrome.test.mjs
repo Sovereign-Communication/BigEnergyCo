@@ -143,7 +143,7 @@ test("RESULTS: no bill-cut chrome renders for an off-grid result", () => {
   // Card title: off-grid results get "Full system analysis", never bill-cut.
   assert.match(
     UI,
-    /p\.mode === "gridtie" \? "Full bill-cut analysis" : "Full system analysis"/,
+    /p\.mode === "gridtie" \? "analysisFullBill" : "analysisFullSystem"/,
   );
   // Results brief lines: the off-grid branch never mentions bill cuts.
   const briefOffgrid = UI.slice(

@@ -54,6 +54,21 @@ jev-artifacts/
 
 # Local media scratch.
 appdriving.mp4
+
+# The shorts renders: 93 MB of mp4/png/m4a output from the 2026-08-30 video
+# pass (29 png, 27 mp4, 2 m4a, plus its own build_raw/build_edited/output dirs).
+# Render output, not source - the scripts that make it stay in the repo, the
+# bytes it produced do not. Ignored rather than deleted: it is a single-machine
+# copy, so removing it would be a loss, and leaving it untracked made the tree
+# read dirty, which is enough on its own for `npm run promote --apply` to
+# refuse to ship.
+shorts/
+
+# `nul` is not a file anyone wrote on purpose: it is the Windows device name a
+# stray `> nul` redirect creates in Git Bash, 42,868 bytes of old command output
+# dated 2026-10-05. Committing it would put a device-name artifact in the tree,
+# and leaving it untracked dirtied the tree for the same reason as shorts/.
+nul
 # Gate reports a run writes for the Jev gate to read. Generated per run and
 # uploaded as artifacts; the COMMITTED evidence is .quality-evidence/, which is
 # a different thing and is tracked. `lighthouse-report.json` is the first-paint

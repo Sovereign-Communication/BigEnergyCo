@@ -307,6 +307,18 @@ export function registryFor(region) {
  * differently, and conflating them is how "a lease costs nothing" happens: a
  * PPA buys ENERGY and the provider keeps the system; a lease rents the SYSTEM
  * and ends, which is a real fork with a real buyout price.
+ *
+ * THE ESCALATOR IS CITED, NOT GUESSED (V-02). Until this pass the band came
+ * from "published ranges" with no publisher named, and planning research had a
+ * "typical 2.9%" that only ever existed in secondary write-ups. One of the
+ * companies that actually writes these contracts says otherwise, in its own
+ * annual report: Sunnova's FY2024 Form 10-K, filed with the SEC, discloses
+ * "approximately 41% of our lease agreements and PPAs contained a price
+ * escalator, ranging from 0.9% to 3.9% annually" - and that the customer may
+ * choose "a flat rate without an escalator". So the population spans 0 to
+ * 3.9%, the 2.9% "typical" figure has no primary support and is NOT asserted
+ * anywhere, and the mid value is the arithmetic midpoint of the disclosed
+ * band at a stated position in it rather than a typical case.
  */
 const LEASE_TERMS = {
   ppa: {
@@ -314,22 +326,29 @@ const LEASE_TERMS = {
     labelKey: "pathsInstrumentPpa",
     discountPct: [0.05, 0.1, 0.18],
     downPaymentPct: [0, 0, 0.1],
-    escPct: [0, 0.015, 0.039],
+    escPct: [0, 0.0195, 0.039],
     termYears: [20, 25, 25],
     buyoutPct: null,
+    // Composite grade, deliberately NOT the escalator's B: this instrument's
+    // payment, discount and term figures are still our estimates, so the route
+    // does not inherit the citation its escalator earned. The readable source
+    // line says which part is cited and which is not, because a visitor sees
+    // this string, not the registry id behind it.
     grade: "C",
-    source: "Published residential PPA discount ranges, 2023-2026",
+    source:
+      "Sunnova FY2024 10-K: escalators 0.9-3.9% annually on 41% of agreements; payments, discounts and buyouts are our estimates",
   },
   lease: {
     instrument: "lease",
     labelKey: "pathsInstrumentLease",
     monthlyUsdPerKwh: [0.09, 0.13, 0.19],
     downPaymentPct: [0, 0.05, 0.15],
-    escPct: [0, 0.02, 0.039],
+    escPct: [0, 0.0195, 0.039],
     termYears: [10, 15, 20],
     buyoutPct: [0.15, 0.3, 0.45],
     grade: "C",
-    source: "Published residential solar-lease payment ranges, 2023-2026",
+    source:
+      "Sunnova FY2024 10-K: escalators 0.9-3.9% annually on 41% of agreements; payments, discounts and buyouts are our estimates",
   },
 };
 

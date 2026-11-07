@@ -358,8 +358,53 @@ export const CURRENCIES = {
   ZWL: { symbol: "Z$", perUSD: 13000, name: "Zimbabwean dollar" },
 };
 
-// Last-update timestamp for the FX rates in use (set by live fetch in ui.js).
-export const fxMeta = { asOf: null };
+// WHERE THE RATES CAME FROM, AND HOW OLD THEY ARE (P1.4, F-10).
+//
+// The hand-kept perUSD values above are offline fallbacks; refreshFxRates() in
+// ui.js overwrites them from a live source when the visitor is online. Until
+// this module owned the question, the page said nothing about either case: a
+// visitor offline, or on a blocked network, got measurements converted at
+// whatever the fallback table said, with no source and no date anywhere on
+// screen. A rate that ages silently is a wrong number presented as fact, which
+// is the defect class this whole programme exists to remove.
+export const FX_SOURCE = "open.er-api.com";
+
+// The provider publishes once a day, so a week without an update means several
+// missed publishes rather than ordinary jitter. Chosen as a round number a
+// visitor can check against the date shown, not derived from anything.
+export const FX_STALE_DAYS = 7;
+
+// `asOf` is the provider's own last-update string when a live fetch succeeded;
+// `live` and `failed` record which path produced the rates in use. Kept as one
+// small object because three booleans in three places is how they drift apart.
+export const fxMeta = { asOf: null, live: false, failed: false };
+
+/**
+ * Classify the FX snapshot in use. Pure, so the thresholds are testable without
+ * a DOM, a network or a clock.
+ *
+ * state is one of:
+ *   "live"   - a live fetch succeeded and its date is inside FX_STALE_DAYS
+ *   "stale"  - a live fetch succeeded but the date is at or past the threshold
+ *   "static" - no usable date: no live rate has loaded (offline, blocked, not
+ *              yet fetched), so the built-in fallbacks are what the visitor is
+ *              being measured against
+ */
+export function fxFreshness({
+  asOf,
+  now = Date.now(),
+  staleDays = FX_STALE_DAYS,
+} = {}) {
+  if (!asOf) return { state: "static", asOf: null, days: null };
+  const at = Date.parse(asOf);
+  if (!Number.isFinite(at)) return { state: "static", asOf: null, days: null };
+  const days = Math.max(0, Math.floor((now - at) / 86400000));
+  return {
+    state: days >= staleDays ? "stale" : "live",
+    asOf,
+    days,
+  };
+}
 
 const TARIFF_BOXES = [
   // Country-level refinement (most-specific first). `currency` is the ISO

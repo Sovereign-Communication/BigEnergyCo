@@ -225,9 +225,15 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
     htmlBytes <= 132_000,
     `index.html ${htmlBytes} bytes exceeds 132,000 budget`,
   );
+  // 41,000 (+1,000, 2026-11-07): V2's ask line at the value moment. The
+  // flush-out's primary cause was that the results flow could not receive
+  // gratitude - no ask existed at the outcome card - and the line costs one
+  // container rule plus a link-styled button for its third door. Recorded as a
+  // deliberate raise rather than paid for by restyling the door as a fake link
+  // or dropping the muted treatment that keeps it quiet beside the numbers.
   assert.ok(
-    cssBytes <= 40_000,
-    `site.css ${cssBytes} bytes exceeds 40,000 budget`,
+    cssBytes <= 41_000,
+    `site.css ${cssBytes} bytes exceeds 41,000 budget`,
   );
   assert.ok(
     jsBytes <= 895_000,

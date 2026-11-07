@@ -1,0 +1,1061 @@
+{
+  "iso": "US",
+  "name": "United States",
+  "values": {
+    "currency": {
+      "code": "USD",
+      "grade": "A",
+      "source": "iso_3166",
+      "retrieved": "2026-10-05",
+      "review_by": "2027-10-05"
+    },
+    "tariff": {
+      "lo": 0.1816,
+      "mid": 0.1816,
+      "hi": 0.1816,
+      "unit": "USD/kWh",
+      "currency": "USD",
+      "year": 2026,
+      "grade": "A",
+      "source": "eia_retail",
+      "retrieved": "2026-11-05",
+      "review_by": "2027-05-05",
+      "note": "Source: U.S. Energy Information Administration (Oct 2026). U.S. total residential average price, 18.16 cents/kWh, Electric Power Monthly Table 5.6.A for August 2026, read at the EIA table on 2026-11-05. A point statistic, so the band is deliberately degenerate - lo, mid and hi are the same number rather than a spread invented around it. The 6-month review matches a monthly publication cadence. The state rows from the same table now sit under regions, one cited row per state and the District of Columbia; each cites EIA itself rather than deriving from this national figure. The table's census-division rows (New England, Mountain, and so on) are deliberately not nested: they are aggregates of the states already present, and nesting an aggregate beside its parts invites a value computed from another value, which R-DATA-08 requires to carry its derivation instead."
+    },
+    "fixed_charge": {
+      "unknown": true,
+      "note": "P2.3: not yet populated. Unknown is a permitted value and triggers the check-your-bill prompt instead of a guess.",
+      "review_by": "2027-02-01"
+    },
+    "export_regime": {
+      "unknown": true,
+      "note": "P2.4: export rules are policy and carry a 6-month review window. Net metering, net billing and buy-all-sell-all differ by state, and this file is national scope, so the honest national answer is unknown until P2.4 lands the sub-national rows.",
+      "review_by": "2027-02-01"
+    },
+    "legality_gridtie": {
+      "unknown": true,
+      "note": "P2.4: grid-tie legality is a policy field with a 6-month window and varies by state and utility.",
+      "review_by": "2027-02-01"
+    },
+    "legality_offgrid": {
+      "unknown": true,
+      "note": "P2.4: off-grid legality hinges on local code and permit rules that a national row cannot honestly summarise.",
+      "review_by": "2027-02-01"
+    },
+    "legality_battery_only": {
+      "unknown": true,
+      "note": "P2.4: battery-only legality is a policy field with a 6-month window.",
+      "review_by": "2027-02-01"
+    },
+    "legality_portable": {
+      "unknown": true,
+      "note": "P2.4: portable-system rules are a policy field with a 6-month window.",
+      "review_by": "2027-02-01"
+    },
+    "turnkey_benchmark": {
+      "lo": 3,
+      "mid": 4,
+      "hi": 5.2,
+      "unit": "USD/Wdc",
+      "currency": "USD",
+      "year": 2024,
+      "grade": "B",
+      "source": "lbnl_tracking_the_sun",
+      "retrieved": "2026-11-05",
+      "review_by": "2027-05-05",
+      "note": "Berkeley Lab, U.S. Distributed Solar and Storage: 2025 Data Update (Tracking the Sun), published 2025-10-27 and read 2026-11-05. The band is the published distribution of installed prices for host-owned, stand-alone residential PV installed in 2024: 20th percentile $3.0/Wdc, median $4.0/Wdc, 80th percentile $5.2/Wdc in 2024 dollars, before incentives. This is a range because the plan (V-01) requires one: a single 'typical installer price' hides the spread that makes the installer premium honest. Three limits travel with it and must be shown wherever it renders. First, the vintage is 2024 installs, so the year must be displayed, not implied; the 2026 update published in August 2026 reports that host-owned residential prices fell a further $0.5/W in inflation-adjusted terms and that median prices across the top-100 installers in 2025 spanned $2.4 to $6.3/W, but it prints no percentile table in text, so the newer distribution is the next read and this band is the 2024 anchor until then. Second, third-party-owned and self-installed systems are excluded, so this measures what an installer charged a host-owned customer. Third, the figures include both cash and loan-financed systems, and loan dealer fees pull the median up - for 2024, cash-purchase median was $3.5/W against $4.7/W loan-financed - so a visitor paying cash should be pointed at the lower end. Grade B rather than A: Berkeley Lab is a DOE national laboratory compiling state agency records, not a statistics office publishing a census."
+    },
+    "hardware_landed_factor": {
+      "unknown": true,
+      "note": "P2.3: not yet populated from a citable landed-cost source.",
+      "review_by": "2027-02-01"
+    },
+    "electrician_rate": {
+      "lo": 30.38,
+      "mid": 30.38,
+      "hi": 30.38,
+      "unit": "USD/hour",
+      "currency": "USD",
+      "year": 2025,
+      "grade": "A",
+      "source": "bls_oews",
+      "retrieved": "2026-11-05",
+      "review_by": "2027-11-05",
+      "note": "Bureau of Labor Statistics, Occupational Outlook Handbook: Electricians, page last modified 2026-08-27, read 2026-11-05. The median annual wage for electricians was $63,190 in May 2025, or $30.38/hour (821,000 jobs). A point statistic, so the band is degenerate rather than a spread invented around it. What this number IS matters: an employer's median wage for the occupation, observed by OEWS. It is not a contractor's billed rate - a billed rate adds payroll burden, overhead and margin on top - so the site's labour model must apply its own multiplier and label it as a derivation (grade D) wherever it appears. Reading this value as a billed rate would understate installer labour by roughly half, which is exactly the sort of quiet error R-DATA-08 exists to prevent. 12-month window because OEWS is an annual series, so the next release arrives well inside it."
+    },
+    "permit_fees": {
+      "unknown": true,
+      "note": "P2.4: permit fees are jurisdictional and belong with the policy pass.",
+      "review_by": "2027-02-01"
+    },
+    "lease_available": {
+      "unknown": true,
+      "note": "P2.3: lease and PPA availability are not populated yet.",
+      "review_by": "2027-02-01"
+    },
+    "lease_term_years": {
+      "unknown": true,
+      "note": "P2.3: no citable term data yet.",
+      "review_by": "2027-02-01"
+    },
+    "lease_buyout_pct": {
+      "unknown": true,
+      "note": "P2.3: no citable buyout data yet.",
+      "review_by": "2027-02-01"
+    },
+    "inflation_rate": {
+      "unknown": true,
+      "note": "P2.3: the engine assumes flat prices; the registry row for the assumption itself is what P2.3 fills.",
+      "review_by": "2027-02-01"
+    },
+    "real_discount_rate": {
+      "unknown": true,
+      "note": "P2.3: not yet populated.",
+      "review_by": "2027-02-01"
+    },
+    "pv_degradation_d1": {
+      "lo": 0.015,
+      "mid": 0.02,
+      "hi": 0.025,
+      "unit": "fraction per year (first year)",
+      "grade": "B",
+      "source": "nrel_degradation",
+      "year": 2026,
+      "retrieved": "2026-10-05",
+      "review_by": "2027-10-05",
+      "note": "The engine ships 0.02 (paths.js DEGRADATION.firstYear); the band is the range NREL reports for current modules."
+    },
+    "pv_degradation_ann": {
+      "lo": 0.003,
+      "mid": 0.005,
+      "hi": 0.007,
+      "unit": "fraction per year (thereafter)",
+      "grade": "B",
+      "source": "nrel_degradation",
+      "year": 2026,
+      "retrieved": "2026-10-05",
+      "review_by": "2027-10-05",
+      "note": "The engine ships 0.005 (paths.js DEGRADATION.annual)."
+    }
+  },
+  "regions": {
+    "US-AL": {
+      "name": "Alabama",
+      "values": {
+        "tariff": {
+          "lo": 0.1633,
+          "mid": 0.1633,
+          "hi": 0.1633,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 16.33 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-AK": {
+      "name": "Alaska",
+      "values": {
+        "tariff": {
+          "lo": 0.2941,
+          "mid": 0.2941,
+          "hi": 0.2941,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 29.41 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-AZ": {
+      "name": "Arizona",
+      "values": {
+        "tariff": {
+          "lo": 0.1505,
+          "mid": 0.1505,
+          "hi": 0.1505,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 15.05 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-AR": {
+      "name": "Arkansas",
+      "values": {
+        "tariff": {
+          "lo": 0.1437,
+          "mid": 0.1437,
+          "hi": 0.1437,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 14.37 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-CA": {
+      "name": "California",
+      "values": {
+        "tariff": {
+          "lo": 0.2975,
+          "mid": 0.2975,
+          "hi": 0.2975,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 29.75 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-CO": {
+      "name": "Colorado",
+      "values": {
+        "tariff": {
+          "lo": 0.1717,
+          "mid": 0.1717,
+          "hi": 0.1717,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 17.17 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-CT": {
+      "name": "Connecticut",
+      "values": {
+        "tariff": {
+          "lo": 0.2451,
+          "mid": 0.2451,
+          "hi": 0.2451,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 24.51 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-DE": {
+      "name": "Delaware",
+      "values": {
+        "tariff": {
+          "lo": 0.187,
+          "mid": 0.187,
+          "hi": 0.187,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 18.70 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-DC": {
+      "name": "District of Columbia",
+      "values": {
+        "tariff": {
+          "lo": 0.2598,
+          "mid": 0.2598,
+          "hi": 0.2598,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 25.98 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-FL": {
+      "name": "Florida",
+      "values": {
+        "tariff": {
+          "lo": 0.1499,
+          "mid": 0.1499,
+          "hi": 0.1499,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 14.99 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-GA": {
+      "name": "Georgia",
+      "values": {
+        "tariff": {
+          "lo": 0.159,
+          "mid": 0.159,
+          "hi": 0.159,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 15.90 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-HI": {
+      "name": "Hawaii",
+      "values": {
+        "tariff": {
+          "lo": 0.4718,
+          "mid": 0.4718,
+          "hi": 0.4718,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 47.18 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-ID": {
+      "name": "Idaho",
+      "values": {
+        "tariff": {
+          "lo": 0.1337,
+          "mid": 0.1337,
+          "hi": 0.1337,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 13.37 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-IL": {
+      "name": "Illinois",
+      "values": {
+        "tariff": {
+          "lo": 0.1932,
+          "mid": 0.1932,
+          "hi": 0.1932,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 19.32 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-IN": {
+      "name": "Indiana",
+      "values": {
+        "tariff": {
+          "lo": 0.1702,
+          "mid": 0.1702,
+          "hi": 0.1702,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 17.02 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-IA": {
+      "name": "Iowa",
+      "values": {
+        "tariff": {
+          "lo": 0.1706,
+          "mid": 0.1706,
+          "hi": 0.1706,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 17.06 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-KS": {
+      "name": "Kansas",
+      "values": {
+        "tariff": {
+          "lo": 0.1547,
+          "mid": 0.1547,
+          "hi": 0.1547,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 15.47 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-KY": {
+      "name": "Kentucky",
+      "values": {
+        "tariff": {
+          "lo": 0.138,
+          "mid": 0.138,
+          "hi": 0.138,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 13.80 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-LA": {
+      "name": "Louisiana",
+      "values": {
+        "tariff": {
+          "lo": 0.1287,
+          "mid": 0.1287,
+          "hi": 0.1287,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 12.87 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-ME": {
+      "name": "Maine",
+      "values": {
+        "tariff": {
+          "lo": 0.3211,
+          "mid": 0.3211,
+          "hi": 0.3211,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 32.11 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-MD": {
+      "name": "Maryland",
+      "values": {
+        "tariff": {
+          "lo": 0.214,
+          "mid": 0.214,
+          "hi": 0.214,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 21.40 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-MA": {
+      "name": "Massachusetts",
+      "values": {
+        "tariff": {
+          "lo": 0.3048,
+          "mid": 0.3048,
+          "hi": 0.3048,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 30.48 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-MI": {
+      "name": "Michigan",
+      "values": {
+        "tariff": {
+          "lo": 0.2299,
+          "mid": 0.2299,
+          "hi": 0.2299,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 22.99 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-MN": {
+      "name": "Minnesota",
+      "values": {
+        "tariff": {
+          "lo": 0.172,
+          "mid": 0.172,
+          "hi": 0.172,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 17.20 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-MS": {
+      "name": "Mississippi",
+      "values": {
+        "tariff": {
+          "lo": 0.1443,
+          "mid": 0.1443,
+          "hi": 0.1443,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 14.43 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-MO": {
+      "name": "Missouri",
+      "values": {
+        "tariff": {
+          "lo": 0.1602,
+          "mid": 0.1602,
+          "hi": 0.1602,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 16.02 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-MT": {
+      "name": "Montana",
+      "values": {
+        "tariff": {
+          "lo": 0.1557,
+          "mid": 0.1557,
+          "hi": 0.1557,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 15.57 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-NE": {
+      "name": "Nebraska",
+      "values": {
+        "tariff": {
+          "lo": 0.1354,
+          "mid": 0.1354,
+          "hi": 0.1354,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 13.54 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-NV": {
+      "name": "Nevada",
+      "values": {
+        "tariff": {
+          "lo": 0.1272,
+          "mid": 0.1272,
+          "hi": 0.1272,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 12.72 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-NH": {
+      "name": "New Hampshire",
+      "values": {
+        "tariff": {
+          "lo": 0.2764,
+          "mid": 0.2764,
+          "hi": 0.2764,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 27.64 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-NJ": {
+      "name": "New Jersey",
+      "values": {
+        "tariff": {
+          "lo": 0.2461,
+          "mid": 0.2461,
+          "hi": 0.2461,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 24.61 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-NM": {
+      "name": "New Mexico",
+      "values": {
+        "tariff": {
+          "lo": 0.1651,
+          "mid": 0.1651,
+          "hi": 0.1651,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 16.51 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-NY": {
+      "name": "New York",
+      "values": {
+        "tariff": {
+          "lo": 0.2865,
+          "mid": 0.2865,
+          "hi": 0.2865,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 28.65 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-NC": {
+      "name": "North Carolina",
+      "values": {
+        "tariff": {
+          "lo": 0.1495,
+          "mid": 0.1495,
+          "hi": 0.1495,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 14.95 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-ND": {
+      "name": "North Dakota",
+      "values": {
+        "tariff": {
+          "lo": 0.1331,
+          "mid": 0.1331,
+          "hi": 0.1331,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 13.31 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-OH": {
+      "name": "Ohio",
+      "values": {
+        "tariff": {
+          "lo": 0.1938,
+          "mid": 0.1938,
+          "hi": 0.1938,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 19.38 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-OK": {
+      "name": "Oklahoma",
+      "values": {
+        "tariff": {
+          "lo": 0.1482,
+          "mid": 0.1482,
+          "hi": 0.1482,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 14.82 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-OR": {
+      "name": "Oregon",
+      "values": {
+        "tariff": {
+          "lo": 0.1592,
+          "mid": 0.1592,
+          "hi": 0.1592,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 15.92 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-PA": {
+      "name": "Pennsylvania",
+      "values": {
+        "tariff": {
+          "lo": 0.2177,
+          "mid": 0.2177,
+          "hi": 0.2177,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 21.77 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-RI": {
+      "name": "Rhode Island",
+      "values": {
+        "tariff": {
+          "lo": 0.2818,
+          "mid": 0.2818,
+          "hi": 0.2818,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 28.18 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-SC": {
+      "name": "South Carolina",
+      "values": {
+        "tariff": {
+          "lo": 0.1576,
+          "mid": 0.1576,
+          "hi": 0.1576,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 15.76 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-SD": {
+      "name": "South Dakota",
+      "values": {
+        "tariff": {
+          "lo": 0.1515,
+          "mid": 0.1515,
+          "hi": 0.1515,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 15.15 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-TN": {
+      "name": "Tennessee",
+      "values": {
+        "tariff": {
+          "lo": 0.1342,
+          "mid": 0.1342,
+          "hi": 0.1342,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 13.42 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-TX": {
+      "name": "Texas",
+      "values": {
+        "tariff": {
+          "lo": 0.1591,
+          "mid": 0.1591,
+          "hi": 0.1591,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 15.91 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-UT": {
+      "name": "Utah",
+      "values": {
+        "tariff": {
+          "lo": 0.1331,
+          "mid": 0.1331,
+          "hi": 0.1331,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 13.31 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-VT": {
+      "name": "Vermont",
+      "values": {
+        "tariff": {
+          "lo": 0.2384,
+          "mid": 0.2384,
+          "hi": 0.2384,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 23.84 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-VA": {
+      "name": "Virginia",
+      "values": {
+        "tariff": {
+          "lo": 0.1764,
+          "mid": 0.1764,
+          "hi": 0.1764,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 17.64 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-WA": {
+      "name": "Washington",
+      "values": {
+        "tariff": {
+          "lo": 0.1463,
+          "mid": 0.1463,
+          "hi": 0.1463,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 14.63 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-WV": {
+      "name": "West Virginia",
+      "values": {
+        "tariff": {
+          "lo": 0.1631,
+          "mid": 0.1631,
+          "hi": 0.1631,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 16.31 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-WI": {
+      "name": "Wisconsin",
+      "values": {
+        "tariff": {
+          "lo": 0.1941,
+          "mid": 0.1941,
+          "hi": 0.1941,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 19.41 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    },
+    "US-WY": {
+      "name": "Wyoming",
+      "values": {
+        "tariff": {
+          "lo": 0.1443,
+          "mid": 0.1443,
+          "hi": 0.1443,
+          "unit": "USD/kWh",
+          "currency": "USD",
+          "year": 2026,
+          "grade": "A",
+          "source": "eia_retail",
+          "retrieved": "2026-11-05",
+          "review_by": "2027-05-05",
+          "note": "EIA Table 5.6.A, August 2026: 14.43 cents/kWh residential, before taxes and incentives. A point statistic, so the band is degenerate."
+        }
+      }
+    }
+  }
+}

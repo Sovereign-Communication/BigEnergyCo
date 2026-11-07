@@ -553,8 +553,12 @@ test("rerun: el builds elements with attrs, class and text", () => {
 });
 
 test("rerun: modeLabel names both modes", () => {
-  assert.equal(modeLabel(true), "Simple mode");
-  assert.equal(modeLabel(false), "Technical mode");
+  const en = (key) =>
+    ({ simpleModeLabel: "Simple mode", simpleModeTechnical: "Technical mode" })[
+      key
+    ];
+  assert.equal(modeLabel(true, en), "Simple mode");
+  assert.equal(modeLabel(false, en), "Technical mode");
 });
 
 test("rerun: verdictKeys enumerates the use-case verdict keys deterministically", () => {

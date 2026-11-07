@@ -13,11 +13,11 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20261103u";
+import { APPLIANCES } from "./appliances.js?v=20261107j";
 import {
   INSTALL_NAV_BREAKPOINT_PX,
   installReveal,
-} from "./pwa-install.js?v=20261103u";
+} from "./pwa-install.js?v=20261107j";
 import {
   USE_CASES,
   USE_CASE_IDS,
@@ -28,42 +28,43 @@ import {
   normaliseOutageTarget,
   DEFAULT_RESERVE_PCT,
   DEFAULT_TOU,
-} from "./usecases.js?v=20261103u";
+} from "./usecases.js?v=20261107j";
 import {
   createRunChannel,
   staleRunAction,
   errorReleasesRunChannel,
   RUN_REPLY_DEADLINE_MS,
-} from "./run-coordinator.js?v=20261103u";
+} from "./run-coordinator.js?v=20261107j";
 import {
   assumptionDisclosureKeys,
   cutRowVisible,
   tierForGeneratorRuntime,
   generatorRuntimeForTier,
   generatorAllowedForRuntime,
-} from "./mode-chrome.js?v=20261103u";
-import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261103u";
-import { bestAffordableCurvePoint } from "../shared/budget-targets.js?v=20261103u";
+} from "./mode-chrome.js?v=20261107j";
+import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261107j";
+import { bestAffordableCurvePoint } from "../shared/budget-targets.js?v=20261107j";
 import {
   locateMe,
   purgeLegacyCityCache,
   setupCitySearch,
-} from "./location-picker.js?v=20261103u";
+} from "./location-picker.js?v=20261107j";
 
 import {
   estimateTariff,
   CURRENCIES,
+  fxFreshness,
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20261103u";
+} from "./pricing.js?v=20261107j";
 // The country -> currency table. Static, not lazy: it is consulted the moment
 // a location resolves, so a dynamic import would only add a round trip to the
 // one path that must not wait. Its 11.5 KB is data, and the first-load budget
 // below records the deliberate trade.
-import { currencyForCountry } from "./country-currency.js?v=20261103u";
+import { currencyForCountry } from "./country-currency.js?v=20261107j";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261103u";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261107j";
 
 // THE FOUR WAYS TO PAY FOR ONE SYSTEM (master plan D-01 §6.4, R-PATH-01..10).
 //
@@ -95,7 +96,7 @@ let pathsLoading = null;
 function loadPaths() {
   if (pathsApi) return Promise.resolve(pathsApi);
   if (!pathsLoading)
-    pathsLoading = import("./paths.js?v=20261103u").then((mod) => {
+    pathsLoading = import("./paths.js?v=20261107j").then((mod) => {
       pathsApi = mod;
       PATHS_HORIZON_YEARS = mod.HORIZON_YEARS;
       return mod;
@@ -106,15 +107,15 @@ import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20261103u";
+} from "./lead-acid.js?v=20261107j";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20261103u";
+} from "./bom.js?v=20261107j";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20261103u";
+import { BOM_ITEMS } from "../shared/content.js?v=20261107j";
 
 import {
   applyI18n,
@@ -123,18 +124,18 @@ import {
   // uses, so `t` is a binding to the one implementation rather than a second
   // copy of the placeholder contract.
   translate as t,
-} from "../shared/i18n.js?v=20261103u";
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261103u";
-import { byId as $, el } from "../shared/dom.js?v=20261103u";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261103u";
+} from "../shared/i18n.js?v=20261107j";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261107j";
+import { byId as $, el } from "../shared/dom.js?v=20261107j";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261107j";
 import {
   isSimpleMode,
   initSimpleMode,
   setSimpleMode,
   onSimpleModeChange,
   modeLabel,
-} from "../shared/simple-mode.js?v=20261103u";
-import { buildSimpleView } from "../shared/simple-view.js?v=20261103u";
+} from "../shared/simple-mode.js?v=20261107j";
+import { buildSimpleView } from "../shared/simple-view.js?v=20261107j";
 import {
   advisorJevContext,
   interpretSanity,
@@ -142,29 +143,29 @@ import {
   renderSanityBadge,
   requestSanity,
   sanityState,
-} from "./validate.js?v=20261103u";
+} from "./validate.js?v=20261107j";
 import {
   CUT_TARGET_PCT,
   sliderStateDrifted,
   targetForPct,
-} from "../shared/cut-targets.js?v=20261103u";
+} from "../shared/cut-targets.js?v=20261107j";
 import {
   SHARE_PREFIX,
   b64urlEncode,
   parseShareHash,
-} from "./share-codec.js?v=20261103u";
+} from "./share-codec.js?v=20261107j";
 import {
   hasInfeasibleCopy,
   infeasibleCopyKeys,
-} from "./infeasible-copy.js?v=20261103u";
-import { csvDocument, partsListRows } from "./parts-csv.js?v=20261103u";
+} from "./infeasible-copy.js?v=20261107j";
+import { csvDocument, partsListRows } from "./parts-csv.js?v=20261107j";
 import {
   fuelBurnPerKwh,
   fuelDisplay,
   fuelRateUsd,
   fuelTypeName,
   isImperialLocation,
-} from "./fuel-units.js?v=20261103u";
+} from "./fuel-units.js?v=20261107j";
 
 import {
   createLeafletProvider,
@@ -172,18 +173,18 @@ import {
   rotatedRectangleAreaM2,
   rotatedRectangleCorners,
   manualRoofHint,
-} from "./map-provider.js?v=20261103u";
+} from "./map-provider.js?v=20261107j";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20261103u";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20261103u";
+} from "./wizard.js?v=20261107j";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20261107j";
 import {
   interpolateCurveTarget,
   surplusAnchor,
   budgetSpanMax,
-} from "./budget-span.js?v=20261103u";
+} from "./budget-span.js?v=20261107j";
 // Heavy modules used only after a sizing result stay outside the initial UI graph.
 let _engine = null;
 let _charts = null;
@@ -195,10 +196,10 @@ let _chartsInitialized = false;
 function preloadRunModules() {
   if (!_runModulesPromise) {
     _runModulesPromise = Promise.all([
-      import("./engine.js?v=20261103u"),
-      import("./charts.js?v=20261103u"),
-      import("./frontier-chart.js?v=20261103u"),
-      import("./rescale.js?v=20261103u"),
+      import("./engine.js?v=20261107j"),
+      import("./charts.js?v=20261107j"),
+      import("./frontier-chart.js?v=20261107j"),
+      import("./rescale.js?v=20261107j"),
     ])
       .then(([engine, charts, frontierChart, rescale]) => {
         _engine = engine;
@@ -266,9 +267,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20261103u";
+} from "./money.js?v=20261107j";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261103u";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261107j";
 
 let worker = null;
 
@@ -664,7 +665,10 @@ function applySimpleMode() {
   const toggle = $("simpleModeToggle");
   if (toggle) {
     toggle.checked = simpleMode;
-    toggle.setAttribute("aria-label", `${modeLabel(simpleMode)} enabled`);
+    toggle.setAttribute(
+      "aria-label",
+      t("simpleModeAria", { mode: modeLabel(simpleMode, t) }),
+    );
   }
   // Simple mode swaps the detail panels for one plain-language card: the
   // wrapper is only ever revealed with fresh content inside, so a stale card
@@ -1037,7 +1041,11 @@ function renderUseCaseOutcome(p) {
       {
         style: `font-size:0.9rem;font-weight:700;color:${tone};margin:0 0 0.4rem`,
       },
-      t(o.reasonKey, verdictParams(o)),
+      // A plain sentence first, then the measurement. The old form prefixed
+      // the measurement with a bare status label ("Partly: ..."), which read
+      // as a category stamp and, on a not-here verdict, contradicted the
+      // sentence it sat in front of.
+      t(leadKeyForStatus(o.status)) + " " + t(o.reasonKey, verdictParams(o)),
     ),
   );
   card.appendChild(
@@ -1054,20 +1062,26 @@ function renderUseCaseOutcome(p) {
   wrap.appendChild(card);
 }
 
+/**
+ * The plain-words lead for a verdict status. The verdict reads as a sentence,
+ * not a label: this short sentence says how far the plan got, and the
+ * measurement sentence after it says what the numbers were. The three bare
+ * status words survive for anything that labels a state; the verdict itself no
+ * longer opens with a colon-stamped one.
+ */
+function leadKeyForStatus(status) {
+  return status === "works"
+    ? "verdictLeadWorks"
+    : status === "partial"
+      ? "verdictLeadPartial"
+      : "verdictLeadNotHere";
+}
+
 /** The measured numbers each verdict key interpolates, so no sentence invents one. */
 function verdictParams(o) {
   const m = o.measurement || {};
   const round = (v) => Math.round(Number(v) || 0);
   return {
-    // The status word is a parameter, so one sentence per case reads correctly
-    // whether it is saying yes, half, or no. Three words, six languages.
-    status: t(
-      o.status === "works"
-        ? "statusWorks"
-        : o.status === "partial"
-          ? "statusPartial"
-          : "statusNotHere",
-    ),
     metric: t(o.labelKey),
     pct: round(o.unit === "tradeoff" ? m.reserveSavingsLostPct : o.value),
     hours: round(m.backupHoursP50 ?? m.reserveCoverHours),
@@ -1167,8 +1181,11 @@ function renderSimpleResults(p) {
     p,
     entry,
     saved,
-    // Injected formatters keep number/currency policy in money.js.
+    // Injected formatters keep number/currency policy in money.js; the
+    // translator is injected for the same reason — this module cannot import
+    // the dictionary without duplicating the locale lookup.
     fmt: { fmt, money, moneyRange, fmtPaybackRange },
+    t,
   });
 
   if (!view.feasible) return;
@@ -2431,13 +2448,17 @@ function updateCurrencyUnitLabel() {
   const expSpan = document.querySelector('label[for="exportRate"] span');
 
   if (expSpan)
-    expSpan.textContent = `(${fx ? CURRENCIES[fx.code]?.symbol || fx.code : "$"}/kWh, optional \u2014 grid-tie only)`;
+    expSpan.textContent = t("simpleHintFeedIn", {
+      unit: fx ? CURRENCIES[fx.code]?.symbol || fx.code : "$",
+    });
 
   // The fixed charge is entered in the same display currency.
   const fixedCur = document.querySelector('label[for="fixedChargeVal"] span');
 
   if (fixedCur)
-    fixedCur.textContent = `(${fx ? CURRENCIES[fx.code]?.symbol || fx.code : "$"}/mo, optional)`;
+    fixedCur.textContent = t("simpleHintFixed", {
+      unit: fx ? CURRENCIES[fx.code]?.symbol || fx.code : "$",
+    });
 
   // The always-visible bill slider shows the resolved location's currency.
 
@@ -3980,7 +4001,7 @@ function restoreRunButton() {
 function ensureWorker() {
   if (!worker) {
     const runWorker = new Worker(
-      "./assets/js/sizing/sizing-worker.js?v=20261103u",
+      "./assets/js/sizing/sizing-worker.js?v=20261107j",
       {
         type: "module",
       },
@@ -4301,16 +4322,77 @@ function bestPriceNote(entry) {
   return _rescale.relocalizeOversizeCallout(text, money);
 }
 
+// The FX provenance line (P1.4, F-10). Rendered on every load, including the
+// offline one, because "no source and no date" was the defect: a visitor whose
+// money was converted at the built-in fallback table had nothing on screen
+// saying so, and a live rate aged silently until the next page load.
+//
+// The data-i18n attribute is kept in step with the state rather than left
+// alone. For the static and failed wordings it stays set, so a later
+// applyI18n() re-translates the right sentence. For live and stale it is
+// removed, because those carry a date the static key cannot express - and an
+// applyI18n() that reverted them to "no live rate loaded" would be stating
+// something false about a rate that did load.
+/**
+ * The rate's own date, in plain words.
+ *
+ * The provider hands back a raw RFC-822 string ("Sat, 07 Nov 2026 00:02:31
+ * +0000"). Printed as-is beside a result built from 2021-2025 weather, that
+ * read as a date from the wrong window with no indication of what it dated,
+ * which is the V1 defect: an out-of-window date line. Two cures, both here -
+ * format it as a plain date, and let the locale sentence say whose date it is.
+ */
+function fxAsOfDisplay(asOf) {
+  const at = Date.parse(asOf);
+  if (!Number.isFinite(at)) return asOf;
+  try {
+    return new Date(at).toLocaleDateString(
+      document.documentElement.lang || "en",
+      { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" },
+    );
+  } catch {
+    return asOf;
+  }
+}
+
+function renderFxStatus() {
+  const el = $("fxAsOf");
+  if (!el) return;
+  const f = fxFreshness({ asOf: fxMeta.asOf });
+  if (f.state === "stale") {
+    el.removeAttribute("data-i18n");
+    el.textContent = t("fxSourceStale", {
+      asOf: fxAsOfDisplay(f.asOf),
+      days: String(f.days),
+    });
+  } else if (f.state === "live") {
+    el.removeAttribute("data-i18n");
+    el.textContent = t("fxSourceLive", { asOf: fxAsOfDisplay(f.asOf) });
+  } else {
+    const key = fxMeta.failed ? "fxSourceFailed" : "fxSourceStatic";
+    el.setAttribute("data-i18n", key);
+    el.textContent = t(key);
+  }
+}
+
 function fxNote() {
   const fx = fxActive();
 
   if (!fx) return null;
 
-  const asOf = fxMeta.asOf
-    ? ` Live rates as of ${fxMeta.asOf}.`
-    : " Indicative built-in rates (live fetch unavailable).";
+  const f = fxFreshness({ asOf: fxMeta.asOf });
 
-  return `Amounts shown in ${fx.code} at ${fx.rate} per US$1. Energy cost rates and recommendations are converted to ${fx.code}; source price scopes remain USD-denominated.`;
+  const stamp =
+    f.state === "stale"
+      ? t("fxSourceStale", {
+          asOf: fxAsOfDisplay(f.asOf),
+          days: String(f.days),
+        })
+      : f.state === "live"
+        ? t("fxSourceLive", { asOf: fxAsOfDisplay(f.asOf) })
+        : t(fxMeta.failed ? "fxSourceFailed" : "fxSourceStatic");
+
+  return `${stamp} Amounts shown in ${fx.code} at ${fx.rate} per US$1. Energy cost rates and recommendations are converted to ${fx.code}; source price scopes remain USD-denominated.`;
 }
 
 // REMOVED 2026-10-05: renderAutoCards (232 lines) was UNREACHABLE shipped
@@ -6039,7 +6121,9 @@ function showSystemModal(p, entry, adopt) {
       : "";
   const title = $("systemModalTitle");
   if (title) {
-    title.textContent = `${p.mode === "gridtie" ? "Full bill-cut analysis" : "Full system analysis"}${headPct}: ${chemLabel}`;
+    title.textContent = `${t(
+      p.mode === "gridtie" ? "analysisFullBill" : "analysisFullSystem",
+    )}${headPct}: ${chemLabel}`;
   }
   if (body) {
     body.innerHTML = "";
@@ -7544,6 +7628,13 @@ async function renderResults(p) {
 
   $("btnAskAdvisor").style.display = "inline-flex";
 
+  // V2: the ask appears with the result, never before one exists. It is one
+  // quiet line, not a modal, and it sells nothing - the same three doors as
+  // the support section, brought to the moment the visitor is actually glad.
+  const vmAsk = $("valueMomentAsk");
+
+  if (vmAsk) vmAsk.hidden = false;
+
   const shareBtn = $("btnShareResult");
 
   if (shareBtn) shareBtn.style.display = "inline-flex";
@@ -7882,6 +7973,27 @@ function restoreFromShare() {
 
   $("dailyKwhInput").value = String(kw);
 
+  // Off-grid reads the slider BEFORE the numeric input (readInputs), so a
+  // share link that only wrote the input left the previous slider load in
+  // charge of sizing. Write the slider too when the shared value fits its
+  // range; outside the range, clear it so the numeric input wins.
+  const sharedSlider = $("offgridKwhSlider");
+  if (sharedSlider) {
+    const sliderMin = parseFloat(sharedSlider.min);
+    const sliderMax = parseFloat(sharedSlider.max);
+    if (
+      (!Number.isFinite(sliderMin) || kw >= sliderMin) &&
+      (!Number.isFinite(sliderMax) || kw <= sliderMax)
+    ) {
+      sharedSlider.value = String(kw);
+      const sharedOut = $("offgridKwhVal");
+      if (sharedOut)
+        sharedOut.textContent = t("offgridKwhReadout", { kwh: kw });
+    } else {
+      sharedSlider.value = "";
+    }
+  }
+
   if (o.a === 1) $("chemSelect").value = "auto";
   else if (o.ch && CHEM_KEYS.has(o.ch)) $("chemSelect").value = o.ch;
 
@@ -7981,6 +8093,18 @@ function restoreFromShare() {
       billUserNominal = null;
       syncBillSlider();
     }
+  }
+
+  // The recipient's persistent note. The status line below carries the same
+  // fact for a moment, but the run this link triggers replaces it with its own
+  // progress, so the result itself must say whose result it is (found by the
+  // 2026-11-07 cold recipient drive, where the note was gone in under a
+  // second). It lives inside the results region, so it appears with them.
+  const note = $("sharedResultNote");
+
+  if (note) {
+    note.textContent = t("shareLoaded");
+    note.hidden = false;
   }
 
   setStatus(t("shareLoaded"));
@@ -8289,17 +8413,25 @@ function askAdvisor() {
   const instructions = [jev, isSimpleMode() ? t("simpleAdvisorStyle") : null]
     .filter(Boolean)
     .join("\n");
-  if (input)
-    input.value =
-      window.lastSizingBrief + (instructions ? "\n" + instructions : "");
+  // The brief is prompt scaffolding: it is sent to the model, never shown. The
+  // bubble gets one plain sentence the visitor would have typed themselves; the
+  // full brief rides alongside it (see sendChatMsg in chat.js).
+  window.pendingAdvisorPrompt =
+    window.lastSizingBrief + (instructions ? "\n" + instructions : "");
+
+  if (input) input.value = t("advisorAskResult");
 
   if (window.openSizingModal) window.openSizingModal();
 
   if (window.sendChatMsg) window.sendChatMsg();
 }
 
-function copyShareLink() {
-  const btn = $("btnShareResult");
+// `trigger` is the control the visitor actually pressed. V2's third door is a
+// second entry point to this same act, and feedback that lands on a button the
+// visitor did not press reads as a bug, so the confirmation goes where the
+// click did.
+function copyShareLink(trigger) {
+  const btn = trigger && trigger.textContent ? trigger : $("btnShareResult");
 
   const origText = btn ? btn.textContent : " Copy share link";
 
@@ -8455,17 +8587,16 @@ function setupPwaControls() {
     if (!badge) return;
     if (!navigator.onLine) {
       badge.className = "offline-badge";
-      badge.innerHTML = `<span class="offline-dot"></span> Offline Ready`;
+      badge.innerHTML = `<span class="offline-dot"></span> ${t("offlineReady")}`;
       badge.style.display = "inline-flex";
-      badge.title =
-        "Working offline using cached app data & local weather simulation";
+      badge.title = t("offlineBadgeTitle");
     } else {
       if (
         badge.style.display !== "none" &&
         !badge.classList.contains("online-flash")
       ) {
         badge.className = "offline-badge online-flash";
-        badge.innerHTML = `<span class="offline-dot"></span> Back Online`;
+        badge.innerHTML = `<span class="offline-dot"></span> ${t("backOnline")}`;
         setTimeout(() => {
           badge.style.display = "none";
         }, 3000);
@@ -8602,6 +8733,14 @@ async function initSizingUI() {
     const printBtn = $("btnPrintResult");
 
     if (printBtn) printBtn.addEventListener("click", () => window.print());
+
+    // V2's third door: "send this result to someone pricing a system" is the
+    // same act as the share button above, so it calls the same code rather
+    // than growing a second link-building path that could drift from it.
+    const vmSend = $("vmAskSend");
+
+    if (vmSend)
+      vmSend.addEventListener("click", (e) => copyShareLink(e.currentTarget));
 
     // Result detail ladder (Best pick / Compare batteries / All options)
     for (const [id, lvl] of [
@@ -8891,6 +9030,10 @@ async function initSizingUI() {
 
     window.addEventListener("beco:lang", () => {
       repaintRuntimeCopy();
+      // The mode toggle's aria-label names the current mode in the current
+      // language; repaintRuntimeCopy does not own that node, so without this
+      // call the card switched language while the toggle stayed in the old one.
+      applySimpleMode();
     });
 
     // THE SAME REPAINT, once, immediately — and this is the load-bearing call.
@@ -8926,22 +9069,34 @@ async function initSizingUI() {
     // can click, and the browser smoke gate polls for the ready flag
     // rather than assuming it. Without the loader the CTA is a plain
     // link — the same fallback the loader's own catch takes.
-    import("../shared/translation-suggestion-loader.js?v=20261103u")
+    import("../shared/translation-suggestion-loader.js?v=20261107j")
       .then(({ installTranslationSuggestionLoader }) => {
         installTranslationSuggestionLoader(
           document.querySelector("[data-translation-suggestion]"),
-          () => import("../translation-suggestion.js?v=20261103u"),
+          () => import("../translation-suggestion.js?v=20261107j"),
         );
       })
       .catch(() => {});
 
     updateFuelUnits();
 
-    // A shared link restores its inputs; sizing still requires an explicit
-    // click so opening a link never starts weather or engine work silently.
-    restoreFromShare();
+    // V2's recipient gap: a share link exists to show someone's RESULT, so a
+    // valid link lands on the result instead of on a prefilled form.
+    // restoreFromShare() returns true only after the codec accepted the hash
+    // and every input was written; a malformed or hostile link returns false
+    // here and never reaches run(), so only a link that already passed the
+    // bounds gate can start weather or engine work. `explicit` bypasses the
+    // authorization/dirty gates so this single load-time run is never
+    // silently swallowed, and it runs once because init runs once.
+    if (restoreFromShare()) run(false, true);
 
     // Background FX refresh: keeps auto-selected currencies accurate.
+
+    // Paint the provenance line first, from whatever the rates actually are
+    // right now (the built-in table, unless a previous refresh in this page
+    // already succeeded), so the visitor is never shown converted money with
+    // no source and no date while the fetch is in flight.
+    renderFxStatus();
 
     refreshFxRates();
   } catch (err) {
@@ -8972,11 +9127,21 @@ async function refreshFxRates() {
       ...(timeoutSignal ? { signal: timeoutSignal } : {}),
     });
 
-    if (!res.ok) return;
+    if (!res.ok) {
+      fxMeta.live = false;
+      fxMeta.failed = true;
+      renderFxStatus();
+      return;
+    }
 
     const json = await res.json();
 
-    if (!json || json.result !== "success" || !json.rates) return;
+    if (!json || json.result !== "success" || !json.rates) {
+      fxMeta.live = false;
+      fxMeta.failed = true;
+      renderFxStatus();
+      return;
+    }
 
     for (const code of Object.keys(CURRENCIES)) {
       const r = json.rates[code];
@@ -8985,10 +9150,10 @@ async function refreshFxRates() {
     }
 
     fxMeta.asOf = json.time_last_update_utc || new Date().toUTCString();
+    fxMeta.live = true;
+    fxMeta.failed = false;
 
-    const elN = $("fxAsOf");
-
-    if (elN) elN.textContent = t("fxAsOfNote", { asOf: fxMeta.asOf });
+    renderFxStatus();
 
     // fxActive() reads the fxRate INPUT, not the CURRENCIES table — without
     // syncing it, the live fetch changes nothing on screen. Display-currency
@@ -9017,7 +9182,11 @@ async function refreshFxRates() {
 
     if (lastPayload) renderResults(lastPayload);
   } catch {
-    /* offline - static defaults remain */
+    // Offline, blocked, or timed out: the built-in table stays in use, and the
+    // line now says so instead of leaving the visitor to guess.
+    fxMeta.live = false;
+    fxMeta.failed = true;
+    renderFxStatus();
   }
 }
 

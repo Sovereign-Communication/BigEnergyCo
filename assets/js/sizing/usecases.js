@@ -365,6 +365,23 @@ export function deriveLegacy(id) {
 }
 
 /**
+ * Which hardware the run actually searches. A case that locks hardware (ToU
+ * is battery-only, off-grid needs both) keeps its pair; an unlocked case
+ * (bill-cut, reserve) honors a visitor's explicit solar/both choice instead
+ * of silently reverting to the legacy "both" — that revert sized a battery
+ * for a solar-only share link.
+ */
+export function hardwareForRun(id, requested) {
+  const c = useCase(id) || USE_CASES.billcut;
+  if (
+    !c.legacy.locksHardware &&
+    (requested === "solar" || requested === "both")
+  )
+    return requested;
+  return c.legacy.hardwareConfig === null ? "battery" : c.legacy.hardwareConfig;
+}
+
+/**
  * The reverse direction, for the share link and for anything restoring saved
  * state: given the legacy pair, which use case was meant? Backup and reserve
  * are not recoverable from the pair alone (they share the pair with

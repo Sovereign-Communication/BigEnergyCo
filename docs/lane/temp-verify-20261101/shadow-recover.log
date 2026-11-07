@@ -1,0 +1,11 @@
+﻿2026-11-01T13:05:25.9349463-10:00 STARTED pid=26092 user=SCM elevated=True
+2026-11-01T13:05:26.2704994-10:00 SHADOW COUNT (cim): 0
+2026-11-01T13:05:26.3199048-10:00 === vssadmin list shadows ===
+2026-11-01T13:05:26.3214243-10:00 vssadmin 1.1 - Volume Shadow Copy Service administrative command-line tool
+(C) Copyright 2001-2013 Microsoft Corp.
+
+No items found that satisfy the query.
+
+2026-11-01T13:05:26.3227349-10:00 NO SHADOW COPIES REPORTED BY CIM - nothing to search
+2026-11-01T13:05:26.3227349-10:00 RESTORED COUNT: 0
+2026-11-01T13:05:26.3370684-10:00 END 2026-11-01T13:05:26.3357118-10:00

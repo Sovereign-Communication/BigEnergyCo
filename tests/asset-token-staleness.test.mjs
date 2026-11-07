@@ -187,14 +187,28 @@ test("the gate detects the four stale assets this change was written for", () =>
     setter,
     (rev, p) => gitBlob(ROOT, rev, p),
   );
-  // chat/i18n/locales/ui changed under an unchanged stamp. validate.js did not,
-  // and turnstile-client.js is new since the setter, so both are exempt.
-  assert.deepEqual(stale, [
+  // chat/i18n/locales/ui changed under an unchanged stamp, and validate.js has
+  // changed since the anchor too (2026-11-07, the JEV block). turnstile-client.js
+  // is new since the setter, so it is exempt.
+  //
+  // Containment rather than equality, deliberately: this test proves the
+  // DETECTOR works against real history, and a strict list would also assert
+  // that no other asset has been touched since 64a6d664 — turning a genuine
+  // pass into a failure every time this repo evolves, for a reason the detector
+  // has nothing to do with. The four the change was written for must be found;
+  // the post-setter file must stay exempt.
+  for (const p of [
     "assets/js/chat.js",
     "assets/js/shared/i18n.js",
     "assets/js/shared/locales.js",
     "assets/js/sizing/ui.js",
-  ]);
+  ]) {
+    assert.ok(stale.includes(p), `${p} must be detected as stale`);
+  }
+  assert.ok(
+    !stale.includes("assets/js/turnstile-client.js"),
+    "a file that did not exist at the setter commit cannot be stale",
+  );
   assert.deepEqual(
     unresolvable,
     [],

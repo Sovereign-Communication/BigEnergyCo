@@ -2,11 +2,12 @@
 // render (passed in by ui.js, which owns selection and savings policy) and
 // reduces it to the few numbers a first-time visitor needs. Pure data: no DOM,
 // no formatting — ui.js injects its formatters so currency/locale handling
-// stays single-owner. Anything missing or non-finite is dropped, never
-// rendered as "NaN".
-import { seriesBreakdown } from "../sizing/money.js?v=20261103u";
+// stays single-owner, and its translator so no label or sentence in this file
+// can ship in English on another locale. Anything missing or non-finite is
+// dropped, never rendered as "NaN".
+import { seriesBreakdown } from "../sizing/money.js?v=20261107j";
 
-export function buildSimpleView({ p, entry, saved, fmt }) {
+export function buildSimpleView({ p, entry, saved, fmt, t }) {
   if (!p || !entry || !entry.solvable) return { feasible: false };
 
   const heroes = [];
@@ -20,9 +21,9 @@ export function buildSimpleView({ p, entry, saved, fmt }) {
     const panels = Math.round((entry.pvKw * 1000) / 550);
     push(
       "kW",
-      "Solar",
+      t("simpleSolar"),
       fmt.fmt(entry.pvKw) + " kW",
-      "about " + panels + " panels",
+      t("simplePanels", { panels }),
     );
   }
 
@@ -30,16 +31,20 @@ export function buildSimpleView({ p, entry, saved, fmt }) {
   if (entry.battKwh > 0) {
     push(
       "usableCapacity",
-      "Battery",
-      fmt.fmt(entry.battKwh) + " kWh usable",
+      t("simpleBattery"),
+      t("simpleKwhUsable", { kwh: fmt.fmt(entry.battKwh) }),
       entry.battNameplateKwh
-        ? "about " + fmt.fmt(entry.battNameplateKwh) + " kWh installed"
+        ? t("simpleKwhInstalled", { kwh: fmt.fmt(entry.battNameplateKwh) })
         : null,
     );
   }
 
   if (Number.isFinite(entry.costLo) && Number.isFinite(entry.costHi)) {
-    push(null, "First cost", "~" + fmt.moneyRange(entry.costLo, entry.costHi));
+    push(
+      null,
+      t("simpleFirstCost"),
+      "~" + fmt.moneyRange(entry.costLo, entry.costHi),
+    );
   }
 
   // Same rule the technical panel follows: no panels means no bill cut. A
@@ -47,23 +52,22 @@ export function buildSimpleView({ p, entry, saved, fmt }) {
   // and "does not pay back in 20 years" below already says so.
   const goal =
     p.mode !== "gridtie"
-      ? Math.round(100 - (entry.unmetHoursPerYear || 0) / 87.6) +
-        "% of the year covered"
+      ? t("simpleYearCovered", {
+          pct: Math.round(100 - (entry.unmetHoursPerYear || 0) / 87.6),
+        })
       : entry.pvKw > 0
-        ? "cuts about " + (entry.cutPct ?? 0) + "% off your bill"
-        : "shifts about " +
-          (entry.cutPct ?? 0) +
-          "% of peak hours onto the battery — your bill is unchanged";
-  push(null, "What it does", goal);
+        ? t("simpleBillCut", { pct: entry.cutPct ?? 0 })
+        : t("simplePeakShift", { pct: entry.cutPct ?? 0 });
+  push(null, t("simpleWhatItDoes"), goal);
 
   if (Number.isFinite(saved) && saved > 0) {
-    push(null, "Saved over 20 years", "~" + fmt.money(saved));
+    push(null, t("simpleSaved"), "~" + fmt.money(saved));
   } else if (Number.isFinite(saved) && saved <= 0) {
-    push(null, "Saved over 20 years", "does not pay back in 20 years");
+    push(null, t("simpleSaved"), t("simpleNoPayback"));
   } else if (Number.isFinite(entry.paybackYearsLo)) {
     push(
       null,
-      "Payback",
+      t("simplePayback"),
       fmt.fmtPaybackRange(entry.paybackYearsLo, entry.paybackYearsHi),
     );
   }

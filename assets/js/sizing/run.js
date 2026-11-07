@@ -28,34 +28,35 @@ import {
   billCutFraction,
   simulateOutage,
   simulatePortable,
-} from "./engine.js?v=20261103u";
+} from "./engine.js?v=20261107j";
 
 import {
   isUseCaseId,
   deriveLegacy,
   useCaseForLegacy,
   loadsFor,
+  hardwareForRun,
   sizingTierFor,
   normaliseReservePct,
   normaliseOutageTarget,
   outcomeFor,
-} from "./usecases.js?v=20261103u";
-import { memoizeSimulate } from "./sim-cache.js?v=20261103u";
+} from "./usecases.js?v=20261107j";
+import { memoizeSimulate } from "./sim-cache.js?v=20261107j";
 
 import {
   fetchHourlyCached,
   synthesizeFromProfile,
-} from "./nasa.js?v=20261103u";
-import { buildFrontier } from "./frontier.js?v=20261103u";
-import { oversizeCallout, oversizeCalloutI18n } from "./rescale.js?v=20261103u";
-import { climateSummary } from "./climate.js?v=20261103u";
+} from "./nasa.js?v=20261107j";
+import { buildFrontier } from "./frontier.js?v=20261107j";
+import { oversizeCallout, oversizeCalloutI18n } from "./rescale.js?v=20261107j";
+import { climateSummary } from "./climate.js?v=20261107j";
 import {
   fullRange,
   getScope,
   POWMR_CATALOG,
   estimateTariff,
   landedMidBattKwhFor,
-} from "./pricing.js?v=20261103u";
+} from "./pricing.js?v=20261107j";
 import {
   annualGridSpendUsd,
   paybackYears,
@@ -66,7 +67,7 @@ import {
   trueBreakEvenYear,
   cumulativeCostSeries,
   INSTALL_LABOR_PER_KWH_USABLE,
-} from "./money.js?v=20261103u";
+} from "./money.js?v=20261107j";
 
 const TIER_BASIS = {
   tier100: "100% independence — never needs a generator",
@@ -308,7 +309,7 @@ async function fetchWeatherWithFallback(opts) {
     return await fetchWeatherDefault(opts);
   } catch (netErr) {
     const { OFFLINE_PROFILES, PROFILE_YEAR } =
-      await import("./profiles.js?v=20261103u");
+      await import("./profiles.js?v=20261107j");
     let best = null,
       bestD = Infinity;
     for (const p of OFFLINE_PROFILES) {
@@ -774,7 +775,9 @@ async function runSizingUncached(msg, deps = {}) {
       bestPriceCallout =
         `Best 20-year price for this exact hardware: standard sizing with ` +
         `${replacementsHorizon} replacement(s) over 20 years (counted above).`;
-      bestPriceCalloutI18n = null;
+      bestPriceCalloutI18n = oversizeCalloutI18n("exact_hardware_swaps", {
+        replacements: replacementsHorizon,
+      });
       oversizeSavingsUsd = null;
       oversizedBattKwh = sizing.battKwh;
     }
@@ -3007,8 +3010,7 @@ export async function runSizing(msg, deps = {}) {
     // shape the renderer expects; battery-only is the cheapest honest one,
     // and its numbers are never shown for this use case.
     forwarded.mode = legacy.mode === "portable" ? "gridtie" : legacy.mode;
-    forwarded.hardwareConfig =
-      legacy.hardwareConfig === null ? "battery" : legacy.hardwareConfig;
+    forwarded.hardwareConfig = hardwareForRun(useCaseId, msg.hardwareConfig);
     // The load each use case is SIZED on is part of its definition. Backup
     // answers to the essentials (at a zero-unmet-hours budget), portable to
     // the devices. Sizing either on the household load would hand the outage

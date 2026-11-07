@@ -35,6 +35,57 @@ jobs:
       - name: Live sanity sweep
         run: node scripts/live-sanity.mjs
 
+  # R-DATA-07: the registry's review_by dates, swept weekly. A past-due entry is
+  # a number we promised to re-check and did not, so this opens an issue naming
+  # the entries instead of only failing a run nobody reads. Weekly rather than
+  # per-PR because a weekly job is what the plan names, and the same check also
+  # runs per-PR inside `npm run seo` (scripts/build-registry.mjs --check).
+  registry-freshness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Registry freshness sweep
+        id: sweep
+        # `status=0` up front, because a bare `|| true` would report the tee's
+        # exit code and a bare pipe would report nothing at all.
+        run: |
+          status=0
+          node scripts/build-registry.mjs --freshness > /tmp/registry-freshness.txt 2>&1 || status=$?
+          cat /tmp/registry-freshness.txt
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+
+      - name: Open or update the past-due issue
+        if: steps.sweep.outputs.status != '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          title="Registry entries past due for review"
+          {
+            printf 'The weekly registry freshness sweep (R-DATA-07) failed.\n\n```\n'
+            cat /tmp/registry-freshness.txt
+            printf '```\n\nEach line names a country, a field and the review_by date that has passed. Cure it by re-checking the source and updating both the value and its review_by, or by moving the value to `unknown` with a note saying why (unknown is a permitted value; a stale number is not).\n'
+          } > /tmp/registry-issue.md
+          existing=$(gh issue list --search "$title in:title" --state open --json number --jq '.[0].number')
+          if [ -n "$existing" ]; then
+            gh issue edit "$existing" --body-file /tmp/registry-issue.md
+          else
+            gh issue create --title "$title" --body-file /tmp/registry-issue.md --label "maintenance"
+          fi
+
+      - name: Fail on past-due entries
+        if: steps.sweep.outputs.status != '0'
+        run: exit 1
+
   # Live NASA POWER data through both sizing modes AND the full tier pipeline.
   # Deliberately scheduled rather than per-PR: it needs the network, so it can
   # never be part of the offline deterministic PR suite. A red run here means

@@ -258,10 +258,10 @@ export function advisorJevContext(
   ].join(": ");
 
   if (status === "pending") {
-    return `[JEV REVIEW — PENDING] ${reviewed}. The independent numeric plausibility check has not returned yet. Do not claim that Jev approved or rejected this result; explain the calculator figures and any uncertainty.`;
+    return `[JEV REVIEW — PENDING: ${reviewed}. The independent numeric plausibility check has not returned yet. Do not claim that Jev approved or rejected this result; explain the calculator figures and any uncertainty.]`;
   }
   if (status === "unavailable") {
-    return `[JEV REVIEW — UNAVAILABLE] ${reviewed}. No independent Jev result is available for this run. Do not imply that an independent check occurred; rely on the deterministic brief, state uncertainty, and invite verification.`;
+    return `[JEV REVIEW — UNAVAILABLE: ${reviewed}. No independent Jev result is available for this run. Do not imply that an independent check occurred; rely on the deterministic brief, state uncertainty, and invite verification.]`;
   }
   if (status !== "available" || !interp) return "";
   const plausible = Number.isFinite(Number(interp.plausible))
@@ -289,7 +289,7 @@ export function advisorJevContext(
     .filter(Boolean)
     .join(", ");
   return (
-    "[JEV REVIEW — INDEPENDENT NUMERIC PLAUSIBILITY CHECK] " +
-    `${reviewed}; ${details}. Jev saw sizing numbers only, not location names or free text. Treat this as a second opinion, not ground truth: it does not validate local prices, product specifications, code compliance, or safety. Do not override the deterministic calculator figures. If level=flag, explain what deserves checking and ask for missing inputs; if level=pass or uncertain, do not overstate certainty.`
+    "[JEV REVIEW — INDEPENDENT NUMERIC PLAUSIBILITY CHECK: " +
+    `${reviewed}; ${details}. Jev saw sizing numbers only, not location names or free text. Treat this as a second opinion, not ground truth: it does not validate local prices, product specifications, code compliance, or safety. Do not override the deterministic calculator figures. If level=flag, explain what deserves checking and ask for missing inputs; if level=pass or uncertain, do not overstate certainty.]`
   );
 }

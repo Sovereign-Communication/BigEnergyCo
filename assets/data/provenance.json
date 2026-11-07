@@ -37,11 +37,11 @@
       "license": "ISO standard, free to access"
     },
     "open_er_api_fx": {
-      "publisher": "open.er-api.com",
-      "title": "Exchange rate API — live USD rates",
-      "url": "https://www.exchangerate-api.com/",
-      "as_of": "live per request",
-      "license": "Free tier, terms at the linked site"
+      "publisher": "ExchangeRate-API, operator of open.er-api.com (a product of AYR Tech (Pty) Ltd)",
+      "title": "Open Access endpoint — terms, update cadence and attribution",
+      "url": "https://www.exchangerate-api.com/docs/free",
+      "as_of": "2026-11-05",
+      "license": "Open Access terms: attribution required, caching permitted, redistribution NOT permitted, data refreshed once per day, rate limited"
     },
     "nrel_degradation": {
       "publisher": "NREL — PV Lifetime Project",
@@ -56,6 +56,13 @@
       "url": "https://www.ise.fraunhofer.de/en/publications/studies/photovoltaics-report.html",
       "as_of": "2026-10-05",
       "license": "Freely downloadable"
+    },
+    "sunnova_10k": {
+      "publisher": "Sunnova Energy International Inc.",
+      "title": "Annual Report on Form 10-K for fiscal year 2024 (filed 2025-03-03)",
+      "url": "https://www.sec.gov/Archives/edgar/data/1772695/000177269525000020/nova-20241231.htm",
+      "as_of": "2026-11-05",
+      "license": "Public SEC filing of record: quoted for the figures below, not redistributed as a dataset"
     }
   },
   "assumptions": [
@@ -63,7 +70,10 @@
       "id": "city_yield_band",
       "family": "Latitude-band solar-yield estimates on generated city pages",
       "shown_as": "the rough kWh per kWp per year band and static panel ranges",
-      "used_by": ["scripts/build-city-pages.mjs:yieldBand", "scripts/build-city-pages.mjs:workedExample"],
+      "used_by": [
+        "scripts/build-city-pages.mjs:yieldBand",
+        "scripts/build-city-pages.mjs:workedExample"
+      ],
       "source": null,
       "grade": "unknown",
       "disclosure": "OUR ILLUSTRATIVE ESTIMATE. The broad latitude bands are not measured solar data or a local forecast, and the static panel example applies a fixed 1.5x dark-week margin. The calculator's separate five-year NASA POWER simulation estimates location-specific weather input; it does not survey roof shade, orientation, or installation."
@@ -72,7 +82,9 @@
       "id": "weather_irradiance",
       "family": "Hourly solar irradiance and ambient temperature",
       "shown_as": "sunshine hours, annual kWh per kW, weather year range",
-      "used_by": ["assets/js/sizing/nasa.js:POWER_HOURLY_URL"],
+      "used_by": [
+        "assets/js/sizing/nasa.js:POWER_HOURLY_URL"
+      ],
       "source": "nasa_power",
       "grade": "A",
       "disclosure": "Live API. The page names the years and the record count it received; offline profiles are labelled offline in the payload and on screen."
@@ -81,7 +93,9 @@
       "id": "us_state_tariffs",
       "family": "US state average retail electricity price, cents per kWh",
       "shown_as": "the energy cost rate when a US state is chosen",
-      "used_by": ["assets/js/sizing/pricing.js:US_STATES"],
+      "used_by": [
+        "assets/js/sizing/pricing.js:US_STATES"
+      ],
       "source": "eia_retail",
       "grade": "B",
       "disclosure": "State AVERAGES. A real utility in that state can differ materially, and the page says so where the rate is shown."
@@ -90,7 +104,10 @@
       "id": "intl_tariff_regions",
       "family": "Energy cost rate outside the US, by 5-degree grid region",
       "shown_as": "the energy cost rate for a non-US site",
-      "used_by": ["assets/js/sizing/pricing.js:PRICING_SCOPES", "assets/js/sizing/pricing.js:POWMR_CATALOG"],
+      "used_by": [
+        "assets/js/sizing/pricing.js:PRICING_SCOPES",
+        "assets/js/sizing/pricing.js:POWMR_CATALOG"
+      ],
       "source": null,
       "grade": "unknown",
       "disclosure": "OUR ESTIMATE, and the weakest input on the page. There is no free, current, per-country equivalent of the EIA table, so these are hand-set planning ranges. The page labels them as estimates and every figure derived from them inherits that uncertainty."
@@ -99,25 +116,38 @@
       "id": "fx_live",
       "family": "USD exchange rate used to show the bill in the visitor's currency",
       "shown_as": "every amount in a non-USD currency",
-      "used_by": ["assets/js/sizing/ui.js:refreshFxRates"],
+      "used_by": [
+        "assets/js/sizing/ui.js:refreshFxRates"
+      ],
       "source": "open_er_api_fx",
       "grade": "A",
-      "disclosure": "Fetched live, and the date the API itself reports is shown on the page ('Live rates as of <date>'). When the fetch fails the page says so and falls back to built-in rates, labelled indicative."
+      "disclosure": "Fetched live from the provider's Open Access endpoint, and the provider's own update timestamp is what the page shows. Its terms require attribution - the link sits under the rate line - permit caching, and do NOT permit redistribution, which is why the rates are never written into shipped data. The endpoint refreshes once a day, so any live rate can be up to 24 hours old; past a week the page badges it as stale. The ECB's reference rates cannot replace it: they cover about 30 currencies against the 153 this site converts, they are EUR-based, and the rouble has been suspended since 2022-03-01."
     },
     {
       "id": "fx_fallback",
       "family": "Built-in USD exchange rates used only when the live fetch fails",
       "shown_as": "amounts in a non-USD currency, labelled indicative",
-      "used_by": ["assets/js/sizing/pricing.js:CURRENCIES"],
+      "used_by": [
+        "assets/js/sizing/pricing.js:CURRENCIES"
+      ],
       "source": "iso_4217",
-      "grade": "C",
-      "disclosure": "ISO 4217 fixes the CODE and its name, not the rate. The rates themselves are our snapshot. The page says these are indicative whenever they are used, so a visitor is never shown a stale rate as a live one."
+      "grade": "C",        "disclosure": "ISO 4217 fixes the CODE and its name, not the rate. The rates themselves are our snapshot. The page says these are indicative whenever they are used, so a visitor is never shown a stale rate as a live one.",
+
+      "audit": {
+        "a19_status": "OPEN",
+        "a19_verify_by": "2026-11-19",
+        "a19_requirement": "trace each fallback value to an independently published reference (or replace it with one) and record that against the source",
+        "a19_current": "fallback values source is iso_4217 (currency codes only, not rates); lineage not yet fully audited",
+        "a19_note": "FX fallback table in pricing.js is NOT a stored copy of live provider payload; publishing does not breach provider T&Cs, but fallback values lineage must be audited"
+      }
     },
     {
       "id": "country_currency_map",
       "family": "Which currency a country shows in",
       "shown_as": "the currency symbol and code on every amount",
-      "used_by": ["assets/js/sizing/country-currency.js:COUNTRY_CURRENCY"],
+      "used_by": [
+        "assets/js/sizing/country-currency.js:COUNTRY_CURRENCY"
+      ],
       "source": "iso_3166",
       "grade": "A",
       "disclosure": "Countries are matched by ISO 3166-1 alpha-2 code, resolved from the site's own coordinates rather than a bounding box, so a country cannot be guessed from a corner of a map."
@@ -126,7 +156,9 @@
       "id": "panel_degradation",
       "family": "Annual array output loss",
       "shown_as": "year-by-year production and lifetime cost",
-      "used_by": ["assets/js/sizing/paths.js:DEGRADATION"],
+      "used_by": [
+        "assets/js/sizing/paths.js:DEGRADATION"
+      ],
       "source": "nrel_degradation",
       "grade": "B",
       "disclosure": "2% first-year and 0.5%/yr thereafter, inside the range NREL reports for current modules. The first-year step is larger than the annual one because that is how degradation actually behaves, and the card shows both."
@@ -135,7 +167,9 @@
       "id": "inverter_efficiency",
       "family": "DC to AC conversion efficiency",
       "shown_as": "system output, payback, lifetime cost",
-      "used_by": ["assets/js/sizing/engine.js:ETA_INVERTER"],
+      "used_by": [
+        "assets/js/sizing/engine.js:ETA_INVERTER"
+      ],
       "source": "fraunhofer_pv",
       "grade": "B",
       "disclosure": "94% continuous, consistent with current residential string inverters. String, not microinverter; a microinverter system is modelled differently and is not what this figure describes."
@@ -144,7 +178,9 @@
       "id": "round_trip_efficiency",
       "family": "Battery charge/discharge round trip",
       "shown_as": "usable capacity, autonomy hours, outage coverage",
-      "used_by": ["assets/js/sizing/chem-model.js:CHEMISTRIES"],
+      "used_by": [
+        "assets/js/sizing/chem-model.js:CHEMISTRIES"
+      ],
       "source": "fraunhofer_pv",
       "grade": "C",
       "disclosure": "92% is our planning figure for a lithium system including inverter and BMS overhead, and the same model carries 90% for sodium-ion and 85% for AGM. None of the three is taken from a datasheet; 92% is the most optimistic end of the plausible band."
@@ -153,7 +189,9 @@
       "id": "panel_temperature_coefficient",
       "family": "Module output loss per degree above nominal cell temperature",
       "shown_as": "summer production, peak-hour output",
-      "used_by": ["assets/js/sizing/engine.js:GAMMA_PMAX"],
+      "used_by": [
+        "assets/js/sizing/engine.js:GAMMA_PMAX"
+      ],
       "source": null,
       "grade": "unknown",
       "disclosure": "OUR ESTIMATE (-0.34%/°C). The comment in engine.js records the plausible range as -0.29 to -0.40 but names no publisher, so we cite none. A visitor reading a hot-climate number should treat it as an estimate."
@@ -162,7 +200,10 @@
       "id": "module_price",
       "family": "Panel, battery and inverter unit prices behind the BOM",
       "shown_as": "hardware cost on every route",
-      "used_by": ["assets/js/sizing/pricing.js:PRICING_SCOPES", "assets/js/sizing/pricing.js:POWMR_CATALOG"],
+      "used_by": [
+        "assets/js/sizing/pricing.js:PRICING_SCOPES",
+        "assets/js/sizing/pricing.js:POWMR_CATALOG"
+      ],
       "source": null,
       "grade": "unknown",
       "disclosure": "OUR ESTIMATE: shipped retail catalogue prices we recorded by hand, checked Aug 2026. No free public price index exists at this granularity, so there is no publisher to cite. This is why the comparison quotes a RANGE and shows three bands rather than one number."
@@ -171,7 +212,9 @@
       "id": "installed_costs",
       "family": "Installed system cost per region, by route",
       "shown_as": "the turnkey, self-purchase and DIY prices side by side",
-      "used_by": ["assets/js/sizing/paths.js:REGION_ROWS"],
+      "used_by": [
+        "assets/js/sizing/paths.js:REGION_ROWS"
+      ],
       "source": null,
       "grade": "unknown",
       "disclosure": "OUR ESTIMATE, grade unknown: regional ranges informed by surveys that are not free at this resolution, so no source URL is claimed. The comparison is between our estimates, not measured market prices; the page says so."
@@ -180,7 +223,9 @@
       "id": "incentives",
       "family": "Tax credits, rebates and feed-in rates",
       "shown_as": "the incentives line in every route's 20-year total",
-      "used_by": ["assets/js/sizing/paths.js:INCENTIVES"],
+      "used_by": [
+        "assets/js/sizing/paths.js:INCENTIVES"
+      ],
       "source": null,
       "grade": "unknown",
       "disclosure": "OUR ESTIMATE. Incentives change constantly, eligibility is per household and per jurisdiction, and we do not verify a visitor's eligibility. The route that receives them is shown explicitly so the reader can discount them."
@@ -189,25 +234,42 @@
       "id": "battery_labour",
       "family": "Battery replacement labour, by region",
       "shown_as": "the replacement line in the 20-year total",
-      "used_by": ["assets/js/sizing/paths.js:BANK_LABOUR_PER_KWH"],
+      "used_by": [
+        "assets/js/sizing/paths.js:BANK_LABOUR_PER_KWH"
+      ],
       "source": null,
       "grade": "unknown",
       "disclosure": "OUR ESTIMATE by region. Sourced to nothing, and flagged as such in the path text itself."
     },
     {
+      "id": "lease_escalator",
+      "family": "Annual escalation applied to a lease or PPA payment",
+      "shown_as": "the lease route's payment line, growing year over year",
+      "used_by": [
+        "assets/js/sizing/paths.js:escPct"
+      ],
+      "source": "sunnova_10k",
+      "grade": "B",
+      "disclosure": "Sunnova's FY2024 Form 10-K says \"approximately 41% of our lease agreements and PPAs contained a price escalator, ranging from 0.9% to 3.9% annually\", and that a customer may choose \"a flat rate without an escalator\". The band we ship is therefore 0% (no escalator) to 3.9%, and the middle value is the arithmetic midpoint of that disclosed band - a stated position inside the published range, not a typical case. No \"typical\" percentage is asserted: the publisher discloses none."
+    },
+    {
       "id": "lease_terms",
-      "family": "PPA and lease escalators and terms",
+      "family": "Lease and PPA payment, discount, down payment and buyout terms",
       "shown_as": "the lease route's payment line and end-of-term choice",
-      "used_by": ["assets/js/sizing/paths.js:LEASE_TERMS"],
+      "used_by": [
+        "assets/js/sizing/paths.js:LEASE_TERMS"
+      ],
       "source": null,
       "grade": "unknown",
-      "disclosure": "OUR ESTIMATE from published ranges, not from any one provider's disclosed contract. The end-of-term buyout is priced inside the 20-year total so the lease is compared on the same horizon as the routes a visitor owns."
+      "disclosure": "OUR ESTIMATE for the parts no publisher discloses: the per-kWh payment, the PPA discount to the local tariff, down payments and the end-of-term buyout. The ESCALATOR is not in this bucket - it is cited separately under lease_escalator from Sunnova's FY2024 Form 10-K, and only that row may claim a publisher. The end-of-term buyout is priced inside the 20-year total so a lease is compared on the same horizon as the routes a visitor owns."
     },
     {
       "id": "cycle_life",
       "family": "Battery cycle-life curves by chemistry",
       "shown_as": "warranty years, replacements in the 20-year total",
-      "used_by": ["assets/js/sizing/engine.js:CYCLE_LIFE_CURVES"],
+      "used_by": [
+        "assets/js/sizing/engine.js:CYCLE_LIFE_CURVES"
+      ],
       "source": null,
       "grade": "unknown",
       "disclosure": "OUR ESTIMATE, set so the replacement schedule is plausible rather than optimistic. A datasheet warranty is a floor, not an expectation, and the curve is deliberately more conservative than the warranty it is judged against."
