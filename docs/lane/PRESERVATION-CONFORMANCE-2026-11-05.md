@@ -137,22 +137,55 @@ The live sheet's G1 cell, at offset 148 of the row:
 
 **Verdict: PASS.** Character-by-character comparison (`find` on the exact
 string, then a byte equality check in Node): the required sentence appears
-**103 of 103 characters identical**, one occurrence, inside the G1 row, with no
-paraphrase, no re-punctuation and no case drift. The only text after it is the
-sentence's continuation, which adds the same qualification the review asked forrather than weakening it. The retired claim (that the loss was _proved_ beyond
-recovery) now matches **0 times** in the live sheet; the single remaining `unrecoverable` is section D's own "G1 is an
-unrecovered loss", which is the corrected sense.
+**103 of 103 characters identical** at its first match, which is inside the G1
+row, with no paraphrase, no re-punctuation and no case drift. The only text
+after it is the sentence's continuation, which adds the same qualification the
+review asked for rather than weakening it. The retired claim (that the loss was
+_proved_ beyond recovery) now matches **0 times** in the live sheet; the single
+remaining `unrecoverable` is section D's own "G1 is an unrecovered loss", which
+is the corrected sense.
+
+Counting note, so a re-reader grepping for the sentence is not misled: a
+case-sensitive grep of this file returns **3** matches - the G1 body cell
+itself, plus the two block quotations above that reproduce it for this
+verification. Only the first is the sheet's live claim; the other two are this
+narrative quoting it. That is also why the earlier draft of this paragraph said
+"one occurrence", which was accurate about the live claim and imprecise as a
+grep count, and is now stated instead of assumed.
 
 Difference from the required wording: none. The superseded 2026-11-03 draft
 (`docs/lane/allclear-2026-11-03.md:69`) still carries the old phrasing, left
 untouched on purpose because the directive named the sheet; it is named here so
 the difference is recorded rather than later discovered.
 
+### Non-author G1 re-read received: PASS WITH NOTES (2026-11-06T21:20:09Z)
+
+The re-read the 2026-11-05 CHANGES verdict asked for has landed, and it was
+scoped to exactly what that verdict cured. Recorded here in the reviewer's own
+terms:
+
+- Verdict: **PASS WITH NOTES**, by the GPT slow lane, filed at
+  `bigenergyco/reviews/PRESERVATION_REREAD_2026-11-06.md` in
+  `Treystu/slow-lane-ledger` (read: its carry comment on PR #330,
+  2026-11-06T21:20:09Z - the review record itself is in that repo, not this one).
+- Scope it actually covers: the cured G1 wording, and this sheet's continued
+  NOT-ISSUED posture. It states the required 103-character sentence is present at
+  the live PR #330 head `5fb38580` and accurately limits the claim to the
+  documented checks.
+- What it explicitly does **not** do, in its own words: it "did not
+  independently replay every receipt", and G1/G2/G3/G4 still carry owner
+  decisions. It issues no ALL-CLEAR.
+
+So this closes item 1 below and only item 1. The sheet is not accepted as a
+whole by it, G6's closure has not been second-read, and the owner dispositions
+are untouched.
+
 ### What stands between the current state and ALL-CLEAR
 
-1. **A non-author re-read confirming the G1 cure.** The review asked for exactly
-   that; the producer's own verification above is evidence for that read, not a
-   substitute for it.
+1. ~~**A non-author re-read confirming the G1 cure.**~~ **DONE 2026-11-06** - PASS
+   WITH NOTES, recorded above. This is the read the CHANGES verdict asked for, and
+   it was scoped to the cure rather than to the sheet as a whole, which is why it
+   does not advance items 2-4.
 2. **Non-author acceptance of the six states in B.2** - five decision-ready, one
    closed. A closed row still needs a second pair of eyes to be counted, because
    the row is the producer's own.
