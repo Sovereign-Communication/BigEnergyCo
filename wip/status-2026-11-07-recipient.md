@@ -2,27 +2,27 @@
 
 ### SEAT CHECK (as run, this session, in `C:\Users\SCM\Documents\GitHub\BigEnergyCo\BigEnergyCo`)
 
-| Check | Read |
-| --- | --- |
-| `pwd` | `/c/Users/SCM/Documents/GitHub/BigEnergyCo/BigEnergyCo` |
-| branch | `lane/finish` |
-| `git rev-parse HEAD` at session start | **`7a179cb623075febe906957c690e61017cb0a844`** |
-| `origin/lane/finish` at session start | `7a179cb62` — local and remote identical |
-| `git status --short` at session start | **empty** — working tree clean, nothing unpushed |
-| `origin/main` | **`7b3c108b6`** (matches the packet's expected main) |
-| model actually selected | the client does not expose a model id to the agent; role is Buffy (FreeBuff), running the local seat |
-| Harness MCP | **REACHABLE** — `harness-oc` answered and exposes `panel_verify`, `log_judgment`, `apply_edit`, `offer_work`, `defer_work`, `ledger_status`, `participation_report`, `spend_status` |
+| Check                                 | Read                                                                                                                                                                                |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pwd`                                 | `/c/Users/SCM/Documents/GitHub/BigEnergyCo/BigEnergyCo`                                                                                                                             |
+| branch                                | `lane/finish`                                                                                                                                                                       |
+| `git rev-parse HEAD` at session start | **`7a179cb623075febe906957c690e61017cb0a844`**                                                                                                                                      |
+| `origin/lane/finish` at session start | `7a179cb62` — local and remote identical                                                                                                                                            |
+| `git status --short` at session start | **empty** — working tree clean, nothing unpushed                                                                                                                                    |
+| `origin/main`                         | **`7b3c108b6`** (matches the packet's expected main)                                                                                                                                |
+| model actually selected               | the client does not expose a model id to the agent; role is Buffy (FreeBuff), running the local seat                                                                                |
+| Harness MCP                           | **REACHABLE** — `harness-oc` answered and exposes `panel_verify`, `log_judgment`, `apply_edit`, `offer_work`, `defer_work`, `ledger_status`, `participation_report`, `spend_status` |
 
 **Head accounting, because the packet's expected lane head was stale.** The packet expected `lane/finish` at `a12e9377`. The lane is five commits past that and the extra commits are the lane's own V1/V2 work, not drift: `a12e93777` → `0165f2c1e` → … → `6017e047` (V1/V2 close) → `7a179cb62` (its ledger commit). Main has moved since the packet was written too: `7b3c108b` is main, and the lane is based on it.
 
 **CircleCI verify run for the PR head, as asked in the 07:24Z steering.** The green receipt quoted last turn was pipeline 10 at `66ec9865`; the PR head then moved. Current reads, from the status API on each head:
 
-| Head | `ci/circleci: verify` |
-| --- | --- |
-| `7a179cb62` (head at session start) | **success** — pipeline 21, https://circleci.com/gh/Treystu/BigEnergyCo/21 |
-| `256b3770e` (this session's first landing) | success — pipeline 22 |
-| `ec5f69015` (the note cure) | **success** — pipeline 23, https://circleci.com/gh/Treystu/BigEnergyCo/23 |
-| `75a3b2549` (this status's ledger commit) | pending at this read — pipeline 24 |
+| Head                                       | `ci/circleci: verify`                                                     |
+| ------------------------------------------ | ------------------------------------------------------------------------- |
+| `7a179cb62` (head at session start)        | **success** — pipeline 21, https://circleci.com/gh/Treystu/BigEnergyCo/21 |
+| `256b3770e` (this session's first landing) | success — pipeline 22                                                     |
+| `ec5f69015` (the note cure)                | **success** — pipeline 23, https://circleci.com/gh/Treystu/BigEnergyCo/23 |
+| `75a3b2549` (this status's ledger commit)  | pending at this read — pipeline 24                                        |
 
 ### CHECKPOINT (standing owner order)
 
@@ -36,15 +36,15 @@ Executed first, before any new work: the tree was already clean at `7a179cb62`, 
 
 **The drive (cold recipient, stamp `20261107j`, allowlisted staging build served locally by `scripts/serve-static.mjs`; open the link untouched, record the first screen and the path out):**
 
-| Step | Read |
-| --- | --- |
-| opened `#s=` link, **no click** | the run starts by itself: `Fetching 5 years of hourly satellite weather and searching system sizes…`, then `✅ 5 yr of hourly data (2021–2025) · 1,783 kWh/yr per kW of panel.` |
-| first line of the result | `This is the result someone shared with you, sized from their location and usage. Change any input to price your own system.` |
-| the outcome, untouched | `Your result: Go fully off-grid` / `99%` / `This one gets most of the way there. 99% of the year runs with no grid — 81 hours short in the worst year, 0.7 days of autonomy.` / `LFP (LiFePO4): 16 kW solar + 20 kWh battery` / `~$3,801.00–$13,209.00` / `Total 20-year cost ~$12,202.00` |
-| value moment | `#valueMomentAsk` revealed once the result exists (`hidden` false) |
-| malformed `#s=not-a-payload` | **no run and no weather request** (no `power.larc` entry in the page's resource timings), results stay hidden, status `This share link could not be read — it may have been cut short when it was copied.` |
+| Step                            | Read                                                                                                                                                                                                                                                                                       |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| opened `#s=` link, **no click** | the run starts by itself: `Fetching 5 years of hourly satellite weather and searching system sizes…`, then `✅ 5 yr of hourly data (2021–2025) · 1,783 kWh/yr per kW of panel.`                                                                                                            |
+| first line of the result        | `This is the result someone shared with you, sized from their location and usage. Change any input to price your own system.`                                                                                                                                                              |
+| the outcome, untouched          | `Your result: Go fully off-grid` / `99%` / `This one gets most of the way there. 99% of the year runs with no grid — 81 hours short in the worst year, 0.7 days of autonomy.` / `LFP (LiFePO4): 16 kW solar + 20 kWh battery` / `~$3,801.00–$13,209.00` / `Total 20-year cost ~$12,202.00` |
+| value moment                    | `#valueMomentAsk` revealed once the result exists (`hidden` false)                                                                                                                                                                                                                         |
+| malformed `#s=not-a-payload`    | **no run and no weather request** (no `power.larc` entry in the page's resource timings), results stay hidden, status `This share link could not be read — it may have been cut short when it was copied.`                                                                                 |
 
-**A defect the drive found, cured before the row was closed.** The landing copy lived only in the status line, and the run the link triggers replaces that line with its own progress in **under a second** — so the first drive showed a full result with no word about whose it was. That is the "never claim without context" failure in miniature: the recipient would read someone else's sizing as their own. Cured by `#sharedResultNote`, inside the results region, filled and revealed by `restoreFromShare()`, reusing the ask line's `vma` styling so the CSS byte budget did not move. **Re-driven: the note is the first line of the results region and stays there with the result.** The landing copy was rewritten in all seven locales at the same time (`shareLoaded` had been telling the recipient to click *Size My System* — the exact behaviour this work removes). Pins: `tests/recipient-landing.test.mjs` **5/5**, including that the note is inside the results region and not merely a status string.
+**A defect the drive found, cured before the row was closed.** The landing copy lived only in the status line, and the run the link triggers replaces that line with its own progress in **under a second** — so the first drive showed a full result with no word about whose it was. That is the "never claim without context" failure in miniature: the recipient would read someone else's sizing as their own. Cured by `#sharedResultNote`, inside the results region, filled and revealed by `restoreFromShare()`, reusing the ask line's `vma` styling so the CSS byte budget did not move. **Re-driven: the note is the first line of the results region and stays there with the result.** The landing copy was rewritten in all seven locales at the same time (`shareLoaded` had been telling the recipient to click _Size My System_ — the exact behaviour this work removes). Pins: `tests/recipient-landing.test.mjs` **5/5**, including that the note is inside the results region and not merely a status string.
 
 ### RAIL AND BATTERY, read on their own lines
 
