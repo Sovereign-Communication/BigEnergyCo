@@ -231,7 +231,7 @@ so no claim is made about production's route. Locally the advisor is offline by
 design ("no model key is configured"), which is the honest local state, not a
 finding.
 
-## V2 ask + share at the value moment (2026-11-07) - HALF CLOSED, HALF OPEN
+## V2 ask + share at the value moment (2026-11-07) - CLOSED
 
 **Closed: the ask exists at the value moment, and it is driven.** One muted
 line, `#valueMomentAsk`, under the result actions - hidden until a result
@@ -259,12 +259,37 @@ recorded +1,000 raise, not by hiding bytes elsewhere); and the send door's
 confirmation originally flashed on the _share button_ rather than the door
 pressed, which reads as a bug (cured by passing the trigger through).
 
-**OPEN: the recipient gap.** A shared link still restores inputs and requires a
-click before any sizing runs - the sender sends a result, the recipient lands
-on a prefilled form. Verified as still true at this head (the init path's own
-comment states the design verbatim). V2's stated closing receipt is a fresh
-recipient cold-drive, and it cannot be produced until the landing question is
-answered (auto-run on a restored share link, or outcome-first landing). That
-decision changes what opening _any_ incoming link does - including a link a
-visitor did not ask to run - so it is prepared here as the next lane step, not
-improvised at the end of this one.
+**CLOSED (2026-11-07): the recipient gap - a shared link lands on the result.**
+Decision, gated locally: a valid link AUTO-RUNS. The sender made the link to
+show a result, so the recipient gets the result, not a form; the run is bounded
+(one weather fetch and one engine pass, the same work the Calculate button
+does), and it is only reachable through the codec, so a malformed or hostile
+hash never starts anything. Init now reads
+`if (restoreFromShare()) run(false, true);` - `explicit` so the
+authorization/dirty gates cannot swallow the one load-time run, and one call
+site so a link cannot double-run. `restoreFromShare()` returns true only after
+`parseShareHash` accepted the hash and every input was written.
+
+**Receipt: a cold recipient drive, at stamp `20261107j`, on the allowlisted
+staging build served locally by `scripts/serve-static.mjs`** (open the link
+untouched, record the first screen and the path out):
+
+| Step                          | Read                                                                                                                                                                                                                                                                                       |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| opened `#s=` link, no click   | run starts by itself: status `Fetching 5 years of hourly satellite weather and searching system sizes…`, then `✅ 5 yr of hourly data (2021–2025) · 1,783 kWh/yr per kW of panel.`                                                                                                         |
+| recipient's first result line | `This is the result someone shared with you, sized from their location and usage. Change any input to price your own system.`                                                                                                                                                              |
+| the outcome, untouched        | `Your result: Go fully off-grid` / `99%` / `This one gets most of the way there. 99% of the year runs with no grid — 81 hours short in the worst year, 0.7 days of autonomy.` / `LFP (LiFePO4): 16 kW solar + 20 kWh battery` / `~$3,801.00–$13,209.00` / `Total 20-year cost ~$12,202.00` |
+| asked value moment            | `#valueMomentAsk` revealed (`hidden` false) once the result exists                                                                                                                                                                                                                         |
+| malformed `#s=not-a-payload`  | no run, **no weather request** (`performance.getEntriesByType('resource')` has no `power.larc` entry), results stay hidden, status reads `This share link could not be read — it may have been cut short when it was copied.`                                                              |
+
+**A defect the drive found, cured before it was recorded as closed:** the
+landing copy lived only in the status line, and the run the link triggers
+replaces that line with its own progress in under a second - so the first
+drive showed the result with no word about whose it was. The note now lives in
+`#sharedResultNote`, inside the results region, filled and revealed by
+`restoreFromShare()`; it reuses the ask line's `vma` styling, so the CSS
+budget did not move. Re-driven: the note is the first line of the results
+region and stays there with the result. The landing copy was rewritten in all
+seven locales at the same time (`shareLoaded` used to tell the recipient to
+click Size My System - the exact behaviour this work removes). Pins:
+`tests/recipient-landing.test.mjs` 5/5.
