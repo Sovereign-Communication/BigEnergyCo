@@ -20,8 +20,8 @@ import {
   CHEMISTRIES,
   evaluateOversizeOptimization,
   billCutFraction,
-} from "./engine.js?v=20261107a";
-import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20261107a";
+} from "./engine.js?v=20261107b";
+import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20261107b";
 
 // Points below this coverage are real but not decision-useful; plotting them
 // squashes the interesting part of the curve into the top corner.

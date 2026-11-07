@@ -3,7 +3,7 @@
 // `ar` flips the document to RTL automatically.
 // Keys not present in a locale fall back to English silently.
 
-import { HOME_COPY } from "./home-copy.js?v=20261107a";
+import { HOME_COPY } from "./home-copy.js?v=20261107b";
 
 export const LOCALES = {
   en: {
@@ -499,8 +499,7 @@ export const LOCALES = {
     generatorRuntime0: "0% \u2014 never",
     generatorRuntime1: "1% \u2014 a few days a year",
     generatorRuntime2: "2%+ \u2014 fine when needed",
-    verdictBillCut:
-      "This system removes {pct}% of your bill over 20 years.",
+    verdictBillCut: "This system removes {pct}% of your bill over 20 years.",
     verdictTou:
       "The battery covers {pct}% of your peak-window energy, worth about {saving} over 20 years against a {cost} battery. Your peak-to-off-peak spread here is {spread} per kWh.",
     verdictBackup:
@@ -650,7 +649,8 @@ export const LOCALES = {
     bomSelectedSystem: "Selected system",
     fxSourceStatic:
       "Rate source: open.er-api.com. No live rate loaded, so these are built-in estimates.",
-    fxSourceLive: "Rate source: open.er-api.com, as of {asOf} — that date is the exchange rate’s; the weather figures are five years of hourly history.",
+    fxSourceLive:
+      "Rate source: open.er-api.com, as of {asOf} — that date is the exchange rate’s; the weather figures are five years of hourly history.",
     fxSourceStale:
       "Rate source: open.er-api.com, last updated {asOf} ({days} days ago). Check the rate before relying on it.",
     fxSourceFailed:
@@ -814,8 +814,7 @@ export const LOCALES = {
     generatorRuntime0: "0% \u2014 nunca",
     generatorRuntime1: "1% \u2014 unos d\u00edas al a\u00f1o",
     generatorRuntime2: "2%+ \u2014 sin problema cuando haga falta",
-    verdictBillCut:
-      "Este sistema elimina el {pct}% de tu factura en 20 años.",
+    verdictBillCut: "Este sistema elimina el {pct}% de tu factura en 20 años.",
     verdictTou:
       "La batería cubre el {pct}% de tu energía en horas punta, unos {saving} en 20 años frente a una batería de {cost}. Aquí la diferencia entre punta y valle es de {spread} por kWh.",
     verdictBackup:
@@ -1469,8 +1468,7 @@ export const LOCALES = {
     generatorRuntime0: "0% — nunca",
     generatorRuntime1: "1% — alguns dias por ano",
     generatorRuntime2: "2%+ — sem problema quando necessário",
-    verdictBillCut:
-      "Este sistema elimina {pct}% da sua conta em 20 anos.",
+    verdictBillCut: "Este sistema elimina {pct}% da sua conta em 20 anos.",
     verdictTou:
       "A bateria cobre {pct}% da sua energia nas horas de pico, valendo cerca de {saving} em 20 anos contra uma bateria de {cost}. A diferença entre pico e fora do pico aqui é de {spread} por kWh.",
     verdictBackup:
@@ -2018,7 +2016,8 @@ export const LOCALES = {
     bomSelectedSystem: "Sistema selecionado",
     fxSourceStatic:
       "Fonte da taxa de câmbio: open.er-api.com. Nenhuma taxa ao vivo foi carregada, então estes são valores estimados incorporados.",
-    fxSourceLive: "Fonte da taxa de câmbio: open.er-api.com, em {asOf} — esta data é a da taxa de câmbio; a meteorologia são cinco anos de histórico horário.",
+    fxSourceLive:
+      "Fonte da taxa de câmbio: open.er-api.com, em {asOf} — esta data é a da taxa de câmbio; a meteorologia são cinco anos de histórico horário.",
     fxSourceStale:
       "Fonte da taxa de câmbio: open.er-api.com, última atualização {asOf} (há {days} dias). Confirme a taxa antes de confiar nela.",
     fxSourceFailed:
@@ -2149,8 +2148,7 @@ export const LOCALES = {
     generatorRuntime0: "0% — jamais",
     generatorRuntime1: "1% — quelques jours par an",
     generatorRuntime2: "2%+ — sans problème si besoin",
-    verdictBillCut:
-      "Ce système supprime {pct}% de votre facture sur 20 ans.",
+    verdictBillCut: "Ce système supprime {pct}% de votre facture sur 20 ans.",
     verdictTou:
       "La batterie couvre {pct}% de votre énergie en heures pleines, soit environ {saving} sur 20 ans face à une batterie de {cost}. L'écart entre pointe et creux ici est de {spread} par kWh.",
     verdictBackup:
@@ -2710,7 +2708,8 @@ export const LOCALES = {
     bomSelectedSystem: "Système sélectionné",
     fxSourceStatic:
       "Source du taux de change : open.er-api.com. Aucun taux en direct n'a été chargé, ce sont donc des estimations intégrées.",
-    fxSourceLive: "Source du taux de change : open.er-api.com, au {asOf} — cette date est celle du taux de change ; la météo couvre cinq ans d’historique horaire.",
+    fxSourceLive:
+      "Source du taux de change : open.er-api.com, au {asOf} — cette date est celle du taux de change ; la météo couvre cinq ans d’historique horaire.",
     fxSourceStale:
       "Source du taux de change : open.er-api.com, dernière mise à jour le {asOf} (il y a {days} jours). Vérifiez le taux avant de vous y fier.",
     fxSourceFailed:
@@ -2889,8 +2888,7 @@ export const LOCALES = {
     generatorRuntime0: "0% — nie",
     generatorRuntime1: "1% — wenige Tage im Jahr",
     generatorRuntime2: "2%+ — bei Bedarf kein Problem",
-    verdictBillCut:
-      "Dieses System spart {pct}% deiner Rechnung über 20 Jahre.",
+    verdictBillCut: "Dieses System spart {pct}% deiner Rechnung über 20 Jahre.",
     verdictTou:
       "Die Batterie deckt {pct}% deiner Energie in den Spitzenstunden, rund {saving} über 20 Jahre gegen eine {cost}-Batterie. Der Abstand zwischen Spitze und Tal beträgt hier {spread} pro kWh.",
     verdictBackup:
@@ -3394,7 +3392,8 @@ export const LOCALES = {
     bomSelectedSystem: "Ausgewähltes System",
     fxSourceStatic:
       "Kursquelle: open.er-api.com. Es wurde kein Live-Kurs geladen, daher sind dies eingebaute Schätzwerte.",
-    fxSourceLive: "Kursquelle: open.er-api.com, Stand {asOf} — dieses Datum ist das des Wechselkurses; die Wetterdaten umfassen fünf Jahre stündlicher Werte.",
+    fxSourceLive:
+      "Kursquelle: open.er-api.com, Stand {asOf} — dieses Datum ist das des Wechselkurses; die Wetterdaten umfassen fünf Jahre stündlicher Werte.",
     fxSourceStale:
       "Kursquelle: open.er-api.com, zuletzt aktualisiert am {asOf} (vor {days} Tagen). Prüfen Sie den Kurs, bevor Sie sich darauf verlassen.",
     fxSourceFailed:
@@ -4183,7 +4182,8 @@ export const LOCALES = {
     bomSelectedSystem: "Geselecteerd systeem",
     fxSourceStatic:
       "Bron van de wisselkoers: open.er-api.com. Er is geen live koers geladen, dus dit zijn ingebouwde schattingen.",
-    fxSourceLive: "Bron van de wisselkoers: open.er-api.com, per {asOf} — deze datum is die van de wisselkoers; de weercijfers beslaan vijf jaar uurgegevens.",
+    fxSourceLive:
+      "Bron van de wisselkoers: open.er-api.com, per {asOf} — deze datum is die van de wisselkoers; de weercijfers beslaan vijf jaar uurgegevens.",
     fxSourceStale:
       "Bron van de wisselkoers: open.er-api.com, laatst bijgewerkt op {asOf} ({days} dagen geleden). Controleer de koers voordat u erop vertrouwt.",
     fxSourceFailed:
@@ -4308,8 +4308,7 @@ export const LOCALES = {
     generatorRuntime0: "0% \u2014 أبداً",
     generatorRuntime1: "1% \u2014 بضعة أيام في السنة",
     generatorRuntime2: "2%+ \u2014 لا مشكلة عند الحاجة",
-    verdictBillCut:
-      "يزيل هذا النظام {pct}% من فاتورتك على مدى 20 عامًا.",
+    verdictBillCut: "يزيل هذا النظام {pct}% من فاتورتك على مدى 20 عامًا.",
     verdictTou:
       "تغطي البطارية {pct}% من طاقتك في ساعات الذروة، بقيمة نحو {saving} على مدى 20 عامًا مقابل بطارية تكلف {cost}. الفارق بين الذروة وخارج الذروة هنا {spread} لكل ك.و.س.",
     verdictBackup:
@@ -4828,7 +4827,8 @@ export const LOCALES = {
     bomSelectedSystem: "النظام المحدد",
     fxSourceStatic:
       "مصدر سعر الصرف: open.er-api.com. لم يتم تحميل سعر مباشر، لذا هذه تقديرات مدمجة.",
-    fxSourceLive: "مصدر سعر الصرف: open.er-api.com، بتاريخ {asOf} — هذا التاريخ هو تاريخ سعر الصرف؛ بيانات الطقس تغطي خمس سنوات من السجلات الساعية.",
+    fxSourceLive:
+      "مصدر سعر الصرف: open.er-api.com، بتاريخ {asOf} — هذا التاريخ هو تاريخ سعر الصرف؛ بيانات الطقس تغطي خمس سنوات من السجلات الساعية.",
     fxSourceStale:
       "مصدر سعر الصرف: open.er-api.com، آخر تحديث {asOf} (قبل {days} يومًا). تحقّق من السعر قبل الاعتماد عليه.",
     fxSourceFailed:

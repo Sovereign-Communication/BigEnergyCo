@@ -172,9 +172,9 @@ test("an echoed advisor brief can never reach the screen", () => {
   );
   // A brief in the middle of prose is removed, and the prose survives.
   assert.ok(
-    strip("Yes. [ADVISOR INSTRUCTION: be brief.] It pays back in year 8.").includes(
-      "It pays back in year 8.",
-    ),
+    strip(
+      "Yes. [ADVISOR INSTRUCTION: be brief.] It pays back in year 8.",
+    ).includes("It pays back in year 8."),
   );
   // Ordinary text is untouched, including a bracketed non-brief.
   assert.equal(strip("Costs [$1,623] up front."), "Costs [$1,623] up front.");
