@@ -259,10 +259,10 @@
     <!-- Early Hints prep: these two are on every page's critical path. When
          the zone's Early Hints setting is on, Cloudflare turns them into a
          103 response so the browser starts fetching before the HTML lands. -->
-    <link rel="preload" href="./assets/site.css?v=20261107e" as="style" />
-    <link rel="modulepreload" href="./assets/js/sizing/ui.js?v=20261107e" />
+    <link rel="preload" href="./assets/site.css?v=20261107f" as="style" />
+    <link rel="modulepreload" href="./assets/js/sizing/ui.js?v=20261107f" />
 
-    <link rel="stylesheet" href="./assets/site.css?v=20261107e" />
+    <link rel="stylesheet" href="./assets/site.css?v=20261107f" />
 
     <!-- Preconnect to weather, tariff, and geocoding APIs during parsing. -->
     <link rel="preconnect" href="https://power.larc.nasa.gov" crossorigin />
@@ -2735,12 +2735,7 @@
                   until now nothing on this card could receive it. Revealed by
                   renderResults() with the other result actions, never before
                   a result exists. -->
-                <p
-                  id="valueMomentAsk"
-                  class="value-moment-ask"
-                  role="note"
-                  hidden
-                >
+                <p id="valueMomentAsk" class="vma" role="note" hidden>
                   <span data-i18n="valueMomentAskLead"
                     >If this saved you a call or a quote:</span
                   >
@@ -2750,14 +2745,14 @@
                     data-i18n="valueMomentAskChipIn"
                     >chip in</a
                   >
-                  <span class="vm-sep" aria-hidden="true">·</span>
+                  <span aria-hidden="true"> · </span>
                   <a
                     id="vmAskWorked"
                     href="mailto:lucasballek@gmail.com?subject=The%20calculator%20worked%20for%20me"
                     data-i18n="valueMomentAskWorked"
                     >tell me it worked</a
                   >
-                  <span class="vm-sep" aria-hidden="true">·</span>
+                  <span aria-hidden="true"> · </span>
                   <button
                     id="vmAskSend"
                     class="vm-link"
@@ -3584,15 +3579,15 @@
 
     <!-- Browser helpers (classic script: advisor + modal globals) -->
 
-    <script type="module" src="./assets/js/sizing/ui.js?v=20261107e"></script>
+    <script type="module" src="./assets/js/sizing/ui.js?v=20261107f"></script>
 
     <!-- Turnstile client (B1/R-CF-02). Harmless with no site key configured;
          the advisor posts without a token in that case, exactly as before. -->
     <script
       type="module"
-      src="./assets/js/turnstile-client.js?v=20261107e"
+      src="./assets/js/turnstile-client.js?v=20261107f"
     ></script>
-    <script defer src="./assets/js/chat.js?v=20261107e"></script>
+    <script defer src="./assets/js/chat.js?v=20261107f"></script>
   </body>
 </html>
 

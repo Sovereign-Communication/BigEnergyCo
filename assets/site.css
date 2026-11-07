@@ -1073,31 +1073,21 @@ textarea:focus-visible {
   display: none;
 }
 
-/* V2: the ask at the value moment. Quieter than the result it follows - an
-   invitation, not a call to action competing with the numbers. */
-.value-moment-ask {
+/* V2: the ask at the value moment - quieter than the result it follows. */
+.vma {
   margin: 1rem 0 0;
-  font-size: 0.9rem;
-  line-height: 1.6;
   color: var(--text-muted);
 }
-.value-moment-ask[hidden] {
+.vma[hidden] {
   display: none;
 }
-.value-moment-ask a,
-.value-moment-ask .vm-link {
-  color: var(--primary-accent);
-  text-decoration: underline;
-}
-.value-moment-ask .vm-link {
+.vma .vm-link {
   background: none;
   border: 0;
   padding: 0;
   font: inherit;
   cursor: pointer;
-}
-.value-moment-ask .vm-sep {
-  margin: 0 0.4rem;
+  color: var(--primary-accent);
 }
 
 .field-error {
