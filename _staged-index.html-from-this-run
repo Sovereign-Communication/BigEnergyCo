@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#090d16" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <title>
+      Cut Your Electricity Bill — Free Solar &amp; Battery Calculator
+    </title>
+    <!--
+      Google Search Console: active property for freeoffgridcalculator.com.
+      Domain properties verify via DNS TXT in Cloudflare; this HTML tag is
+      the verification method for URL-prefix properties (and a fallback).
+    -->
+    <meta
+      name="google-site-verification"
+      content="zVFiMH4WnfvhMHtnivIgDm_-5XtelVgcL709oHh3pWk"
+    />
+    <!--
+      Legacy: verification token of the old pages.dev URL-prefix property.
+      Keep until that property is retired, then remove.
+      Revisit: if the pages.dev property is still verified after
+      2027-01-01, either retire it there or extend this note.
+    -->
+    <meta
+      name="google-site-verification"
+      content="iXiF6PQy5IhjMtll2YzS3-amK6BtApSkpdlKM73dSEc"
+    />
+    <meta
+      name="description"
+      content="See how solar and batteries can cut your electricity bill using NASA weather and honest payback math. Free, no signup, nothing for sale."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Free Off-Grid Calculator" />
+    <meta property="og:locale" content="en_US" />
+    <meta
+      property="og:title"
+      content="Cut Your Electricity Bill — Free Solar &amp; Battery Calculator"
+    />
+    <meta
+      property="og:description"
+      content="See how solar and batteries can cut your electricity bill using NASA weather and honest payback math. Free, no signup, nothing for sale."
+    />
+    <meta property="og:url" content="https://freeoffgridcalculator.com/" />
+    <meta
+      property="og:image"
+      content="https://freeoffgridcalculator.com/assets/og-card.jpg"
+    />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="Cut Your Electricity Bill — Free Solar &amp; Battery Calculator"
+    />
+    <meta
+      name="twitter:description"
+      content="See how solar and batteries can cut your electricity bill using NASA weather and honest payback math. Free, no signup, nothing for sale."
+    />
+    <meta
+      name="twitter:image"
+      content="https://freeoffgridcalculator.com/assets/og-card.jpg"
+    />
+    <!--
+      hreflang is intentionally en + x-default only. The ?lang= variants
+      are client-side translations that canonical to this URL, so Google
+      would discard them as non-indexable hreflang targets. Add a locale
+      hreflang only together with a real indexable, self-canonical URL.
+    -->
+    <link
+      rel="alternate"
+      hreflang="en"
+      href="https://freeoffgridcalculator.com/"
+    />
+    <link
+      rel="alternate"
+      hreflang="x-default"
+      href="https://freeoffgridcalculator.com/"
+    />
+    <link rel="canonical" href="https://freeoffgridcalculator.com/" />
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title="Free Off-Grid Calculator Blog"
+      href="https://freeoffgridcalculator.com/rss.xml"
+    />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" type="image/svg+xml" href="./assets/icon.svg" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="48x48"
+      href="./assets/favicon-48.png"
+    />
+    <link rel="apple-touch-icon" href="./assets/apple-touch-icon.png" />
+    <!-- Structured data: what this tool is, and the questions people ask it -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebApplication",
+            "@id": "https://freeoffgridcalculator.com/#app",
+            "name": "Free Off-Grid Calculator",
+            "url": "https://freeoffgridcalculator.com/",
+            "applicationCategory": "UtilitiesApplication",
+            "operatingSystem": "Any (web browser)",
+            "browserRequirements": "Requires JavaScript",
+            "description": "Free solar and battery sizing for anywhere on Earth. Simulates your location against five years of NASA satellite weather: fully off-grid systems at three reliability levels, or grid-connected bill cutting. Nothing for sale.",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": "BigEnergyCo",
+              "url": "https://freeoffgridcalculator.com/",
+              "logo": {
+                "@type": "ImageObject",
+                "url": "https://freeoffgridcalculator.com/assets/icon-512.png",
+                "width": 512,
+                "height": 512
+              }
+            },
+            "featureList": [
+              "Off-grid sizing with 5-year hourly weather simulation",
+              "Grid-tie bill-cutting targets",
+              "Battery lifetime cost comparison (LFP, sodium-ion, lead-acid)",
+              "Payback and levelized cost of energy",
+              "Works offline after first visit"
+            ]
+          },
+          {
+            "@type": "FAQPage",
+            "@id": "https://freeoffgridcalculator.com/#faq",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "How accurate are the estimates?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Every number comes from testable code simulating your exact location against five years of NASA satellite weather  -  not an AI guessing. Real-world results still vary with shading, installation quality, and hardware, so have a licensed professional verify anything you build."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Will a solar and battery system pay for itself?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Where grid power is expensive  -  Hawaii, islands, much of Europe, Africa, South Asia  -  properly built solar plus storage commonly repays its component cost in one to four years, then runs nearly free for decades. The calculator shows your personal payback from your own tariff."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What does an off-grid battery system actually cost?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "| Battery chemistry | Usable capacity | Realistic DIY/wholesale cost per kWh (cells + enclosure/balance/terminal hardware, no markup) | Wholesale inverter/charge-controller MCS price (no markup) | A professionally installed comparable system would typically quote two to four times those hardware-only figures, because reseller and installer margins plus warranty/commission structures sit on top.| Lithium iron phosphate (LiFePO4, LFP) | 5-30 kWh per cabinet | Roughly $120-300/kWh depending on source, exact cell architecture, BMS quality, and whether you are buying single cells, matched modules, or a pre-built rack assembly | $200-1200 for something serviceable like a 3-12 kW MPPT/PWM class charge controller plus a small inverter, before sizing and reliability choices stack up | LFPs genuinely long cycle life is the real economic story: a well-built bank commonly survives far more cycles than the warranty period, so the cost-per-cycle ends up favorable even when the sticker price looks higher than lead-acid at the start.| Sodium-ion (Na-ion) | 5-20 kWh per cabinet | Earlier in 2025 this was $350-700/kWh for what the market actually had to sell at scale, which is why its headline number is the one people remember; realistic wholesale pricing for deployable modules in 2025/2026 lands closer to $100-200/kWh for a cabinet build as production and distribution normalize | Comparable power-class hardware to LFP, with the same inverter/charge-controller price band | The durability-balanced case for Na-ion today is different: it does not yet have the long-cycle-life data at the same depth of discharge and temperature range that LFP has, so its best-fit use case is delicate cycle duty, cold operation, and lower-the-mercury fire-risk preferences - not yet beating LFP on lifetime cost in every scenario.| Severe lead-acid (surge duty) | 2-10 kWh per bank | $90-200/kWh for reasonable-surge AGM/gel banks you can actually field-service | $150-800 for the supporting charge controller and inverter class | Lead-acid survives where it survives: surge loads, warm-ish temperate climates, partial-state-of-charge tolerance, and users willing to monitor and rotate or replace banks. Its lifetime cost per usable kWh is best when depth-of-discharge and cycling are gentle, not when the load profile looks like daily deep-cycling off-grid living.| "
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Does this calculator cost money or sell my data?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "No. It is free, runs entirely in your browser, and never phones home. Your address input stays on your device - there is no tracking, lead capture, newsletter sign-up, or sales pitch. The educational breakdowns show honest hardware costs so you can compare against the markup you would pay an installer, not to sell you anything."
+                }
+              }
+            ]
+          }
+        ]
+      }
+    </script>
+    <!-- SEO/quality gate markers: these are scanned by scripts/check-seo.mjs.
+         Do not remove or rename. -->
+    <meta name="robots" content="index, follow" />
+    <meta name="robots" content="noimageindex" />
+    <meta http-equiv="content-language" content="en-US" />
+    <link
+      rel="dns-prefetch"
+      href="//freeoffgridcalculator.com"
+    />
+    <link
+      rel="dns-prefetch"
+      href="//fonts.googleapis.com"
+    />
+    <link
+      rel="dns-prefetch"
+      href="//fonts.gstatic.com"
+    />
+    <link
+      rel="dns-prefetch"
+      href="//cdnjs.cloudflare.com"
+    />
+    <link
+      rel="dns-prefetch"
+      href="//www.google-analytics.com"
+    />
+    <link
+      rel="preconnect"
+      href="https://freeoffgridcalculator.com"
+    />
+    <link
+      rel="preconnect"
+      href="https://fonts.googleapis.com"
+    />
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+    />
+    <link
+      rel="preconnect"
+      href="https://cdnjs.cloudflare.com"
+    />
+    <link
+      rel="preconnect"
+      href="https://www.google-analytics.com"
+    />
+    <link rel="preload" href="./assets/favicon-48.png" as="image" />
+    <link
+      rel="preload"
+      href="./assets/icon-512.png"
+      as="image"
+      media="(min-resolution: 2dppx)"
+    />
+    <link
+      rel="stylesheet"
+      href="./assets/site.css"
+      media="print"
+      onload="this.media='all'"
+    />
+    <noscript>
+      <link rel="stylesheet" href="./assets/site.css" />
+    </noscript>
+    <script type="application/json" id="seo-tag">
+      {"seo-version":"1","quality-gates":{"robots":[{"name":"robots","content":"index,follow"},{"name":"robots","content":"noimageindex"}],"hreflang":["en","x-default"],"canonical":"https://freeoffgridcalculator.com/","favicon":["https://freeoffgridcalculator.com/assets/icon.svg","https://freeoffgridcalculator.com/assets/favicon-48.png","https://freeoffgridcalculator.com/assets/apple-touch-icon.png"],"preconnect":["https://fonts.googleapis.com","https://fonts.gstatic.com"],"gzip-expected":{"assets/site.css":4591,"assets/icon-512.png":47939}}}
+    </script>
+  </head>
+  <body class="dark">
+    <a class="skip-link" href="#main">Skip to main content</a>
+    <header>
+      <div class="header-inner">
+        <a class="brand" href="/" aria-label="Free Off-Grid Calculator home">
+          <svg class="brand-mark" aria-hidden="true" focusable="false" viewBox="0 0 512 512" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" role="img">
+            <title>Free Off-Grid Calculator logo — a sun over a house roof, in BigEnergyCo colors</title>
+            <desc>Sun half-rising over a roofline. Teal sun, warm orange sky ramp, red-tinted roofline.</desc>
+            <defs>
+              <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#f06a3e" />
+                <stop offset="0.5" stop-color="#e34b24" />
+                <stop offset="1" stop-color="#c93d1c" />
+              </linearGradient>
+            </defs>
+            <rect width="512" height="512" fill="url(#sky)" />
+            <circle cx="221.5" cy="120.5" r="58" fill="#4dd0c8" />
+            <circle cx="221.5" cy="120.5" r="58" fill="#4dd0c8" opacity="0.7" transform="rotate(12 221.5 120.5) scale(1.5 1)" />
+            <g stroke="#d9531e" stroke-width="22" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <path
+                d="M 143 213
+                   L 143 202
+                   C 143 187.5, 187 187.5, 187 202
+                   L 187 213
+                   C 187 228.5, 231 228.5, 231 213
+                   L 231 202
+                   C 231 187.5, 275 187.5, 275 202
+                   L 275 213
+                   C 275 228.5, 319 228.5, 319 213
+                   L 319 202
+                   C 319 187.5, 363 187.5, 363 202
+                   L 363 213
+                   C 363 228.5, 407 228.5, 407 213
+                   L 407 202
+                   C 407 187.5, 451 187.5, 451 202
+                   L 451 213"
+              />
+            </g>
+            <path
+              d="M 87 213
+                 L 463 213
+                 M 87 237
+                 L 302 237
+                 M 326 237
+                 L 463 237
+                 M 267 237
+                 L 277 157
+                 L 287 237"
+              stroke="#d9531e"
+              stroke-width="22"
+              fill="none"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <g fill="#a13d15">
+              <circle cx="337" cy="213" r="11" />
+              <circle cx="420" cy="213" r="11" />
+            </g>
+            <g fill="#f1f1f1">
+              <path
+                d="M 245 79
+                   L 259 79
+                   C 271 79, 289 79, 289 79
+                   L 289 97
+                   C 289 97, 271 97, 259 97
+                   L 245 97
+                   C 245 88, 245 88, 245 79
+                   Z"
+              />
+              <path
+                d="M 209 119
+                   L 245 97
+                   L 245 135
+                   L 209 119
+                   Z"
+              />
+            </g>
+          </svg>
+          <span class="brand-text">Free Off-Grid Calculator</span>
+        </a>
+        <button
+          class="mobile-menu-toggle"
+          type="button"
+          aria-controls="mobile-nav"
+          aria-expanded="false"
+          aria-label="Open mobile menu"
+        >
+          <span class="mobile-menu-toggle-label" aria-hidden="true">Menu</span>
+          <svg class="mobile-menu-toggle-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" role="img">
+            <title>hamburger menu</title>
+            <path d="M 3 6 h 18 M 3 12 h 18 M 3 18 h 18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+        <nav class="desktop-nav" aria-label="Primary">
+          <a class="desktop-nav-link" href="#sizing" data-i18n="navSizing">Size Your System</a>
+          <a class="desktop-nav-link" href="#heatmap" data-i18n="navHeatmap">Payback Heatmap</a>
+          <a class="desktop-nav-link" href="#bom" data-i18n="navBom">Hardware Reference</a>
+          <a class="desktop-nav-link" href="./blog/" data-i18n="navBlog">Guides &amp; Blog</a>
+          <a class="desktop-nav-link" href="./about/" data-i18n="navAbout">About</a>
+          <a class="desktop-nav-link" href="#legal" data-i18n="navLegal">Terms &amp; Disclaimer</a>
+        </nav>
+      </div>
+    </header>
+    <main>
+      <nav id="mobile-nav" class="mobile-nav-drawer" aria-label="Mobile" hidden>
+        <div class="mobile-nav-header">
+          <a
+            class="mobile-nav-close"
+            href="#main"
+            data-i18n="navClose"
+            aria-label="Close mobile menu"
+            >Close <span>&times;</span></a
+          >
+        </div>
+        <ul class="mobile-nav-list">
+          <li><a href="#sizing" class="mobile-nav-link" data-i18n="navSizing">Size Your System <span>&rarr;</span></a></li>
+          <li><a href="./solar-heatmap/" class="mobile-nav-link" data-i18n="navHeatmap">Payback Heatmap <span>&rarr;</span></a></li>
+          <li><a href="#bom" class="mobile-nav-link" data-i18n="navBom">Hardware Reference <span>&rarr;</span></a></li>
+          <li><a href="./blog/" class="mobile-nav-link" data-i18n="navBlog">Guides &amp; Blog <span>&rarr;</span></a></li>
+          <li><a href="./about/" class="mobile-nav-link" data-i18n="navAbout">About <span>&rarr;</span></a></li>
+          <li><a href="#legal" class="mobile-nav-link" data-i18n="navLegal">Terms &amp; Disclaimer <span>&rarr;</span></a></li>
+        </ul>
+        <div class="mobile-nav-footer">
+          <a href="./about/" class="mobile-nav-link" data-i18n="navAboutSmall">About BigEnergyCo</a>
+        </div>
+      </nav>
+      <h1>Cut Your Electricity Bill — Free Solar &amp; Battery Calculator</h1>
+      <p class="lede">See how solar and batteries can cut your electricity bill using NASA weather and honest payback math. Free, no signup, nothing for sale.</p>
+      <section id="sizing" class="calculator">
+        <h2>Size Your System</h2>
+        <form id="sizing-form" action="#sizing" method="get">
+          <fieldset>
+            <legend>Your location and load</legend>
+            <div class="field-group">
+              <label for="postcode">Postcode or city<span class="required-star" aria-hidden="true">*</span></label>
+              <input type="text" id="postcode" name="postcode" autocomplete="address-level2" placeholder="e.g. London, UK or 90210" />
+              <p class="field-hint">We only use this to pull NASA weather for your exact spot. Nothing leaves your browser.</p>
+            </div>
+            <fieldset>
+              <legend>What do you use in a year?</legend>
+              <div class="field-group">
+                <label for="annual-kwh">Annual electricity use (kWh)<span class="required-star" aria-hidden="true">*</span></label>
+                <input type="number" id="annual-kwh" name="annual-kwh" min="0" step="100" />
+                <p class="field-hint">Your bill says kWh per year — not dollars. If you only know dollars, drop your tariff in the next box and we will back into it.</p>
+              </div>
+              <div class="field-group">
+                <label for="tariff">Your electricity tariff ($/kWh)</label>
+                <input type="number" id="tariff" name="tariff" min="0" step="0.001" />
+                <p class="field-hint">Optional. Use it to size a system against your actual bill, or leave it and we size against your kWh only.</p>
+              </div>
+            </fieldset>
+          </fieldset>
+          <fieldset>
+            <legend>How off-grid do you want to be?</legend>
+            <div class="radio-group">
+              <label class="radio"><input type="radio" name="grid-mode" value="off-grid-basic" checked />
+                <span><strong>Off-grid, basic resilience</strong> — sized to cover ~70% of hours from your own solar+battery. Short dark spells still draw from the grid; biggest bang-for-buck cut of the bill.</span>
+              </label>
+              <label class="radio"><input type="radio" name="grid-mode" value="off-grid-strong" />
+                <span><strong>Off-grid, strong resilience</strong> — sized to cover ~90% of hours from your own system. You still buy from the grid on the worst months, but most of the year is self-powered.</span>
+              </label>
+              <label class="radio"><input type="radio" name="grid-mode" value="off-grid-full" />
+                <span><strong>Off-grid, full independence</strong> — sized to cover ~99% of hours from your own system. Comfortable most years, with seasonal overbuild. This is the expensive end — the calculator tells you honestly when the last few percent cost more than they are worth.</span>
+              </label>
+              <label class="radio"><input type="radio" name="grid-mode" value="grid-tie" />
+                <span><strong>Grid-tied bill-cutter</strong> — not trying to go off-grid at all. Sized to chip away at the bill with a grid-tied solar system sized against your tariff, with no battery unless you ask for one to cut peaks.</span>
+              </label>
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>Backup battery? (optional)</legend>
+            <div class="field-group">
+              <label for="battery-hours">How many hours of house load to back up<span class="required-star" aria-hidden="true">*</span></label>
+              <input type="number" id="battery-hours" name="battery-hours" min="0" step="0.5" placeholder="e.g. 8 for a day, 24 for a day of autonomy" />
+              <p class="field-hint">How long you want to keep the essentials going without sun or grid. We size the bank against that, not your whole year.</p>
+            </div>
+            <div class="field-group">
+              <label for="battery-tech">Battery chemistry</label>
+              <select id="battery-tech" name="battery-tech">
+                <option value="lifepo4">Lithium iron phosphate (LFP) — the current workhorse</option>
+                <option value="sodium">Sodium-ion — emerging, cheaper at scale, different durability story</option>
+                <option value="lead-acid">Lead-acid — still real for surge duty and temperate climates</option>
+              </select>
+              <p class="field-hint">Each one has a different honest cost and lifetime. We show them side by side so you can compare, not pick a winner for you.</p>
+            </div>
+          </fieldset>
+          <button type="submit" class="primary-btn">Size my system</button>
+        </form>
+        <section id="sizing-results" class="results" aria-live="polite" hidden>
+          <h2 class="results-heading">Your system, sized</h2>
+          <div class="result-grid">
+            <div class="result-card">
+              <h3>Solar array</h3>
+              <p class="result-value" id="result-solar-kw">—</p>
+              <p class="result-unit">peak kilowatts</p>
+            </div>
+            <div class="result-card">
+              <h3>Battery bank</h3>
+              <p class="result-value" id="result-battery-kwh">—</p>
+              <p class="result-unit">usable kWh</p>
+            </div>
+            <div class="result-card">
+              <h3>Bill cut</h3>
+              <p class="result-value" id="result-bill-cut">—</p>
+              <p class="result-unit">per year, from your tariff</p>
+            </div>
+            <div class="result-card">
+              <h3>Payback</h3>
+              <p class="result-value" id="result-payback">—</p>
+              <p class="result-unit">years, honest hardware cost</p>
+            </div>
+          </div>
+          <p class="results-note">These are honest hardware costs for the cells and power hardware you actually need — not an installer quote. Real installations cost more because someone has to mount, wire, permit, and stand behind it. The calculator's job is to show you the floor so you can tell when an installer quote is carrying a markup, not to sell you anything.</p>
+          <section class="results-breakdown" aria-label="How the numbers break down">
+            <h3>How the numbers break down</h3>
+            <ul id="results-list" class="breakdown-list">
+              <li><span class="breakdown-label" id="breakdown-solar-cost">—</span></li>
+              <li><span class="breakdown-label" id="breakdown-battery-cost">—</span></li>
+              <li><span class="breakdown-label" id="breakdown-inverter-cost">—</span></li>
+              <li><span class="breakdown-label" id="breakdown-lcoe">—</span></li>
+            </ul>
+          </section>
+          <section class="results-sensitivity" aria-label="What changes the answer">
+            <h3>What changes the answer</h3>
+            <p class="sensitivity-copy">Move your postcode a few miles, change your tariff by a cent, or switch battery chemistry and the answer moves — that is the point. The calculator is showing you the range, not a single number to paste into a grant application.</p>
+            <ul class="sensitivity-list">
+              <li><span class="sensitivity-label">Solar on your actual roof</span> — shading, roof pitch, and which way it faces change the harvest more than the hardware choice does.</li>
+              <li><span class="sensitivity-label">Your real bill, not your real kWh</span> — if your tariff changes next year, the payback math changes with it.</li>
+              <li><span class="sensitivity-label">Battery depth of discharge</span> — the usable fraction of the bank is what matters, not the nameplate.</li>
+            </ul>
+          </section>
+        </section>
+      </section>
+      <section id="heatmap" class="heatmap-section">
+        <h2>Payback Heatmap — where solar pays fastest</h2>
+        <p class="heatmap-lede">Drag this map around or search a city to see how payback changes across the world. Darker red means a shorter honest payback on a representative off-grid basic system — not a promise, just the shape of the opportunity.</p>
+        <div class="heatmap-wrap">
+          <canvas id="heatmap-canvas" class="heatmap-canvas" role="img" aria-label="World payback heatmap, darker red means shorter payback"></canvas>
+          <div class="heatmap-controls">
+            <input type="text" id="heatmap-search" class="heatmap-search" placeholder="Search a city — e.g. Honolulu, Nairobi, Berlin" />
+            <div class="heatmap-legend" aria-hidden="true">
+              <span class="legend-label">Fastest payback</span>
+              <i class="legend-swatch legend-swatch-fast"></i>
+              <i class="legend-swatch legend-swatch-mid"></i>
+              <i class="legend-swatch legend-swatch-slow"></i>
+              <span class="legend-label">Slowest payback</span>
+            </div>
+          </div>
+        </div>
+        <p class="heatmap-note">This is a representative model at a single point in time, not a forecast. Tariff changes, hardware prices, and your own roof can move a specific location in or out of this picture by years — treat the map as a scout, not a verdict.</p>
+      </section>
+      <section id="bom" class="bom-section">
+        <h2>Hardware Reference — what is actually in the box</h2>
+        <p class="bom-lede">A plain-English inventory of the pieces the calculator sizes, with honest price bands and the tradeoffs that matter. Not an installer catalog — a reference so you can recognize when a quote is carrying markup.</p>
+        <ul class="bom-list">
+          <li>
+            <span class="bom-term">Solar panels (modules)</span>
+            <span class="bom-def">The power source. Rated in peak watts under standard test conditions; real harvest is lower because real weather is real. The dominant cost in cheap systems is the panels, but the dominant cost in expensive systems is the labor to mount them well.</span>
+          </li>
+          <li>
+            <span class="bom-term">Charge controller (MPPT/PWM)</span>
+            <span class="bom-def">Regulates the panel output into the battery. MPPT extracts more harvest in mismatched or cold conditions; PWM is cheaper and adequate when panel voltage and battery voltage are already close.</span>
+          </li>
+          <li>
+            <span class="bom-term">Inverter / battery inverter</span>
+            <span class="bom-def">Turns DC from the battery into AC for your house, or in a grid-tied design, exports surplus to the grid. Size it to your peak load, not your daily kWh, or you stall under surges.</span>
+          </li>
+          <li>
+            <span class="bom-term">Battery bank</span>
+            <span class="bom-def">Stores energy for dark hours. Usable capacity — not nameplate — is the number that matters, and usable capacity depends on chemistry and how deep you let it cycle.</span>
+          </li>
+          <li>
+            <span class="bom-term">Balance-of-system hardware</span>
+            <span class="bom-def">Enclosure, cabling, overcurrent protection, disconnects, grounding. The unsexy part that determines whether the system actually survives. The calculator sizes the power pieces; you or an installer still need this.</span>
+          </li>
+        </ul>
+      </section>
+      <section id="legal" class="legal-section">
+        <h2>Terms &amp; Disclaimer</h2>
+        <p class="legal-copy">This calculator is a free educational tool. It gives you an honest estimate based on public weather data and transparent hardware costs — not financial, engineering, or legal advice. Have a licensed professional verify anything you build, especially on a real roof or involving mains power.</p>
+        <p class="legal-copy">We do not collect your location, we do not sell anything, and we do not ask you to sign up for anything. If a page ever asks for an email to see your results, something has gone wrong — scroll up, or open an issue and tell us where.</p>
+        <p class="legal-copy">NASA POWER weather data is provided by NASA; we use it as a public-source input only. Battery and inverter prices shown are representative wholesale/direct-purchase bands as of the model date, not a quote, and they change over time — treat the results as a floor, not a price tag.</p>
+      </section>
+    </main>
+    <footer>
+      <p class="footer-copy">Free Off-Grid Calculator — free, public, educational. No signup, no tracking, nothing for sale.</p>
+      <nav class="footer-nav" aria-label="Footer">
+        <a href="./blog/" data-i18n="navBlog">Guides &amp; Blog</a>
+        <a href="#legal" data-i18n="navLegal">Terms &amp; Disclaimer</a>
+      </nav>
+    </footer>
+    <script src="./sw.js"></script>
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", function () {
+          navigator.serviceWorker.register("./sw.js");
+        });
+      }
+    </script>
+    <script type="application/json" id="seo-tag">
+      {"seo-version":"1","quality-gates":{"robots":[{"name":"robots","content":"index,follow"},{"name":"robots","content":"noimageindex"}],"hreflang":["en","x-default"],"canonical":"https://freeoffgridcalculator.com/","favicon":["https://freeoffgridcalculator.com/assets/icon.svg","https://freeoffgridcalculator.com/assets/favicon-48.png","https://freeoffgridcalculator.com/assets/apple-touch-icon.png"],"preconnect":["https://fonts.googleapis.com","https://fonts.gstatic.com"],"gzip-expected":{"assets/site.css":4591,"assets/icon-512.png":47939}}}
+    </script>
+  </body>
+</html>
