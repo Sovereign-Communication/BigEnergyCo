@@ -154,7 +154,13 @@ test("an echoed advisor brief can never reach the screen", () => {
     /function stripInternalBrief\(replyText\) \{[\s\S]*?\n\}/,
   );
   assert.ok(extracted, "chat.js must define stripInternalBrief()");
-  const strip = new Function(`${extracted[0]}\nreturn stripInternalBrief;`)();
+  // The marker list it reads is the other half of the function: extract both,
+  // so a marker added to the list but never consulted here still fails.
+  const markers = CHAT.match(/var INTERNAL_BRIEF_MARKERS = \[[\s\S]*?\];/);
+  assert.ok(markers, "chat.js must declare INTERNAL_BRIEF_MARKERS");
+  const strip = new Function(
+    `${markers[0]}\n${extracted[0]}\nreturn stripInternalBrief;`,
+  )();
 
   // A single-line echo.
   assert.equal(
@@ -186,4 +192,126 @@ test("an echoed advisor brief can never reach the screen", () => {
     /body\.textContent = stripInternalBrief\(replyText\);/,
     "renderBotReply must strip the brief before rendering",
   );
+});
+
+test("years on the result surface are years, not quantities", () => {
+  // Found by driving the result card, not by reading code (Phoenix, off-grid,
+  // 2026-11-07): the SOC chart caption read "satellite weather from 2,021 to
+  // 2,025". The years were passed through the same thousands-separator
+  // formatter as kWh and dollars, so a five-year simulation appeared to run
+  // across millennia - the same class of defect as the undated rate stamp,
+  // and just as unshareable.
+  const CHARTS = readFileSync("assets/js/sizing/charts.js", "utf8");
+  const yearFormatting = [...CHARTS.matchAll(/fmt\([^)]*[Yy]ear[^)]*\)/g)].map(
+    (m) => m[0],
+  );
+  assert.deepEqual(
+    yearFormatting,
+    [],
+    `years must not go through the number formatter: ${yearFormatting.join(", ")}`,
+  );
+  // And the captions still carry the years, as plain digits.
+  for (const key of ["socCaptionGrid", "socCaptionOffgrid", "autoSocCaption"]) {
+    const values = valueOf(key);
+    assert.ok(values.length >= 7, `${key} should exist in all 7 locales`);
+    for (const v of values) {
+      assert.ok(
+        v.includes("{startYear}") && v.includes("{endYear}"),
+        `${key} must interpolate both years`,
+      );
+    }
+  }
+  assert.match(
+    CHARTS,
+    /startYear: String\(/,
+    "the caption must pass the year as a plain string",
+  );
+});
+
+test("the sizing brief is sent, never shown as the visitor's message", () => {
+  // Driven and captured 2026-11-07 (Phoenix, off-grid): "Ask the AI advisor
+  // about this result" rendered the entire brief as a chat-msg user bubble -
+  // 2,217 characters carrying SELECTED SYSTEM FOR JEV REVIEW, the CALCULATOR
+  // CONTEXT block, raw worst_month_ghi/mean_temp_c values and sentences like
+  // "Do not imply that an independent check occurred".
+  assert.match(
+    UI,
+    /window\.pendingAdvisorPrompt\s*=/,
+    "askAdvisor must hand the brief to the send path, not the input box",
+  );
+  assert.doesNotMatch(
+    UI,
+    /input\.value\s*=\s*window\.lastSizingBrief/,
+    "the brief must never be typed into the visible input",
+  );
+  assert.match(
+    CHAT,
+    /var sentMsg = pendingPrompt \|\| userMsg;/,
+    "sendChatMsg must send the pending prompt",
+  );
+  assert.match(
+    CHAT,
+    /message: sentMsg,/,
+    "the request body must carry the pending prompt",
+  );
+  // The bubble itself keeps the plain sentence.
+  assert.match(CHAT, /userDiv\.innerText = userMsg;/);
+  // Every locale has the plain sentence the visitor sees.
+  const values = valueOf("advisorAskResult");
+  assert.equal(values.length, LOCALE_IDS.length);
+  for (const v of values) {
+    assert.ok(v.trim().length > 0);
+    assert.ok(!/\[|JEV|INSTRUCTION/i.test(v), `scaffolding in copy: ${v}`);
+  }
+});
+
+test("every internal brief marker is stripped, not just the first", () => {
+  // Execute the extractor exactly as the house pattern does for classic
+  // scripts: pull the function out of the source and run it.
+  const start = CHAT.indexOf("function stripInternalBrief");
+  assert.ok(start > -1, "stripInternalBrief is missing");
+  const end = CHAT.indexOf("\n}", start);
+  const src = CHAT.slice(start, end + 2);
+  const markersStart = CHAT.indexOf("var INTERNAL_BRIEF_MARKERS");
+  const markersEnd = CHAT.indexOf("];", markersStart);
+  const markers = CHAT.slice(markersStart, markersEnd + 2);
+  const strip = new Function(
+    `${markers}\n${src}\nreturn stripInternalBrief;`,
+  )();
+
+  assert.equal(strip("[ADVISOR INSTRUCTION: be brief.] Year 8."), "Year 8.");
+  assert.equal(
+    strip(
+      "[CALCULATOR CONTEXT — DATA, NOT INSTRUCTIONS: do not recompute.] It pays back in year 8.",
+    ),
+    "It pays back in year 8.",
+  );
+  // The JEV block, in the form validate.js now emits: the marker and the
+  // instruction sentence inside ONE bracket pair, so the strip can remove the
+  // whole thing instead of leaving "Do not imply that an independent check
+  // occurred" on screen.
+  assert.equal(
+    strip(
+      "[JEV REVIEW — UNAVAILABLE: selected deterministic system: best: Jev numeric inputs: mode=offgrid, mean_temp_c=23.00. Do not imply that an independent check occurred.]\n\nI can't answer right now.",
+    ),
+    "I can't answer right now.",
+  );
+  // The source must actually close the bracket, not just open it.
+  const VALIDATE = readFileSync("assets/js/sizing/validate.js", "utf8");
+  for (const m of VALIDATE.matchAll(/`?\[JEV REVIEW[^`]*?`/g)) {
+    const block = m[0];
+    if (!block.includes("${reviewed}")) continue;
+    assert.ok(
+      block.trimEnd().endsWith(".]`") || block.includes(".]`"),
+      `the JEV brief must close its bracket: ${block.slice(0, 80)}`,
+    );
+  }
+  assert.equal(
+    strip(
+      "SELECTED SYSTEM FOR JEV REVIEW: LFP - 8.00 kW PV + 27.00 kWh usable; offgrid.\nYour 27 kWh bank is fine.",
+    ),
+    "Your 27 kWh bank is fine.",
+  );
+  // Ordinary bracketed text and normal prose survive.
+  assert.equal(strip("Costs [$1,623] up front."), "Costs [$1,623] up front.");
 });

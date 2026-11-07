@@ -3,7 +3,7 @@
 // `ar` flips the document to RTL automatically.
 // Keys not present in a locale fall back to English silently.
 
-import { HOME_COPY } from "./home-copy.js?v=20261107b";
+import { HOME_COPY } from "./home-copy.js?v=20261107c";
 
 export const LOCALES = {
   en: {
@@ -183,6 +183,7 @@ export const LOCALES = {
     advisorPlaceholder:
       "Ask about cell specs, Sodium-ion vs LFP, freight costs...",
     advisorSend: "Send",
+    advisorAskResult: "Explain this result to me.",
     advisorClose: "Close AI advisor",
     advisorBusyRetry: " The free AI engine is busy — retrying in {secs}s…",
     advisorNoReply: " No reply received. Please try again.",
@@ -935,6 +936,7 @@ export const LOCALES = {
     advisorPlaceholder:
       "Pregunta sobre celdas, sodio-ion frente a LFP, costes de transporte...",
     advisorSend: "Enviar",
+    advisorAskResult: "Explica este resultado.",
     advisorClose: "Cerrar asesor de IA",
     advisorBusyRetry:
       " El motor gratuito de IA está ocupado; reintentando en {secs}s…",
@@ -1628,6 +1630,7 @@ export const LOCALES = {
     advisorPlaceholder:
       "Pergunte sobre células, sódio-ion versus LFP, custos de frete...",
     advisorSend: "Enviar",
+    advisorAskResult: "Explica este resultado.",
     advisorClose: "Fechar consultor de IA",
     advisorBusyRetry:
       " O motor gratuito de IA está ocupado — a tentar novamente em {secs}s…",
@@ -2313,6 +2316,7 @@ export const LOCALES = {
     advisorPlaceholder:
       "Questions sur les cellules, sodium-ion vs LFP, fret...",
     advisorSend: "Envoyer",
+    advisorAskResult: "Explique-moi ce résultat.",
     advisorClose: "Fermer le conseiller IA",
     advisorBusyRetry:
       " Le moteur IA gratuit est occupé — nouvelle tentative dans {secs}s…",
@@ -3001,6 +3005,7 @@ export const LOCALES = {
     advisorPlaceholder:
       "Fragen zu Zellen, Natrium-Ion vs. LFP, Frachtkosten...",
     advisorSend: "Senden",
+    advisorAskResult: "Erkläre mir dieses Ergebnis.",
     advisorClose: "KI-Berater schließen",
     advisorBusyRetry:
       " Die kostenlose KI ist ausgelastet — erneuter Versuch in {secs}s…",
@@ -3604,6 +3609,7 @@ export const LOCALES = {
     advisorPlaceholder:
       "Vraag over celspecificaties, natrium-ion vs LFP, transportkosten...",
     advisorSend: "Verzenden",
+    advisorAskResult: "Leg dit resultaat aan me uit.",
     advisorClose: "AI-adviseur sluiten",
     advisorBusyRetry:
       " De gratis AI-engine is bezet — opnieuw proberen over {secs}s…",
@@ -4463,6 +4469,7 @@ export const LOCALES = {
     advisorPlaceholder:
       "اسأل عن الخلايا، أيوني الصوديوم مقابل LFP، تكلفة الشحن...",
     advisorSend: "إرسال",
+    advisorAskResult: "اشرح لي هذه النتيجة.",
     advisorClose: "إغلاق مستشار الذكاء الاصطناعي",
     advisorBusyRetry:
       " محرك الذكاء الاصطناعي المجاني مشغول — إعادة المحاولة خلال {secs}s…",

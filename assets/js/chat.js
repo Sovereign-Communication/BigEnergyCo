@@ -286,13 +286,39 @@ function localizedDegradedReply(data) {
 // one back, and this function renders whatever text it is handed. So the strip
 // happens here, at the one place every reply passes through, rather than trusting
 // the model not to repeat itself.
+// The brief is assembled from several markers, not one: chat.js and locales.js
+// use "[ADVISOR INSTRUCTION:", ui.js wraps its figures in
+// "[CALCULATOR CONTEXT — DATA, NOT INSTRUCTIONS:", and validate.js answers with
+// "[JEV REVIEW — PENDING|UNAVAILABLE|INDEPENDENT NUMERIC PLAUSIBILITY CHECK]"
+// plus a bare "SELECTED SYSTEM FOR JEV REVIEW:" line. A strip that knew only the
+// first marker left the rest reachable on screen, which is how the JEV block
+// was driven out of the advisor on 2026-11-07.
+var INTERNAL_BRIEF_MARKERS = [
+  "ADVISOR INSTRUCTION:",
+  "CALCULATOR CONTEXT",
+  "JEV REVIEW",
+];
+
 function stripInternalBrief(replyText) {
   if (!replyText) return replyText;
 
-  return String(replyText)
-    .replace(/\[\s*ADVISOR INSTRUCTION:[\s\S]*?\]/gi, "")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
+  var out = String(replyText);
+
+  for (var i = 0; i < INTERNAL_BRIEF_MARKERS.length; i++) {
+    var re = new RegExp(
+      "\\[\\s*" +
+        INTERNAL_BRIEF_MARKERS[i].replace(/[.*+?^${}()|[\]\\]/g, "\\$&") +
+        "[\\s\\S]*?\\]",
+      "gi",
+    );
+
+    out = out.replace(re, "");
+  }
+
+  // The one scaffolding line that is not bracketed.
+  out = out.replace(/^[ \t]*SELECTED SYSTEM FOR JEV REVIEW:.*$/gim, "");
+
+  return out.replace(/\n{3,}/g, "\n\n").trim();
 }
 
 function renderBotReply(replyText, degraded, data) {
@@ -379,6 +405,19 @@ function sendChatMsg() {
 
   var userMsg = chatInput.value.trim();
 
+  // A prompt the app composed for the visitor (the sizing brief behind "Ask the
+  // AI advisor about this result") is SENT in full but never shown: the bubble
+  // carries the short question the visitor actually sees. Rendering the brief
+  // put 2,200 characters of prompt scaffolding - "SELECTED SYSTEM FOR JEV
+  // REVIEW", "[CALCULATOR CONTEXT — DATA, NOT INSTRUCTIONS]", raw
+  // worst_month_ghi / mean_temp_c values - on screen as the visitor's own
+  // message (driven and captured 2026-11-07).
+  var pendingPrompt = window.pendingAdvisorPrompt;
+
+  window.pendingAdvisorPrompt = null;
+
+  var sentMsg = pendingPrompt || userMsg;
+
   if (!userMsg) return;
 
   chatSendBusy = true;
@@ -391,7 +430,7 @@ function sendChatMsg() {
 
   chatWindow.appendChild(userDiv);
 
-  chatHistory.push({ role: "user", content: userMsg });
+  chatHistory.push({ role: "user", content: sentMsg });
 
   chatInput.value = "";
 
@@ -423,7 +462,7 @@ function sendChatMsg() {
   // it is ready when no challenge is configured. `sendBody` is replaced below
   // by the token-bearing one only if a token is actually produced.
   var payload = JSON.stringify({
-    message: userMsg,
+    message: sentMsg,
     history: cleanHistory,
     language: window.becoLang || "en",
   });

@@ -5,7 +5,7 @@
 // `$` (DOM lookup), `el` (element factory), `t` (i18n), `fmt` (number format),
 // `money` (currency formatter). Chart state (socZoomRange, cachedChartState)
 // lives here as the single owner.
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261107b";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261107c";
 
 // ── injected boundary (set once by ui.js via initCharts) ──────────────────
 let _$;
@@ -434,7 +434,7 @@ export function drawSocChart(history, chemLabel, hasPv = true) {
         const x = X(dayIdx);
 
         ctx.fillText(
-          fmt(history.startYear + yy),
+          String(history.startYear + yy),
           Math.min(W - padR, Math.max(padL, x)),
           H - 2,
         );
@@ -445,8 +445,8 @@ export function drawSocChart(history, chemLabel, hasPv = true) {
   const caption = $("socCaption");
   if (caption) {
     caption.textContent = t(gt ? "socCaptionGrid" : "socCaptionOffgrid", {
-      startYear: fmt(history.startYear),
-      endYear: fmt(history.endYear),
+      startYear: String(history.startYear),
+      endYear: String(history.endYear),
       chemistry: localizedChemistry(chemLabel),
     });
     if (gt) caption.textContent += " " + t("socCaptionGridPattern");
@@ -1339,7 +1339,7 @@ export function drawAutoChart(p) {
         const x = X(dayIdx);
 
         ctx.fillText(
-          fmt(p.history.startYear + yy),
+          String(p.history.startYear + yy),
           Math.min(W - padR, Math.max(padL, x)),
           H - 4,
         );
@@ -1407,8 +1407,8 @@ export function drawAutoChart(p) {
       t("autoSocIntro", { ceilings }) +
       " " +
       t("autoSocCaption", {
-        startYear: fmt(p.history.startYear),
-        endYear: fmt(p.history.endYear),
+        startYear: String(p.history.startYear),
+        endYear: String(p.history.endYear),
       });
     if (pv) caption.textContent += " " + t("autoSocSunStrip");
   }
