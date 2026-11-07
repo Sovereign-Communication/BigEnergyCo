@@ -73,6 +73,31 @@ test("the landing says whose result it is, in all seven locales", () => {
   assert.match(LOCALES.en.shareLoaded, /shared with you/);
 });
 
+test("the note stays with the result, not just in the status line", () => {
+  // Found by the 2026-11-07 cold recipient drive: the landing copy lived only
+  // in the status line, which the run this link triggers replaces with its own
+  // progress in under a second, so the reader never learned whose result it
+  // was. The note now lives inside the results region and is filled there.
+  const html = readFileSync("index.html", "utf8");
+  const noteAt = html.indexOf('id="sharedResultNote"');
+  const regionAt = html.indexOf('id="resultsRegion"');
+  assert.ok(noteAt > -1, "the landing note must exist in the markup");
+  assert.ok(
+    noteAt > regionAt,
+    "the note must live inside the results region, so it appears with them",
+  );
+  assert.match(
+    html.slice(noteAt, noteAt + 80),
+    /hidden/,
+    "it must start hidden - only an opened share link reveals it",
+  );
+  const start = UI.indexOf("function restoreFromShare() {");
+  const end = UI.indexOf("// -- Printable summary", start);
+  const restore = UI.slice(start, end);
+  assert.match(restore, /note\.textContent = t\("shareLoaded"\)/);
+  assert.match(restore, /note\.hidden = false/);
+});
+
 test("the copy is actually wired to the restore event", () => {
   // shareLoaded is the status the recipient sees after a restore, so it is the
   // one string that must describe the new behaviour.
