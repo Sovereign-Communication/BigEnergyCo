@@ -259,10 +259,10 @@
     <!-- Early Hints prep: these two are on every page's critical path. When
          the zone's Early Hints setting is on, Cloudflare turns them into a
          103 response so the browser starts fetching before the HTML lands. -->
-    <link rel="preload" href="./assets/site.css?v=20261107c" as="style" />
-    <link rel="modulepreload" href="./assets/js/sizing/ui.js?v=20261107c" />
+    <link rel="preload" href="./assets/site.css?v=20261107d" as="style" />
+    <link rel="modulepreload" href="./assets/js/sizing/ui.js?v=20261107d" />
 
-    <link rel="stylesheet" href="./assets/site.css?v=20261107c" />
+    <link rel="stylesheet" href="./assets/site.css?v=20261107d" />
 
     <!-- Preconnect to weather, tariff, and geocoding APIs during parsing. -->
     <link rel="preconnect" href="https://power.larc.nasa.gov" crossorigin />
@@ -2728,6 +2728,45 @@
                     Print / save PDF
                   </button>
                 </div>
+
+                <!-- V2: the ask, at the value moment. One quiet line with three
+                  doors - chip in, say it worked, or send it to someone who is
+                  pricing a system. The gratitude moment already existed here;
+                  until now nothing on this card could receive it. Revealed by
+                  renderResults() with the other result actions, never before
+                  a result exists. -->
+                <p
+                  id="valueMomentAsk"
+                  class="value-moment-ask"
+                  role="note"
+                  hidden
+                >
+                  <span data-i18n="valueMomentAskLead"
+                    >If this saved you a call or a quote:</span
+                  >
+                  <a
+                    id="vmAskChipIn"
+                    href="#support"
+                    data-i18n="valueMomentAskChipIn"
+                    >chip in</a
+                  >
+                  <span class="vm-sep" aria-hidden="true">·</span>
+                  <a
+                    id="vmAskWorked"
+                    href="mailto:lucasballek@gmail.com?subject=The%20calculator%20worked%20for%20me"
+                    data-i18n="valueMomentAskWorked"
+                    >tell me it worked</a
+                  >
+                  <span class="vm-sep" aria-hidden="true">·</span>
+                  <button
+                    id="vmAskSend"
+                    class="vm-link"
+                    type="button"
+                    data-i18n="valueMomentAskSend"
+                  >
+                    send this result to someone pricing a system
+                  </button>
+                </p>
               </div>
             </div>
           </div>
@@ -3545,15 +3584,15 @@
 
     <!-- Browser helpers (classic script: advisor + modal globals) -->
 
-    <script type="module" src="./assets/js/sizing/ui.js?v=20261107c"></script>
+    <script type="module" src="./assets/js/sizing/ui.js?v=20261107d"></script>
 
     <!-- Turnstile client (B1/R-CF-02). Harmless with no site key configured;
          the advisor posts without a token in that case, exactly as before. -->
     <script
       type="module"
-      src="./assets/js/turnstile-client.js?v=20261107c"
+      src="./assets/js/turnstile-client.js?v=20261107d"
     ></script>
-    <script defer src="./assets/js/chat.js?v=20261107c"></script>
+    <script defer src="./assets/js/chat.js?v=20261107d"></script>
   </body>
 </html>
 

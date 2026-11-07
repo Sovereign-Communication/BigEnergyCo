@@ -1073,6 +1073,45 @@ textarea:focus-visible {
   display: none;
 }
 
+/* V2: the ask at the value moment. One quiet line, deliberately quieter than
+   the result it follows - it is an invitation, not a call to action competing
+   with the numbers. Sparing use of colour: the doors read as links because they
+   are links, not because they are painted like buttons. */
+.value-moment-ask {
+  margin: 1rem 0 0;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.value-moment-ask[hidden] {
+  display: none;
+}
+
+.value-moment-ask a,
+.value-moment-ask .vm-link {
+  color: var(--primary-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.value-moment-ask .vm-link {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.value-moment-ask .vm-sep {
+  margin: 0 0.4rem;
+  color: var(--text-muted);
+}
+
+[data-display-mode="simple"] .value-moment-ask {
+  font-size: 0.95rem;
+}
+
 .field-error {
   margin: 0.4rem 0 0;
   font-size: 0.9rem;

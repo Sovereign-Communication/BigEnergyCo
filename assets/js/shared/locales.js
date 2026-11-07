@@ -3,7 +3,7 @@
 // `ar` flips the document to RTL automatically.
 // Keys not present in a locale fall back to English silently.
 
-import { HOME_COPY } from "./home-copy.js?v=20261107c";
+import { HOME_COPY } from "./home-copy.js?v=20261107d";
 
 export const LOCALES = {
   en: {
@@ -184,6 +184,10 @@ export const LOCALES = {
       "Ask about cell specs, Sodium-ion vs LFP, freight costs...",
     advisorSend: "Send",
     advisorAskResult: "Explain this result to me.",
+    valueMomentAskLead: "If this saved you a call or a quote:",
+    valueMomentAskChipIn: "chip in",
+    valueMomentAskWorked: "tell me it worked",
+    valueMomentAskSend: "send this result to someone pricing a system",
     advisorClose: "Close AI advisor",
     advisorBusyRetry: " The free AI engine is busy — retrying in {secs}s…",
     advisorNoReply: " No reply received. Please try again.",
@@ -937,6 +941,11 @@ export const LOCALES = {
       "Pregunta sobre celdas, sodio-ion frente a LFP, costes de transporte...",
     advisorSend: "Enviar",
     advisorAskResult: "Explica este resultado.",
+    valueMomentAskLead: "Si esto te ahorró una llamada o un presupuesto:",
+    valueMomentAskChipIn: "colaborar",
+    valueMomentAskWorked: "cuéntame si te sirvió",
+    valueMomentAskSend:
+      "envía este resultado a alguien que esté cotizando un sistema",
     advisorClose: "Cerrar asesor de IA",
     advisorBusyRetry:
       " El motor gratuito de IA está ocupado; reintentando en {secs}s…",
@@ -1631,6 +1640,11 @@ export const LOCALES = {
       "Pergunte sobre células, sódio-ion versus LFP, custos de frete...",
     advisorSend: "Enviar",
     advisorAskResult: "Explica este resultado.",
+    valueMomentAskLead: "Se isto te poupou uma chamada ou um orçamento:",
+    valueMomentAskChipIn: "contribuir",
+    valueMomentAskWorked: "conta-me se funcionou",
+    valueMomentAskSend:
+      "envia este resultado a alguém que esteja a orçamentar um sistema",
     advisorClose: "Fechar consultor de IA",
     advisorBusyRetry:
       " O motor gratuito de IA está ocupado — a tentar novamente em {secs}s…",
@@ -2317,6 +2331,10 @@ export const LOCALES = {
       "Questions sur les cellules, sodium-ion vs LFP, fret...",
     advisorSend: "Envoyer",
     advisorAskResult: "Explique-moi ce résultat.",
+    valueMomentAskLead: "Si cela vous a évité un appel ou un devis :",
+    valueMomentAskChipIn: "faire un don",
+    valueMomentAskWorked: "dites-moi si ça a marché",
+    valueMomentAskSend: "envoyez ce résultat à quelqu’un qui demande un devis",
     advisorClose: "Fermer le conseiller IA",
     advisorBusyRetry:
       " Le moteur IA gratuit est occupé — nouvelle tentative dans {secs}s…",
@@ -3006,6 +3024,12 @@ export const LOCALES = {
       "Fragen zu Zellen, Natrium-Ion vs. LFP, Frachtkosten...",
     advisorSend: "Senden",
     advisorAskResult: "Erkläre mir dieses Ergebnis.",
+    valueMomentAskLead:
+      "Wenn dir das ein Gespräch oder ein Angebot erspart hat:",
+    valueMomentAskChipIn: "etwas beitragen",
+    valueMomentAskWorked: "sag mir, ob es geklappt hat",
+    valueMomentAskSend:
+      "schick dieses Ergebnis jemandem, der gerade ein Angebot einholt",
     advisorClose: "KI-Berater schließen",
     advisorBusyRetry:
       " Die kostenlose KI ist ausgelastet — erneuter Versuch in {secs}s…",
@@ -3610,6 +3634,11 @@ export const LOCALES = {
       "Vraag over celspecificaties, natrium-ion vs LFP, transportkosten...",
     advisorSend: "Verzenden",
     advisorAskResult: "Leg dit resultaat aan me uit.",
+    valueMomentAskLead: "Als dit je een telefoontje of een offerte bespaarde:",
+    valueMomentAskChipIn: "een bijdrage doen",
+    valueMomentAskWorked: "laat me weten of het werkte",
+    valueMomentAskSend:
+      "stuur dit resultaat naar iemand die een systeem laat offreren",
     advisorClose: "AI-adviseur sluiten",
     advisorBusyRetry:
       " De gratis AI-engine is bezet — opnieuw proberen over {secs}s…",
@@ -4470,6 +4499,10 @@ export const LOCALES = {
       "اسأل عن الخلايا، أيوني الصوديوم مقابل LFP، تكلفة الشحن...",
     advisorSend: "إرسال",
     advisorAskResult: "اشرح لي هذه النتيجة.",
+    valueMomentAskLead: "إذا وفّر عليك هذا مكالمة أو عرض سعر:",
+    valueMomentAskChipIn: "المساهمة",
+    valueMomentAskWorked: "أخبرني إن نجح الأمر",
+    valueMomentAskSend: "أرسل هذه النتيجة لمن يطلب عرض سعر لنظام",
     advisorClose: "إغلاق مستشار الذكاء الاصطناعي",
     advisorBusyRetry:
       " محرك الذكاء الاصطناعي المجاني مشغول — إعادة المحاولة خلال {secs}s…",
