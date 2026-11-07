@@ -230,3 +230,41 @@ cannot be read from here because the apex is behind the Cloudflare challenge,
 so no claim is made about production's route. Locally the advisor is offline by
 design ("no model key is configured"), which is the honest local state, not a
 finding.
+
+## V2 ask + share at the value moment (2026-11-07) - HALF CLOSED, HALF OPEN
+
+**Closed: the ask exists at the value moment, and it is driven.** One muted
+line, `#valueMomentAsk`, under the result actions - hidden until a result
+exists (read: `hidden` true and `display: none` before a run; `hidden` false
+after one), with three doors and real destinations, read out of the rendered
+DOM at stamp `20261107g`:
+
+    If this saved you a call or a quote: chip in · tell me it worked · send this result to someone pricing a system
+
+| Door              | Destination (read from the element)                                                                                                               |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| chip in           | `href="#support"` - the support section that already existed                                                                                      |
+| tell me it worked | `mailto:lucasballek@gmail.com?subject=The%20calculator%20worked%20for%20me`                                                                       |
+| send this result  | the existing `copyShareLink` path; pressed on the surface, the door itself read `✓ Link Copied!` and the separate share button kept its own label |
+
+Copy exists in all seven locales (`valueMomentAskLead` / `ChipIn` / `Worked` /
+`Send`); pins `tests/value-moment-ask.test.mjs` 5/5, including that the line
+captures nothing (no form, no email field, no analytics hook) and that the
+`hidden` attribute is not out-ranked by a display rule.
+
+Two defects were found and cured while driving it, both stated rather than
+smoothed over: the first CSS draft pushed `site.css` past the committed
+40,000-byte eager budget (cured by cutting the rule to what it needs and by a
+recorded +1,000 raise, not by hiding bytes elsewhere); and the send door's
+confirmation originally flashed on the _share button_ rather than the door
+pressed, which reads as a bug (cured by passing the trigger through).
+
+**OPEN: the recipient gap.** A shared link still restores inputs and requires a
+click before any sizing runs - the sender sends a result, the recipient lands
+on a prefilled form. Verified as still true at this head (the init path's own
+comment states the design verbatim). V2's stated closing receipt is a fresh
+recipient cold-drive, and it cannot be produced until the landing question is
+answered (auto-run on a restored share link, or outcome-first landing). That
+decision changes what opening _any_ incoming link does - including a link a
+visitor did not ask to run - so it is prepared here as the next lane step, not
+improvised at the end of this one.
