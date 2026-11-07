@@ -58,8 +58,8 @@ test("it carries exactly the three doors, wired to real destinations", () => {
   assert.match(HTML, /id="vmAskSend"/);
   assert.match(
     UI,
-    /vmSend\.addEventListener\("click", copyShareLink\)/,
-    "the send door must reuse copyShareLink",
+    /vmSend[\s\S]{0,60}copyShareLink\(e\.currentTarget\)/,
+    "the send door must reuse copyShareLink, with feedback on the door pressed",
   );
 });
 
